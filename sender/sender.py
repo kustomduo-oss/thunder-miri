@@ -23,13 +23,14 @@ from pywebpush import webpush, WebPushException
 # ==========================================
 # 설정 (클라우드에선 환경변수/Secrets, 로컬 테스트는 .env.secret 로드)
 # ==========================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://pdlohzenslwbiyoxwjom.supabase.co")
-SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", "")  # sb_secret_... (RLS 우회, 절대 공개 금지)
-KMA_API_KEY = os.environ.get("KMA_API_KEY", "")
+# .strip(): Secrets에 값 붙여넣을 때 끝에 줄바꿈/공백이 들어가도 안전하게
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://pdlohzenslwbiyoxwjom.supabase.co").strip()
+SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", "").strip()  # sb_secret_... (RLS 우회, 절대 공개 금지)
+KMA_API_KEY = os.environ.get("KMA_API_KEY", "").strip()
 
-VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
-VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
-VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").strip()
 
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "10"))  # 10km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "30"))      # 30km 이내: 접근
@@ -330,9 +331,9 @@ def validate_config(need_kma=True):
 if __name__ == "__main__":
     load_local_env()
     # load_local_env 후 전역값 다시 읽기
-    SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", SUPABASE_SECRET_KEY)
-    KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY)
-    VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY)
+    SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", SUPABASE_SECRET_KEY).strip()
+    KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY).strip()
+    VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY).strip()
 
     parser = argparse.ArgumentParser(description="천둥미리 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
