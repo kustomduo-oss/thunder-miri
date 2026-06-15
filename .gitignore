@@ -8,6 +8,10 @@ vapid_keys.secret.txt
 __pycache__/
 *.pyc
 
+# node (아이콘 변환용 sharp) / 아이콘 원본
+node_modules/
+icon-source.*
+
 # OS / 에디터
 .DS_Store
 Thumbs.db
