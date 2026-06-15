@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-천둥미리 — 발송 엔진
+번개 추적기 — 발송 엔진
 GitHub Actions에서 10분마다 실행. 동작 순서:
   1) Supabase에서 구독자(동네·격자·웹푸시토큰) 읽기
   2) 같은 격자끼리 묶어 기상청에 천둥/낙뢰·소나기 조회 (API 절약)
@@ -306,7 +306,7 @@ def run_test():
         dog = s.get("dog_name") or "강아지"
         ok, status = send_web_push(
             s["subscription"],
-            "🐾 천둥미리 테스트",
+            "🐾 번개 추적기 테스트",
             f"{dog} 알림 연결 성공! 천둥이 오면 이렇게 미리 알려드릴게요.",
         )
         print(f"  {s.get('dong') or s['id'][:8]}: {'성공' if ok else f'실패({status})'}")
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY).strip()
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY).strip()
 
-    parser = argparse.ArgumentParser(description="천둥미리 발송 엔진")
+    parser = argparse.ArgumentParser(description="번개 추적기 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
     args = parser.parse_args()

@@ -1,4 +1,4 @@
-/* 천둥미리 — 웹푸시 service worker
+/* 번개 추적기 — 웹푸시 service worker
    서버가 보낸 푸시를 받아 알림으로 표시합니다.
    (VAPID 키 연결은 3단계에서) */
 
@@ -6,7 +6,7 @@ self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (e) { data = { body: event.data && event.data.text() }; }
 
-  const title = data.title || "⛈️ 천둥미리";
+  const title = data.title || "⚡ 번개 추적기";
   const options = {
     body: data.body || "천둥이 다가오고 있어요. 천둥소리를 미리 틀어주세요.",
     icon: data.icon || "icon-192.png",

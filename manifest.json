@@ -1,6 +1,6 @@
 {
-  "name": "천둥미리",
-  "short_name": "천둥미리",
+  "name": "번개 추적기",
+  "short_name": "번개 추적기",
   "description": "강아지 천둥 공포 미리 알림",
   "start_url": ".",
   "scope": ".",
