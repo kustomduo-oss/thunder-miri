@@ -3,7 +3,13 @@ name: thunder-miri-sender
 on:
   schedule:
     - cron: "*/10 * * * *"   # 10분마다 (주기 실행이라 UTC/KST 무관)
-  workflow_dispatch:          # 버튼으로 수동 실행도 가능
+  workflow_dispatch:          # 버튼으로 수동 실행 (mode 선택 가능)
+    inputs:
+      mode:
+        description: "once=실제 천둥감지, test=전 구독자에 테스트 푸시"
+        type: choice
+        options: [once, test]
+        default: once
 
 jobs:
   send:
@@ -15,7 +21,7 @@ jobs:
           python-version: "3.11"
       - run: pip install -r sender/requirements.txt
       - name: run sender
-        run: python sender/sender.py --once
+        run: python sender/sender.py --${{ inputs.mode || 'once' }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
