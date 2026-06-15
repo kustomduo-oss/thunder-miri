@@ -35,7 +35,7 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").st
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "10"))  # 10km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "30"))      # 30km 이내: 접근
 COOLDOWN_MIN = int(os.environ.get("COOLDOWN_MIN", "30"))              # 같은 구독자 재알림 최소 간격(분)
-RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "2"))
+RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "1"))  # 초단기예보 최소 단위 = 1시간
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 
 PTY_TEXT = {0: "강수 없음", 1: "비", 2: "비/눈", 3: "눈", 5: "빗방울", 6: "빗방울/눈날림", 7: "눈날림"}
@@ -272,7 +272,7 @@ def run_once():
             elif nearest <= WATCH_RADIUS_KM:
                 alert_type = "watch"
 
-        # 2) 낙뢰 없으면 소나기 사전예보
+        # 2) 낙뢰 없으면 소나기 예보(1시간 이내)
         fc = None
         if alert_type is None:
             fc = fetch_forecast(nx, ny)
