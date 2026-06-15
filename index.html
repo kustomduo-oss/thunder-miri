@@ -318,6 +318,17 @@ $("ctaBtn").addEventListener("click", async ()=>{
     console.log("[데모 모드] 저장될 데이터:", payload);
   }
 
+  // 가입 직후 환영 알림 — 사용자가 "진짜 되네!" 바로 확인 (구독 성공한 경우만)
+  if(subscription){
+    try{
+      const reg=await navigator.serviceWorker.ready;
+      await reg.showNotification("⚡ 번개 추적기 알림 켜짐!", {
+        body:`${$("dogName").value.trim()||"강아지"} 알림이 켜졌어요. 천둥이 오면 이렇게 미리 알려드릴게요 🐾`,
+        icon:"icon-192.png", badge:"icon-192.png", tag:"welcome"
+      });
+    }catch(e){ console.warn("환영 알림 실패:", e); }
+  }
+
   // 성공 화면
   $("successDog").textContent=$("dogName").value.trim()||"강아지";
   $("formView").style.display="none";
