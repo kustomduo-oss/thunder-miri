@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>천둥미리 — 강아지 천둥 공포 미리 알림</title>
+<meta name="description" content="기상청이 천둥·낙뢰를 감지하면 폰으로 미리 알려드려요. 천둥소리를 먼저 틀어 강아지의 천둥 공포를 둔감화하세요." />
+<style>
+  :root{
+    --bg:#fef6f9;
+    --card:#ffffff;
+    --ink:#3a3340;
+    --ink-soft:#6f6678;
+    --brand:#a78bfa;       /* 파스텔 보라 */
+    --brand-deep:#7c5cf0;
+    --accent:#ffd6e0;      /* 파스텔 핑크 */
+    --sky:#bfe3ff;         /* 파스텔 하늘 */
+    --ok:#34d399;
+    --line:#efe7f1;
+    --shadow:0 14px 40px rgba(124,92,240,.14);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:
+      radial-gradient(1200px 500px at 80% -10%, #ece4ff 0%, transparent 55%),
+      radial-gradient(900px 500px at -10% 10%, #ffe9f1 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:20px 18px 60px}
+
+  /* header */
+  header{display:flex;align-items:center;gap:9px;padding:6px 2px 10px}
+  .logo{font-size:22px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:7px}
+  .logo .badge{font-size:13px;font-weight:700;color:var(--brand-deep);background:#f1ecff;padding:3px 9px;border-radius:999px}
+
+  /* hero */
+  .hero{text-align:center;padding:18px 6px 8px}
+  .hero .emoji{font-size:54px;line-height:1;filter:drop-shadow(0 8px 14px rgba(124,92,240,.18))}
+  .hero h1{font-size:27px;line-height:1.32;margin:14px 0 8px;letter-spacing:-.7px;font-weight:800}
+  .hero h1 .hl{color:var(--brand-deep)}
+  .hero p{font-size:15.5px;color:var(--ink-soft);margin:0 auto;max-width:380px}
+
+  /* steps */
+  .steps{display:grid;gap:10px;margin:22px 0 6px}
+  .step{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+        border-radius:16px;padding:14px 15px;box-shadow:0 6px 18px rgba(124,92,240,.06)}
+  .step .n{flex:0 0 30px;height:30px;border-radius:10px;background:#f1ecff;color:var(--brand-deep);
+           font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .step b{font-size:15px;display:block}
+  .step span{font-size:13.5px;color:var(--ink-soft)}
+
+  /* card / form */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+        padding:24px 20px 22px;margin-top:22px;border:1px solid #fff}
+  .card h2{font-size:19px;margin:0 0 4px;letter-spacing:-.4px}
+  .card .sub{font-size:13.5px;color:var(--ink-soft);margin:0 0 18px}
+
+  label{font-size:13px;font-weight:700;color:var(--ink);display:block;margin:0 0 6px}
+  .field{margin-bottom:16px}
+  input[type=text]{
+    width:100%;border:1.6px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;
+    color:var(--ink);background:#fffdfe;transition:border-color .15s, box-shadow .15s;outline:none}
+  input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(167,139,250,.15)}
+
+  .loc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+    border:1.6px dashed var(--brand);background:#faf7ff;color:var(--brand-deep);font-weight:700;
+    font-size:14.5px;border-radius:14px;padding:13px;cursor:pointer;transition:background .15s}
+  .loc-btn:active{background:#f1ecff}
+  .or-divider{display:flex;align-items:center;gap:10px;margin:11px 0;color:var(--ink-soft);font-size:12px}
+  .or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .addr-row{display:flex;gap:8px}
+  .addr-row input{flex:1}
+  .addr-btn{flex:0 0 auto;border:1.6px solid var(--brand);background:#faf7ff;color:var(--brand-deep);
+    font-weight:700;font-size:14px;border-radius:14px;padding:0 16px;cursor:pointer;transition:background .15s}
+  .addr-btn:active{background:#f1ecff}
+  .addr-btn:disabled{opacity:.5;cursor:not-allowed}
+  .loc-result{display:none;align-items:center;gap:8px;background:#eafff4;border:1.5px solid #c4f2dc;
+    color:#1c8f63;font-size:13.5px;font-weight:700;border-radius:12px;padding:11px 13px;margin-top:9px}
+  .loc-result.show{display:flex}
+
+  .cta{width:100%;border:none;border-radius:16px;padding:16px;font-size:17px;font-weight:800;
+    color:#fff;background:linear-gradient(135deg,var(--brand) 0%, var(--brand-deep) 100%);
+    cursor:pointer;letter-spacing:-.3px;box-shadow:0 10px 24px rgba(124,92,240,.32);
+    transition:transform .12s, opacity .15s;margin-top:6px}
+  .cta:active{transform:translateY(1px)}
+  .cta:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+  .note{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:11px}
+  .note b{color:var(--brand-deep)}
+
+  /* success */
+  .success{display:none;text-align:center;padding:8px 4px}
+  .success.show{display:block}
+  .success .big{font-size:50px}
+  .success h2{font-size:21px;margin:10px 0 6px}
+  .success p{font-size:14.5px;color:var(--ink-soft);margin:0 0 18px}
+  .yt{display:inline-flex;align-items:center;gap:8px;background:#fff0f3;color:#e0457a;font-weight:700;
+    font-size:14px;text-decoration:none;border-radius:13px;padding:12px 18px;border:1.5px solid #ffd6e0}
+
+  footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:30px;line-height:1.7}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:#3a3340;color:#fff;font-size:13.5px;font-weight:600;padding:12px 18px;border-radius:12px;
+    opacity:0;transition:all .25s;pointer-events:none;max-width:90%;text-align:center;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">⛈️ 천둥미리 <span class="badge">무료</span></div>
+  </header>
+
+  <section class="hero">
+    <div class="emoji">🐕‍🦺</div>
+    <h1>천둥이 치기 <span class="hl">전에</span><br/>강아지에게 먼저 알려요</h1>
+    <p>기상청이 우리 동네 천둥·낙뢰를 감지하면 폰으로 미리 알림. 천둥소리를 먼저 틀어 공포를 둔감화하세요.</p>
+  </section>
+
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><b>동네를 등록해요</b><span>현재 위치 버튼 한 번이면 끝</span></div></div>
+    <div class="step"><div class="n">2</div><div><b>기상청이 천둥을 감지하면</b><span>10분마다 우리 동네 낙뢰·소나기 체크</span></div></div>
+    <div class="step"><div class="n">3</div><div><b>폰으로 미리 알림이 와요</b><span>천둥소리를 먼저 틀어 차분하게 적응</span></div></div>
+  </div>
+
+  <div class="card">
+    <!-- 가입 폼 -->
+    <div id="formView">
+      <h2>알림 무료로 켜기 🔔</h2>
+      <p class="sub">앱 설치 없이, 이 화면에서 바로 켜집니다.</p>
+
+      <div class="field">
+        <label for="dogName">강아지 이름 <span style="color:var(--ink-soft);font-weight:400">(선택)</span></label>
+        <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label>우리 동네 위치</label>
+        <button type="button" class="loc-btn" id="locBtn">📍 현재 위치 가져오기</button>
+        <div class="or-divider"><span>또는</span></div>
+        <div class="addr-row">
+          <input type="text" id="addrInput" placeholder="동네 입력 (예: 청주시 용암동)" autocomplete="off" />
+          <button type="button" class="addr-btn" id="addrBtn">검색</button>
+        </div>
+        <div class="loc-result" id="locResult">✅ <span id="locText">위치 확인됨</span></div>
+      </div>
+
+      <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
+      <p class="note">언제든 <b>알림 끄기</b> 가능 · 위치는 천둥 감지에만 사용</p>
+    </div>
+
+    <!-- 성공 화면 -->
+    <div class="success" id="successView">
+      <div class="big">🎉</div>
+      <h2>알림이 켜졌어요!</h2>
+      <p>이제 천둥이 다가오면 <b id="successDog">강아지</b>를 위해 미리 알려드릴게요.</p>
+      <a class="yt" href="https://youtu.be/lpi6gd1H0Ok" target="_blank" rel="noopener">▶ 천둥소리 둔감화 영상 미리 듣기</a>
+    </div>
+  </div>
+
+  <footer>
+    천둥미리 · 반려견 천둥 공포 둔감화 알림 서비스<br/>
+    날씨 데이터: 기상청 API
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   천둥미리 — 가입 화면 로직
+   ⚠️ 백엔드(Supabase/VAPID)는 3단계에서 연결합니다.
+   아래 CONFIG 값이 비어 있으면 "데모 모드"로 동작 (UI만 확인).
+   ============================================================ */
+const CONFIG = {
+  SUPABASE_URL: "https://pdlohzenslwbiyoxwjom.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF", // publishable key (공개 안전)
+  VAPID_PUBLIC_KEY: "BDpsQ-TxN1fOcZL5JX863gvyPT5QD78S8k94lIEDFZnhUXdEy_ReIxVGmSLeFRWtjxO4EvECDEdsWfTGADfocHQ" // 공개키 (공개 안전)
+};
+
+const state = { lat:null, lon:null, nx:null, ny:null, dong:null };
+
+/* ---- 기상청 격자 변환 (dfs_xy_conv: lat/lon -> nx/ny) ---- */
+function toGrid(lat, lon){
+  const RE=6371.00877, GRID=5.0, SLAT1=30.0, SLAT2=60.0, OLON=126.0, OLAT=38.0, XO=43, YO=136;
+  const DEGRAD=Math.PI/180.0;
+  const re=RE/GRID, slat1=SLAT1*DEGRAD, slat2=SLAT2*DEGRAD, olon=OLON*DEGRAD, olat=OLAT*DEGRAD;
+  let sn=Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5);
+  sn=Math.log(Math.cos(slat1)/Math.cos(slat2))/Math.log(sn);
+  let sf=Math.tan(Math.PI*0.25+slat1*0.5); sf=Math.pow(sf,sn)*Math.cos(slat1)/sn;
+  let ro=Math.tan(Math.PI*0.25+olat*0.5); ro=re*sf/Math.pow(ro,sn);
+  let ra=Math.tan(Math.PI*0.25+lat*DEGRAD*0.5); ra=re*sf/Math.pow(ra,sn);
+  let theta=lon*DEGRAD-olon;
+  if(theta>Math.PI) theta-=2.0*Math.PI;
+  if(theta<-Math.PI) theta+=2.0*Math.PI;
+  theta*=sn;
+  return { nx:Math.floor(ra*Math.sin(theta)+XO+0.5), ny:Math.floor(ro-ra*Math.cos(theta)+YO+0.5) };
+}
+
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
+
+/* ---- 위치 확정 (GPS·주소 공통) ---- */
+async function setLocation(lat, lon, dongHint){
+  state.lat=lat; state.lon=lon;
+  const g=toGrid(lat,lon); state.nx=g.nx; state.ny=g.ny;
+  state.dong = (await reverseGeocode(lat,lon)) || dongHint || null;
+  $("locText").textContent = (state.dong || `위도 ${lat.toFixed(3)}, 경도 ${lon.toFixed(3)}`) + ` (격자 ${g.nx},${g.ny})`;
+  $("locResult").classList.add("show");
+  $("ctaBtn").disabled=false;
+  $("ctaBtn").textContent="무료로 알림 켜기 🔔";
+}
+
+/* ---- 1) GPS로 위치 가져오기 ---- */
+$("locBtn").addEventListener("click", ()=>{
+  if(!navigator.geolocation){ toast("이 브라우저는 위치를 지원하지 않아요"); return; }
+  $("locBtn").textContent = "📍 위치 확인 중…";
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    await setLocation(pos.coords.latitude, pos.coords.longitude);
+    $("locBtn").textContent = "📍 다시 가져오기";
+  }, (err)=>{
+    $("locBtn").textContent="📍 현재 위치 가져오기";
+    toast(err.code===1 ? "위치 권한을 거부했어요. 아래 주소 입력을 써보세요" : "위치를 가져오지 못했어요");
+  }, {enableHighAccuracy:true, timeout:10000});
+});
+
+/* ---- 2) 주소로 위치 찾기 ---- */
+$("addrBtn").addEventListener("click", async ()=>{
+  const q=$("addrInput").value.trim();
+  if(!q){ toast("동네를 입력해주세요"); return; }
+  $("addrBtn").textContent="검색 중…"; $("addrBtn").disabled=true;
+  const hit=await forwardGeocode(q);
+  $("addrBtn").textContent="검색"; $("addrBtn").disabled=false;
+  if(!hit){ toast("주소를 찾지 못했어요. 더 자세히 입력해보세요 (예: 청주시 용암동)"); return; }
+  await setLocation(hit.lat, hit.lon, q);
+});
+$("addrInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); $("addrBtn").click(); } });
+
+/* ---- 동네 이름 (역지오코딩, 좌표→동네명) ---- */
+async function reverseGeocode(lat, lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ko&zoom=14`);
+    const j=await r.json(); const a=j.address||{};
+    return a.suburb || a.town || a.village || a.city_district || a.county || a.city || null;
+  }catch(e){ return null; }
+}
+
+/* ---- 주소 검색 (동네명→좌표). 기상청 격자는 5km라 핀포인트 아니어도 충분 ---- */
+async function forwardGeocode(query){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&accept-language=ko&countrycodes=kr&limit=1&q=${encodeURIComponent(query)}`);
+    const j=await r.json();
+    if(!j.length) return null;
+    return { lat:parseFloat(j[0].lat), lon:parseFloat(j[0].lon) };
+  }catch(e){ return null; }
+}
+
+/* ---- 알림 켜기 ---- */
+$("ctaBtn").addEventListener("click", async ()=>{
+  if(state.nx==null){ toast("먼저 위치를 등록해주세요"); return; }
+  $("ctaBtn").disabled=true; $("ctaBtn").textContent="알림 켜는 중…";
+
+  // 1) 알림 권한 (모든 브라우저 공통, 지금도 동작)
+  if(!("Notification" in window)){ toast("이 브라우저는 알림을 지원하지 않아요"); resetCta(); return; }
+  let perm=Notification.permission;
+  if(perm==="default") perm=await Notification.requestPermission();
+  if(perm!=="granted"){ toast("알림 권한이 필요해요 🙏"); resetCta(); return; }
+
+  // 2) 웹푸시 구독
+  let subscription=null;
+  if(CONFIG.VAPID_PUBLIC_KEY && "serviceWorker" in navigator){
+    try{
+      const reg=await navigator.serviceWorker.register("sw.js");
+      await navigator.serviceWorker.ready;   // ← SW 활성화 대기 (첫 방문 시 구독 실패 방지)
+      subscription=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)
+      });
+    }catch(e){ console.warn("push subscribe 실패:", e); }
+    // 푸시 토큰을 못 받으면 알림을 보낼 수 없으니 성공 처리하지 않음
+    if(!subscription){ toast("알림 등록에 실패했어요. 새로고침 후 다시 시도해주세요"); resetCta(); return; }
+  }
+
+  // 3) 서버에 저장 — Supabase (2단계)
+  //  ※ 새 publishable 키는 apikey 헤더에만. return=representation(되읽기)은
+  //     SELECT 정책이 없으면 RLS 위반이 나므로 쓰지 않는다.
+  const payload={
+    dog_name:$("dogName").value.trim()||null,
+    lat:state.lat, lon:state.lon, nx:state.nx, ny:state.ny, dong:state.dong,
+    subscription:subscription
+  };
+  if(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY){
+    try{
+      const res=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/subscribers`,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "apikey":CONFIG.SUPABASE_ANON_KEY },
+        body:JSON.stringify(payload)
+      });
+      if(!res.ok){ console.warn("저장 실패:", res.status, await res.text());
+        toast("저장 중 문제가 생겼어요. 잠시 후 다시 시도해주세요"); resetCta(); return; }
+    }catch(e){ console.warn("저장 실패:", e);
+      toast("네트워크 오류로 저장하지 못했어요"); resetCta(); return; }
+  }else{
+    console.log("[데모 모드] 저장될 데이터:", payload);
+  }
+
+  // 성공 화면
+  $("successDog").textContent=$("dogName").value.trim()||"강아지";
+  $("formView").style.display="none";
+  $("successView").classList.add("show");
+});
+
+function resetCta(){ $("ctaBtn").disabled=false; $("ctaBtn").textContent="무료로 알림 켜기 🔔"; }
+
+function urlBase64ToUint8Array(base64String){
+  const padding="=".repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const raw=atob(base64); const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+</script>
+</body>
+</html>

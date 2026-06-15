@@ -1,0 +1,13 @@
+# 비밀 — 절대 커밋 금지
+*.secret.txt
+.env
+.env.*
+vapid_keys.secret.txt
+
+# python
+__pycache__/
+*.pyc
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
