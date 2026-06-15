@@ -9,8 +9,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "⛈️ 천둥미리";
   const options = {
     body: data.body || "천둥이 다가오고 있어요. 천둥소리를 미리 틀어주세요.",
-    icon: data.icon || "icon-192.png",
-    badge: "badge-72.png",
+    icon: data.icon || "icon.svg",
+    badge: "icon.svg",
     vibrate: [200, 100, 200],
     tag: data.tag || "thunder-alert",
     renotify: true,
