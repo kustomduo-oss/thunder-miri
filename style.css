@@ -1,0 +1,79 @@
+/* 번개 추적기 — 공유 스타일 (콘텐츠/정책 페이지 공통)
+   디자인 수정은 주로 이 파일에서 한다. */
+:root{
+  --navy:#1e3a8a;
+  --navy-deep:#172e6e;
+  --yellow:#ffd54a;
+  --yellow-deep:#f2b705;
+  --ink:#1f2937;
+  --ink-soft:#5b6472;
+  --line:#e7eaf0;
+  --bg:#f7f8fb;
+  --card:#ffffff;
+  --radius:16px;
+  --wrap:760px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--navy);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* 헤더 */
+.site-header{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;
+  box-shadow:0 2px 12px rgba(30,58,138,.18)}
+.site-header .inner{max-width:var(--wrap);margin:0 auto;padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:18px;letter-spacing:-.4px}
+.brand:hover{text-decoration:none}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav a{color:#dbe3ff;font-size:14px;font-weight:600;padding:6px 10px;border-radius:8px}
+.nav a:hover{background:rgba(255,255,255,.12);color:#fff;text-decoration:none}
+.nav a.cta{background:var(--yellow);color:var(--navy-deep)}
+.nav a.cta:hover{background:var(--yellow-deep);color:#000}
+
+/* 본문 */
+main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
+.page-title{font-size:28px;font-weight:800;letter-spacing:-.6px;margin:6px 0 4px}
+.page-sub{color:var(--ink-soft);font-size:15px;margin:0 0 26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 24px;box-shadow:0 6px 20px rgba(30,58,138,.05);margin-bottom:18px}
+.card h2{font-size:20px;margin:26px 0 10px;letter-spacing:-.3px}
+.card h2:first-child{margin-top:0}
+.card h3{font-size:16.5px;margin:20px 0 6px}
+.card p{margin:0 0 14px}
+.card ul,.card ol{margin:0 0 14px;padding-left:22px}
+.card li{margin:5px 0}
+.card .muted{color:var(--ink-soft);font-size:14px}
+.tag{display:inline-block;background:#eef2ff;color:var(--navy);font-size:12.5px;font-weight:700;
+  padding:3px 10px;border-radius:999px;margin-bottom:12px}
+.callout{background:#fffbe9;border:1px solid #ffe9a8;border-radius:12px;padding:14px 16px;margin:0 0 16px}
+.callout b{color:var(--yellow-deep)}
+.divider{height:1px;background:var(--line);margin:22px 0}
+
+/* 글 목록 카드 */
+.post-list{display:grid;gap:14px}
+.post-card{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:0 6px 20px rgba(30,58,138,.05);transition:transform .12s, box-shadow .12s}
+.post-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 12px 28px rgba(30,58,138,.1)}
+.post-card h3{margin:0 0 6px;font-size:18px;color:var(--ink)}
+.post-card p{margin:0;color:var(--ink-soft);font-size:14.5px}
+.post-card .more{display:inline-block;margin-top:10px;color:var(--navy);font-weight:700;font-size:14px}
+
+/* 버튼 */
+.btn{display:inline-block;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+  color:#fff;font-weight:800;font-size:16px;padding:14px 24px;border-radius:14px;
+  box-shadow:0 10px 22px rgba(30,58,138,.28)}
+.btn:hover{text-decoration:none;opacity:.94}
+.btn.yellow{background:linear-gradient(135deg,var(--yellow) 0%,var(--yellow-deep) 100%);color:var(--navy-deep)}
+
+/* 푸터 */
+.site-footer{background:#fff;border-top:1px solid var(--line);margin-top:30px}
+.site-footer .inner{max-width:var(--wrap);margin:0 auto;padding:26px 18px 34px;text-align:center}
+.footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;margin-bottom:14px}
+.footer-nav a{color:var(--ink-soft);font-size:13.5px;font-weight:600}
+.footer-brand{font-weight:800;color:var(--navy);margin-bottom:4px}
+.footer-copy{color:var(--ink-soft);font-size:12.5px;line-height:1.7}
