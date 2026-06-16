@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>번개 추적기 — 강아지 천둥 공포 미리 알림</title>
-<meta name="description" content="기상청이 천둥·낙뢰를 감지하면 폰으로 미리 알려드려요. 천둥소리를 먼저 틀어 강아지의 천둥 공포를 둔감화하세요." />
+<meta name="description" content="기상청이 천둥·낙뢰를 감지하면 폰으로 미리 알려드려요. 천둥소리를 먼저 틀어 강아지의 천둥 공포를 둔감화하세요. 무료 웹푸시 알림." />
 <!-- PWA / iOS 홈화면 앱 (아이폰 웹푸시에 필수) -->
 <meta name="theme-color" content="#1e3a8a" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -16,104 +16,108 @@
 <link rel="icon" type="image/png" href="icon-192.png" />
 <style>
   :root{
-    --bg:#fef6f9;
-    --card:#ffffff;
-    --ink:#3a3340;
-    --ink-soft:#6f6678;
-    --brand:#a78bfa;       /* 파스텔 보라 */
-    --brand-deep:#7c5cf0;
-    --accent:#ffd6e0;      /* 파스텔 핑크 */
-    --sky:#bfe3ff;         /* 파스텔 하늘 */
-    --ok:#34d399;
-    --line:#efe7f1;
-    --shadow:0 14px 40px rgba(124,92,240,.14);
-    --radius:22px;
+    --navy:#1e3a8a; --navy-deep:#172e6e; --yellow:#ffd54a; --yellow-deep:#f2b705;
+    --ink:#1f2937; --ink-soft:#5b6472; --line:#e7eaf0; --bg:#f7f8fb; --card:#ffffff;
+    --radius:20px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;scroll-behavior:smooth}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-    background:
-      radial-gradient(1200px 500px at 80% -10%, #ece4ff 0%, transparent 55%),
-      radial-gradient(900px 500px at -10% 10%, #ffe9f1 0%, transparent 50%),
-      var(--bg);
-    color:var(--ink);
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1000px 460px at 50% -120px,#e9eeff 0%,transparent 70%),var(--bg);
+    color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px;margin:0 auto;padding:20px 18px 60px}
+  a{color:var(--navy)}
 
-  /* header */
-  header{display:flex;align-items:center;gap:9px;padding:6px 2px 10px}
-  .logo{font-size:22px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:7px}
-  .logo .badge{font-size:13px;font-weight:700;color:var(--brand-deep);background:#f1ecff;padding:3px 9px;border-radius:999px}
+  /* 공유 헤더/푸터 (nav.js가 주입) */
+  .site-header{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;box-shadow:0 2px 12px rgba(30,58,138,.18)}
+  .site-header .inner{max-width:560px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:7px;color:#fff;font-weight:800;font-size:17px;letter-spacing:-.4px;text-decoration:none}
+  .nav{display:flex;gap:3px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{color:#dbe3ff;font-size:13px;font-weight:600;padding:6px 9px;border-radius:8px;white-space:nowrap;text-decoration:none}
+  .nav a:hover{background:rgba(255,255,255,.12);color:#fff}
+  .nav a.cta{background:var(--yellow);color:var(--navy-deep)}
+  .site-footer{background:#fff;border-top:1px solid var(--line);margin-top:14px}
+  .site-footer .inner{max-width:560px;margin:0 auto;padding:24px 18px 34px;text-align:center}
+  .footer-nav{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin-bottom:12px}
+  .footer-nav a{color:var(--ink-soft);font-size:13px;font-weight:600;text-decoration:none}
+  .footer-brand{font-weight:800;color:var(--navy);margin-bottom:4px}
+  .footer-copy{color:var(--ink-soft);font-size:12px;line-height:1.7}
+
+  .wrap{max-width:560px;margin:0 auto;padding:8px 18px 30px}
 
   /* hero */
-  .hero{text-align:center;padding:18px 6px 8px}
-  .hero .emoji{font-size:54px;line-height:1;filter:drop-shadow(0 8px 14px rgba(124,92,240,.18))}
-  .hero h1{font-size:27px;line-height:1.32;margin:14px 0 8px;letter-spacing:-.7px;font-weight:800}
-  .hero h1 .hl{color:var(--brand-deep)}
-  .hero p{font-size:15.5px;color:var(--ink-soft);margin:0 auto;max-width:380px}
+  .hero{text-align:center;padding:30px 6px 10px}
+  .hero-emoji{font-size:46px;line-height:1;filter:drop-shadow(0 8px 14px rgba(30,58,138,.2))}
+  .hero h1{font-size:30px;line-height:1.25;margin:16px 0 12px;letter-spacing:-.8px;font-weight:800}
+  .lead{font-size:15.5px;color:var(--ink-soft);margin:0 auto;max-width:430px}
+  .hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
 
-  /* steps */
-  .steps{display:grid;gap:10px;margin:22px 0 6px}
-  .step{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
-        border-radius:16px;padding:14px 15px;box-shadow:0 6px 18px rgba(124,92,240,.06)}
-  .step .n{flex:0 0 30px;height:30px;border-radius:10px;background:#f1ecff;color:var(--brand-deep);
-           font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
-  .step b{font-size:15px;display:block}
-  .step span{font-size:13.5px;color:var(--ink-soft)}
+  /* 버튼 */
+  .btn{display:inline-block;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+    color:#fff;font-weight:800;font-size:15.5px;padding:13px 22px;border-radius:14px;text-decoration:none;
+    box-shadow:0 10px 22px rgba(30,58,138,.26)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--navy);box-shadow:none;border:1.6px solid #cdd6ef}
 
-  /* card / form */
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-        padding:24px 20px 22px;margin-top:22px;border:1px solid #fff}
+  /* 섹션 */
+  .sec{margin:26px 0}
+  .sec-title{font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1.32;margin:0 0 10px}
+  .sec p{font-size:15px;color:#3b4453;margin:0 0 10px}
+  .card-soft{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:22px 20px;box-shadow:0 8px 22px rgba(30,58,138,.05)}
+  .link-more{display:inline-block;margin-top:4px;color:var(--navy);font-weight:700;font-size:14.5px;text-decoration:none}
+  .mini-cards{display:grid;gap:9px;margin:14px 0}
+  .mini{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:14.5px;
+    box-shadow:0 4px 12px rgba(30,58,138,.04)}
+  .mini b{color:var(--navy)}
+  .final{text-align:center;background:var(--navy);color:#fff;border-radius:20px;padding:30px 22px;margin:30px 0 8px}
+  .final .sec-title{color:#fff}
+  .final p{color:#cdd6ef}
+  .final .btn{background:var(--yellow);color:var(--navy-deep);box-shadow:0 10px 22px rgba(0,0,0,.2);margin-top:6px}
+
+  /* 가입 카드/폼 */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 14px 40px rgba(30,58,138,.12);
+    padding:24px 20px 22px;border:1px solid #fff;scroll-margin-top:70px}
   .card h2{font-size:19px;margin:0 0 4px;letter-spacing:-.4px}
   .card .sub{font-size:13.5px;color:var(--ink-soft);margin:0 0 18px}
-
   label{font-size:13px;font-weight:700;color:var(--ink);display:block;margin:0 0 6px}
   .field{margin-bottom:16px}
-  input[type=text]{
-    width:100%;border:1.6px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;
-    color:var(--ink);background:#fffdfe;transition:border-color .15s, box-shadow .15s;outline:none}
-  input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(167,139,250,.15)}
-
+  input[type=text]{width:100%;border:1.6px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;
+    color:var(--ink);background:#fff;transition:border-color .15s, box-shadow .15s;outline:none}
+  input[type=text]:focus{border-color:var(--navy);box-shadow:0 0 0 4px rgba(30,58,138,.13)}
   .loc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-    border:1.6px dashed var(--brand);background:#faf7ff;color:var(--brand-deep);font-weight:700;
+    border:1.6px dashed var(--navy);background:#f0f4ff;color:var(--navy);font-weight:700;
     font-size:14.5px;border-radius:14px;padding:13px;cursor:pointer;transition:background .15s}
-  .loc-btn:active{background:#f1ecff}
+  .loc-btn:active{background:#e6edff}
   .or-divider{display:flex;align-items:center;gap:10px;margin:11px 0;color:var(--ink-soft);font-size:12px}
   .or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--line)}
   .addr-row{display:flex;gap:8px}
   .addr-row input{flex:1}
-  .addr-btn{flex:0 0 auto;border:1.6px solid var(--brand);background:#faf7ff;color:var(--brand-deep);
+  .addr-btn{flex:0 0 auto;border:1.6px solid var(--navy);background:#f0f4ff;color:var(--navy);
     font-weight:700;font-size:14px;border-radius:14px;padding:0 16px;cursor:pointer;transition:background .15s}
-  .addr-btn:active{background:#f1ecff}
+  .addr-btn:active{background:#e6edff}
   .addr-btn:disabled{opacity:.5;cursor:not-allowed}
   .loc-result{display:none;align-items:center;gap:8px;background:#eafff4;border:1.5px solid #c4f2dc;
     color:#1c8f63;font-size:13.5px;font-weight:700;border-radius:12px;padding:11px 13px;margin-top:9px}
   .loc-result.show{display:flex}
-
-  .cta{width:100%;border:none;border-radius:16px;padding:16px;font-size:17px;font-weight:800;
-    color:#fff;background:linear-gradient(135deg,var(--brand) 0%, var(--brand-deep) 100%);
-    cursor:pointer;letter-spacing:-.3px;box-shadow:0 10px 24px rgba(124,92,240,.32);
-    transition:transform .12s, opacity .15s;margin-top:6px}
+  .cta{width:100%;border:none;border-radius:16px;padding:16px;font-size:17px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);cursor:pointer;letter-spacing:-.3px;
+    box-shadow:0 10px 24px rgba(30,58,138,.3);transition:transform .12s, opacity .15s;margin-top:6px}
   .cta:active{transform:translateY(1px)}
   .cta:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
   .note{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:11px}
-  .note b{color:var(--brand-deep)}
-
-  /* success */
+  .note b{color:var(--navy)}
   .success{display:none;text-align:center;padding:8px 4px}
   .success.show{display:block}
   .success .big{font-size:50px}
   .success h2{font-size:21px;margin:10px 0 6px}
   .success p{font-size:14.5px;color:var(--ink-soft);margin:0 0 18px}
-  .yt{display:inline-flex;align-items:center;gap:8px;background:#fff0f3;color:#e0457a;font-weight:700;
-    font-size:14px;text-decoration:none;border-radius:13px;padding:12px 18px;border:1.5px solid #ffd6e0}
-
-  footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:30px;line-height:1.7}
+  .yt{display:inline-flex;align-items:center;gap:8px;background:#fff7e0;color:var(--yellow-deep);font-weight:700;
+    font-size:14px;text-decoration:none;border-radius:13px;padding:12px 18px;border:1.5px solid #ffe9a8}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
-    background:#3a3340;color:#fff;font-size:13.5px;font-weight:600;padding:12px 18px;border-radius:12px;
+    background:#1f2937;color:#fff;font-size:13.5px;font-weight:600;padding:12px 18px;border-radius:12px;
     opacity:0;transition:all .25s;pointer-events:none;max-width:90%;text-align:center;z-index:50}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -121,27 +125,21 @@
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="logo">⚡ 번개 추적기 <span class="badge">무료</span></div>
-  </header>
-
   <section class="hero">
-    <div class="emoji">🐕‍🦺</div>
-    <h1>천둥이 치기 <span class="hl">전에</span><br/>강아지에게 먼저 알려요</h1>
-    <p>기상청이 우리 동네 천둥·낙뢰를 감지하면 폰으로 미리 알림. 천둥소리를 먼저 틀어 공포를 둔감화하세요.</p>
+    <div class="hero-emoji">⚡🐾</div>
+    <h1>Thunder alerts<br/>for dogs who fear storms</h1>
+    <p class="lead">번개 추적기는 천둥번개를 무서워하는 반려견 보호자를 위해 만든 사전 알림 서비스입니다. 갑작스러운 공포를 막을 수는 없어도, 적어도 아무 준비 없이 맞이하지 않도록 돕습니다.</p>
+    <div class="hero-btns">
+      <a class="btn" href="#signup">⚡ 무료로 알림 받기</a>
+      <a class="btn ghost" href="story.html">Read My Story</a>
+    </div>
   </section>
 
-  <div class="steps">
-    <div class="step"><div class="n">1</div><div><b>동네를 등록해요</b><span>현재 위치 버튼 한 번이면 끝</span></div></div>
-    <div class="step"><div class="n">2</div><div><b>기상청이 천둥을 감지하면</b><span>10분마다 우리 동네 낙뢰·소나기 체크</span></div></div>
-    <div class="step"><div class="n">3</div><div><b>폰으로 미리 알림이 와요</b><span>천둥소리를 먼저 틀어 차분하게 적응</span></div></div>
-  </div>
-
-  <div class="card">
+  <div class="card" id="signup">
     <!-- 가입 폼 -->
     <div id="formView">
       <h2>알림 무료로 켜기 🔔</h2>
-      <p class="sub">앱 설치 없이, 이 화면에서 바로 켜집니다.</p>
+      <p class="sub">앱 설치 없이, 이 화면에서 바로 켜집니다. (아이폰은 홈 화면에 추가 후)</p>
 
       <div class="field">
         <label for="dogName">강아지 이름 <span style="color:var(--ink-soft);font-weight:400">(선택)</span></label>
@@ -172,17 +170,45 @@
     </div>
   </div>
 
-  <footer>
-    <nav style="display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin-bottom:12px">
-      <a href="guide.html" style="color:var(--brand-deep);font-weight:600;font-size:13px">도움말</a>
-      <a href="about.html" style="color:var(--brand-deep);font-weight:600;font-size:13px">소개</a>
-      <a href="privacy.html" style="color:var(--brand-deep);font-weight:600;font-size:13px">개인정보처리방침</a>
-      <a href="terms.html" style="color:var(--brand-deep);font-weight:600;font-size:13px">이용약관</a>
-      <a href="contact.html" style="color:var(--brand-deep);font-weight:600;font-size:13px">문의</a>
-    </nav>
-    번개 추적기 · 반려견 천둥 공포 둔감화 알림 서비스<br/>
-    날씨 데이터: 기상청 API · © 2026
-  </footer>
+  <section class="sec">
+    <h2 class="sec-title">Some dogs panic before the first thunder hits</h2>
+    <p>함께 사는 강아지 동탄이는 천둥번개 소리에 크게 놀라는 편이었습니다. 실제 천둥은 단순한 소리만이 아니라 공기의 변화와 긴장감까지 함께 다가오기 때문에, 보호자가 미리 알고 준비하는 것이 중요하다고 느꼈습니다.</p>
+  </section>
+
+  <section class="sec card-soft">
+    <h2 class="sec-title">I built this because my dog needed it</h2>
+    <p>군견의 소음 적응 훈련에서 힌트를 얻어, 집에서는 빗소리와 천둥 영상을 작게 틀어두며 둔감화 연습을 시작했습니다. 하지만 실제 폭우와 천둥은 영상 속 소리와 완전히 같지 않았고, 그래서 저는 "실제 낙뢰가 오기 전에 미리 준비할 수 있는 도구"가 필요하다고 느껴 번개 추적기를 만들었습니다.</p>
+    <a class="link-more" href="story.html">전체 이야기 읽기 →</a>
+  </section>
+
+  <section class="sec">
+    <h2 class="sec-title">Know earlier, prepare earlier</h2>
+    <p>번개 추적기는 주변 낙뢰 신호를 미리 확인할 수 있게 도와줍니다. 보호자는 알림을 바탕으로 실내 환경을 정리하고, 빗소리나 천둥 소리를 활용한 루틴을 준비하고, 반려견이 덜 놀라도록 먼저 대응할 수 있습니다.</p>
+    <div class="mini-cards">
+      <div class="mini"><b>Monitor nearby lightning</b> — 우리 동네 낙뢰·강수를 10분마다 체크</div>
+      <div class="mini"><b>Prepare your dog before the storm</b> — 천둥 전에 미리 준비</div>
+      <div class="mini"><b>Reduce surprise, improve control</b> — 갑작스러운 공포를 줄이기</div>
+    </div>
+    <a class="link-more" href="how.html">작동 방식 자세히 →</a>
+  </section>
+
+  <section class="sec card-soft">
+    <h2 class="sec-title">The night I knew it was working</h2>
+    <p>최근 실제로 비가 많이 오고 천둥번개가 치던 밤, 저는 미리 번개 추적기로 상황을 확인하고 평소보다 조금 더 큰 빗소리·천둥 영상을 틀어두었습니다. 동탄이는 완전히 무서워하지 않은 것은 아니었지만, 아무 대비 없이 천둥을 맞았을 때보다 훨씬 관리 가능한 상태를 유지했고, 그때 이 서비스가 실제로 도움이 된다는 걸 확인했습니다.</p>
+  </section>
+
+  <section class="sec">
+    <h2 class="sec-title">More than a tool</h2>
+    <p>이 사이트는 단순한 알림 도구가 아니라, 천둥을 무서워하는 강아지를 위한 정보와 보호자 가이드를 함께 제공합니다. 반려견의 소음 둔감화, 폭우 전 준비 방법, 천둥 공포 반응 이해 같은 실용적인 콘텐츠를 계속 더해갑니다.</p>
+    <a class="link-more" href="guide.html">도움말 보기 →</a>
+  </section>
+
+  <section class="sec final">
+    <h2 class="sec-title">Help your dog face storms with less fear</h2>
+    <p>천둥을 완전히 없앨 수는 없지만, 미리 알 수 있다면 대처는 달라질 수 있습니다. 번개 추적기는 반려견이 갑작스러운 공포를 조금 더 준비된 상태에서 마주하도록 돕는 서비스입니다.</p>
+    <a class="btn" href="#signup">⚡ 무료로 알림 받기</a>
+  </section>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -190,8 +216,6 @@
 <script>
 /* ============================================================
    번개 추적기 — 가입 화면 로직
-   ⚠️ 백엔드(Supabase/VAPID)는 3단계에서 연결합니다.
-   아래 CONFIG 값이 비어 있으면 "데모 모드"로 동작 (UI만 확인).
    ============================================================ */
 const CONFIG = {
   SUPABASE_URL: "https://pdlohzenslwbiyoxwjom.supabase.co",
@@ -281,13 +305,11 @@ $("ctaBtn").addEventListener("click", async ()=>{
   if(state.nx==null){ toast("먼저 위치를 등록해주세요"); return; }
   $("ctaBtn").disabled=true; $("ctaBtn").textContent="알림 켜는 중…";
 
-  // 1) 알림 권한 (모든 브라우저 공통, 지금도 동작)
   if(!("Notification" in window)){ toast("이 브라우저는 알림을 지원하지 않아요"); resetCta(); return; }
   let perm=Notification.permission;
   if(perm==="default") perm=await Notification.requestPermission();
   if(perm!=="granted"){ toast("알림 권한이 필요해요 🙏"); resetCta(); return; }
 
-  // 2) 웹푸시 구독
   let subscription=null;
   if(CONFIG.VAPID_PUBLIC_KEY && "serviceWorker" in navigator){
     try{
@@ -298,13 +320,9 @@ $("ctaBtn").addEventListener("click", async ()=>{
         applicationServerKey:urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)
       });
     }catch(e){ console.warn("push subscribe 실패:", e); }
-    // 푸시 토큰을 못 받으면 알림을 보낼 수 없으니 성공 처리하지 않음
     if(!subscription){ toast("알림 등록에 실패했어요. 새로고침 후 다시 시도해주세요"); resetCta(); return; }
   }
 
-  // 3) 서버에 저장 — Supabase (2단계)
-  //  ※ 새 publishable 키는 apikey 헤더에만. return=representation(되읽기)은
-  //     SELECT 정책이 없으면 RLS 위반이 나므로 쓰지 않는다.
   const payload={
     dog_name:$("dogName").value.trim()||null,
     lat:state.lat, lon:state.lon, nx:state.nx, ny:state.ny, dong:state.dong,
@@ -325,7 +343,7 @@ $("ctaBtn").addEventListener("click", async ()=>{
     console.log("[데모 모드] 저장될 데이터:", payload);
   }
 
-  // 가입 직후 환영 알림 — 사용자가 "진짜 되네!" 바로 확인 (구독 성공한 경우만)
+  // 가입 직후 환영 알림
   if(subscription){
     try{
       const reg=await navigator.serviceWorker.ready;
@@ -336,10 +354,10 @@ $("ctaBtn").addEventListener("click", async ()=>{
     }catch(e){ console.warn("환영 알림 실패:", e); }
   }
 
-  // 성공 화면
   $("successDog").textContent=$("dogName").value.trim()||"강아지";
   $("formView").style.display="none";
   $("successView").classList.add("show");
+  $("signup").scrollIntoView({behavior:"smooth", block:"start"});
 });
 
 function resetCta(){ $("ctaBtn").disabled=false; $("ctaBtn").textContent="무료로 알림 켜기 🔔"; }
@@ -352,5 +370,6 @@ function urlBase64ToUint8Array(base64String){
   return arr;
 }
 </script>
+<script src="nav.js" defer></script>
 </body>
 </html>
