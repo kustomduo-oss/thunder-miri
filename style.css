@@ -27,7 +27,7 @@ a:hover{text-decoration:underline}
   box-shadow:0 2px 12px rgba(30,58,138,.18)}
 .site-header .inner{max-width:var(--wrap);margin:0 auto;padding:12px 18px;
   display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:18px;letter-spacing:-.4px}
+.brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:18px;letter-spacing:-.4px;white-space:nowrap;flex-shrink:0}
 .brand:hover{text-decoration:none}
 .nav{display:flex;gap:6px;flex-wrap:wrap}
 .nav a{color:#dbe3ff;font-size:14px;font-weight:600;padding:6px 10px;border-radius:8px}
