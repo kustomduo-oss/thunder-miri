@@ -161,7 +161,7 @@ def sb_headers():
 def get_subscribers():
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     params = {
-        "select": "id,dog_name,lat,lon,nx,ny,dong,subscription,last_notified_at",
+        "select": "id,dog_name,lat,lon,nx,ny,dong,subscription,last_notified_at,cooldown_min",
         "active": "eq.true",
     }
     res = requests.get(url, headers=sb_headers(), params=params, timeout=30)
@@ -195,9 +195,11 @@ def cooldown_ok(sub):
     ts = sub.get("last_notified_at")
     if not ts:
         return True
+    # 가입자가 고른 간격(cooldown_min). 없으면 기본 COOLDOWN_MIN(30분)
+    cd = sub.get("cooldown_min") or COOLDOWN_MIN
     try:
         last = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-        return (datetime.now(timezone.utc) - last) > timedelta(minutes=COOLDOWN_MIN)
+        return (datetime.now(timezone.utc) - last) > timedelta(minutes=cd)
     except Exception:
         return True
 

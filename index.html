@@ -93,6 +93,12 @@
   .loc-btn:active{background:#e6edff}
   .or-divider{display:flex;align-items:center;gap:10px;margin:11px 0;color:var(--ink-soft);font-size:12px}
   .or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .iv-row{display:flex;gap:8px}
+  .iv-btn{flex:1;border:1.6px solid var(--line);background:#fff;border-radius:14px;padding:11px 6px;
+    font-size:15px;font-weight:800;color:var(--ink-soft);cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;gap:2px;transition:border-color .15s, background .15s, color .15s}
+  .iv-btn small{font-size:11px;font-weight:600;opacity:.8}
+  .iv-btn.active{border-color:var(--navy);background:#f0f4ff;color:var(--navy)}
   .addr-row{display:flex;gap:8px}
   .addr-row input{flex:1}
   .addr-btn{flex:0 0 auto;border:1.6px solid var(--navy);background:#f0f4ff;color:var(--navy);
@@ -155,6 +161,15 @@
           <button type="button" class="addr-btn" id="addrBtn">검색</button>
         </div>
         <div class="loc-result" id="locResult">✅ <span id="locText">위치 확인됨</span></div>
+      </div>
+
+      <div class="field">
+        <label>알림 간격 <span style="color:var(--ink-soft);font-weight:400">(비가 다가올 때 얼마나 자주)</span></label>
+        <div class="iv-row">
+          <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
+          <button type="button" class="iv-btn active" data-min="20">20분<small>적당</small></button>
+          <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
+        </div>
       </div>
 
       <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
@@ -223,7 +238,7 @@ const CONFIG = {
   VAPID_PUBLIC_KEY: "BDpsQ-TxN1fOcZL5JX863gvyPT5QD78S8k94lIEDFZnhUXdEy_ReIxVGmSLeFRWtjxO4EvECDEdsWfTGADfocHQ" // 공개키 (공개 안전)
 };
 
-const state = { lat:null, lon:null, nx:null, ny:null, dong:null };
+const state = { lat:null, lon:null, nx:null, ny:null, dong:null, cooldown:20 };
 
 /* ---- 기상청 격자 변환 (dfs_xy_conv: lat/lon -> nx/ny) ---- */
 function toGrid(lat, lon){
@@ -281,6 +296,13 @@ $("addrBtn").addEventListener("click", async ()=>{
 });
 $("addrInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); $("addrBtn").click(); } });
 
+/* ---- 알림 간격 선택 (10/20/30분) ---- */
+document.querySelectorAll(".iv-btn").forEach(b=>b.addEventListener("click", ()=>{
+  document.querySelectorAll(".iv-btn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.cooldown = parseInt(b.dataset.min, 10);
+}));
+
 /* ---- 동네 이름 (역지오코딩, 좌표→동네명) ---- */
 async function reverseGeocode(lat, lon){
   try{
@@ -326,6 +348,7 @@ $("ctaBtn").addEventListener("click", async ()=>{
   const payload={
     dog_name:$("dogName").value.trim()||null,
     lat:state.lat, lon:state.lon, nx:state.nx, ny:state.ny, dong:state.dong,
+    cooldown_min:state.cooldown,
     subscription:subscription
   };
   if(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY){
