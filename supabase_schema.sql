@@ -12,12 +12,16 @@ create table if not exists subscribers (
   dong             text,                      -- 동네 이름 (표시용)
   subscription     jsonb,                     -- 웹푸시 구독 객체 (3단계에서 채워짐)
   active           boolean not null default true,
-  last_notified_at timestamptz,               -- 중복 알림 방지용
-  cooldown_min     integer not null default 30 -- 가입자가 고른 알림 간격(분). 10/20/30
+  last_notified_at timestamptz,               -- 강수예보 중복 방지용
+  cooldown_min     integer not null default 30, -- 가입자가 고른 강수예보 간격(분). 10/20/30
+  last_lightning_at    timestamptz,             -- 낙뢰 경보 시각(강수와 별도 추적)
+  last_lightning_level text                     -- 마지막 낙뢰 단계: watch(30km)/warning(10km)
 );
 
 -- 이미 테이블이 있는 경우 칸만 추가 (운영 DB에 적용 완료)
 alter table subscribers add column if not exists cooldown_min integer not null default 30;
+alter table subscribers add column if not exists last_lightning_at timestamptz;
+alter table subscribers add column if not exists last_lightning_level text;
 
 -- 같은 격자끼리 묶어 조회할 때 빠르게
 create index if not exists idx_subscribers_grid on subscribers (nx, ny) where active;

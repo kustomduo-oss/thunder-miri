@@ -34,8 +34,12 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").st
 
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "10"))  # 10km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "30"))      # 30km 이내: 접근
-COOLDOWN_MIN = int(os.environ.get("COOLDOWN_MIN", "30"))              # 같은 구독자 재알림 최소 간격(분)
+COOLDOWN_MIN = int(os.environ.get("COOLDOWN_MIN", "30"))              # 강수예보 기본 간격(가입자 미선택 시)
+LIGHTNING_COOLDOWN_MIN = int(os.environ.get("LIGHTNING_COOLDOWN_MIN", "30"))  # 낙뢰: 같은 단계 유지 시 간격(분). 단계 상승은 즉시
 RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "1"))  # 초단기예보 최소 단위 = 1시간
+
+# 낙뢰 단계 순위 (높을수록 위급). 단계가 올라가면 쿨다운 무시하고 즉시 발송
+LIGHTNING_RANK = {"watch": 1, "warning": 2}
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 
 PTY_TEXT = {0: "강수 없음", 1: "비", 2: "비/눈", 3: "눈", 5: "빗방울", 6: "빗방울/눈날림", 7: "눈날림"}
@@ -161,7 +165,7 @@ def sb_headers():
 def get_subscribers():
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     params = {
-        "select": "id,dog_name,lat,lon,nx,ny,dong,subscription,last_notified_at,cooldown_min",
+        "select": "id,dog_name,lat,lon,nx,ny,dong,subscription,last_notified_at,cooldown_min,last_lightning_at,last_lightning_level",
         "active": "eq.true",
     }
     res = requests.get(url, headers=sb_headers(), params=params, timeout=30)
@@ -171,6 +175,7 @@ def get_subscribers():
 
 
 def mark_notified(sub_id):
+    """강수예보 알림 시각 갱신"""
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     now = datetime.now(timezone.utc).isoformat()
     try:
@@ -178,6 +183,27 @@ def mark_notified(sub_id):
                        json={"last_notified_at": now}, timeout=15)
     except Exception as e:
         print(f"[last_notified 갱신 실패] {e}")
+
+
+def mark_lightning(sub_id, level):
+    """낙뢰 경보 시각·단계 갱신"""
+    url = f"{SUPABASE_URL}/rest/v1/subscribers"
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        requests.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
+                       json={"last_lightning_at": now, "last_lightning_level": level}, timeout=15)
+    except Exception as e:
+        print(f"[last_lightning 갱신 실패] {e}")
+
+
+def reset_lightning(sub_id):
+    """낙뢰가 사라지면 단계 리셋 → 다음 천둥 때 다시 즉시 알림"""
+    url = f"{SUPABASE_URL}/rest/v1/subscribers"
+    try:
+        requests.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
+                       json={"last_lightning_level": None}, timeout=15)
+    except Exception as e:
+        print(f"[last_lightning 리셋 실패] {e}")
 
 
 def deactivate(sub_id):
@@ -192,6 +218,7 @@ def deactivate(sub_id):
 
 
 def cooldown_ok(sub):
+    """강수예보 발송 가능 여부 — 가입자가 고른 간격(cooldown_min) 적용"""
     ts = sub.get("last_notified_at")
     if not ts:
         return True
@@ -200,6 +227,23 @@ def cooldown_ok(sub):
     try:
         last = datetime.fromisoformat(ts.replace("Z", "+00:00"))
         return (datetime.now(timezone.utc) - last) > timedelta(minutes=cd)
+    except Exception:
+        return True
+
+
+def lightning_should_send(sub, cur_level):
+    """낙뢰 경보 발송 여부 (가입자 간격과 독립).
+    단계가 올라가면(접근→임박, 또는 처음 감지) 즉시,
+    같은 단계가 이어지면 LIGHTNING_COOLDOWN_MIN(기본 30분) 간격."""
+    prev_level = sub.get("last_lightning_level")
+    if LIGHTNING_RANK[cur_level] > LIGHTNING_RANK.get(prev_level, 0):
+        return True  # 단계 상승(또는 처음) → 즉시
+    ts = sub.get("last_lightning_at")
+    if not ts:
+        return True
+    try:
+        last = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        return (datetime.now(timezone.utc) - last) > timedelta(minutes=LIGHTNING_COOLDOWN_MIN)
     except Exception:
         return True
 
@@ -258,8 +302,7 @@ def run_once():
     print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 격자 {len(grids)}곳 확인")
 
     for (nx, ny), g in grids.items():
-        # 1) 낙뢰
-        alert_type = None
+        # 1) 낙뢰 거리 → 단계(none/watch/warning) — 예보가 아니라 '실측' 기반
         nearest = None
         for it in fetch_lightning_data(g["lat"], g["lon"], WATCH_RADIUS_KM):
             try:
@@ -268,34 +311,53 @@ def run_once():
                 continue
             if nearest is None or d < nearest:
                 nearest = d
+        lightning_level = None
         if nearest is not None:
             if nearest <= WARNING_RADIUS_KM:
-                alert_type = "warning"
+                lightning_level = "warning"   # 10km 이내: 임박
             elif nearest <= WATCH_RADIUS_KM:
-                alert_type = "watch"
+                lightning_level = "watch"      # 30km 이내: 접근
 
-        # 2) 낙뢰 없으면 소나기 예보(1시간 이내)
-        fc = None
-        if alert_type is None:
-            fc = fetch_forecast(nx, ny)
+        # 2) 강수 예보(1시간 이내) — 낙뢰 없을 때만 확인(천둥이 우선)
+        fc = fetch_forecast(nx, ny) if lightning_level is None else None
 
-        if alert_type is None and fc is None:
+        if lightning_level is None and fc is None:
             print(f"  격자({nx},{ny}) {g.get('dong') or ''}: 천둥/소나기 없음")
+            # 낙뢰가 사라졌으니 단계 리셋 → 다음 천둥 때 다시 즉시 알림
+            for s in g["subs"]:
+                if s.get("last_lightning_level"):
+                    reset_lightning(s["id"])
             continue
 
-        kind = alert_type or "forecast"
-        print(f"  격자({nx},{ny}) {g.get('dong') or ''}: {kind} 감지 → {len(g['subs'])}명에게 발송")
+        print(f"  격자({nx},{ny}) {g.get('dong') or ''}: "
+              f"낙뢰={lightning_level or '없음'} / 예보={'비' if fc else '없음'} → {len(g['subs'])}명 처리")
 
         for s in g["subs"]:
-            if not cooldown_ok(s):
-                continue
             dog = s.get("dog_name") or "강아지"
-            title, body = build_message(alert_type or "forecast", dog, fc)
-            ok, status = send_web_push(s["subscription"], title, body)
-            if ok:
-                mark_notified(s["id"])
-            elif status in (404, 410):
-                deactivate(s["id"])
+
+            # --- ⚡ 낙뢰 경보: 가입자 간격과 독립, 무조건 ---
+            if lightning_level:
+                if lightning_should_send(s, lightning_level):
+                    title, body = build_message(lightning_level, dog)
+                    ok, status = send_web_push(s["subscription"], title, body)
+                    if ok:
+                        mark_lightning(s["id"], lightning_level)
+                    elif status in (404, 410):
+                        deactivate(s["id"])
+                continue  # 천둥 상황에선 강수예보 알림은 보내지 않음(천둥이 우선)
+
+            # 낙뢰 없음 → 단계 리셋
+            if s.get("last_lightning_level"):
+                reset_lightning(s["id"])
+
+            # --- 🌧 강수 예보: 가입자가 고른 간격(10/20/30분) ---
+            if fc and cooldown_ok(s):
+                title, body = build_message("forecast", dog, fc)
+                ok, status = send_web_push(s["subscription"], title, body)
+                if ok:
+                    mark_notified(s["id"])
+                elif status in (404, 410):
+                    deactivate(s["id"])
 
 
 # ----------------------------------------------------------------

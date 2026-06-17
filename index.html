@@ -99,6 +99,13 @@
     align-items:center;gap:2px;transition:border-color .15s, background .15s, color .15s}
   .iv-btn small{font-size:11px;font-weight:600;opacity:.8}
   .iv-btn.active{border-color:var(--navy);background:#f0f4ff;color:var(--navy)}
+  .iv-note{font-size:12px;color:var(--ink-soft);margin:9px 2px 0;line-height:1.55}
+  .iv-note b{color:var(--navy)}
+  .radar-link{display:block;background:linear-gradient(135deg,#eef2ff,#f0f9ff);border:1.5px solid #d4e0ff;
+    border-radius:18px;padding:15px 20px;margin:14px 0 0;text-decoration:none;color:var(--navy);
+    font-weight:800;font-size:15px;transition:transform .12s, box-shadow .12s}
+  .radar-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(30,58,138,.12)}
+  .radar-link span{display:block;margin-top:4px;font-weight:600;font-size:12.5px;color:var(--ink-soft)}
   .addr-row{display:flex;gap:8px}
   .addr-row input{flex:1}
   .addr-btn{flex:0 0 auto;border:1.6px solid var(--navy);background:#f0f4ff;color:var(--navy);
@@ -170,6 +177,7 @@
           <button type="button" class="iv-btn active" data-min="20">20분<small>적당</small></button>
           <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
         </div>
+        <p class="iv-note">⚡ <b>천둥(낙뢰) 경보</b>는 위급해서 이 간격과 상관없이 <b>항상 즉시</b> 알려드려요. 위 간격은 <b>비 예보</b>에만 적용돼요.</p>
       </div>
 
       <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
@@ -182,8 +190,11 @@
       <h2>알림이 켜졌어요!</h2>
       <p>이제 천둥이 다가오면 <b id="successDog">강아지</b>를 위해 미리 알려드릴게요.</p>
       <a class="yt" href="https://youtu.be/lpi6gd1H0Ok" target="_blank" rel="noopener">▶ 천둥소리 둔감화 영상 미리 듣기</a>
+      <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/lgt.do" target="_blank" rel="noopener" style="text-align:left">🛰️ 실시간 비구름·낙뢰 레이더 보기<span>기상청 초단기 강수예측 — 비구름 이동·낙뢰를 직접 확인</span></a>
     </div>
   </div>
+
+  <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/lgt.do" target="_blank" rel="noopener">🛰️ 실시간 비구름·낙뢰 레이더 보기<span>기상청 초단기 강수예측 — 비구름 이동과 낙뢰를 직접 눈으로 확인할 수 있어요</span></a>
 
   <section class="sec">
     <h2 class="sec-title">천둥이 치기 전부터 겁먹는 강아지들</h2>
