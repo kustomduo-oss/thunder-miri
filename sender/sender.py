@@ -270,13 +270,14 @@ def send_web_push(subscription, title, body, url=THUNDER_SOUND_URL):
 # ----------------------------------------------------------------
 # 메시지 문구
 # ----------------------------------------------------------------
-def build_message(alert_type, dog, fc=None):
+def build_message(alert_type, dog, fc=None, dist=None):
+    km = round(dist) if dist is not None else None
     if alert_type == "warning":
-        return (f"🐾⚡ 천둥 코앞 — {dog} 옆에 있어줘!",
-                f"곧 진짜 천둥이 칠 수 있어요. 천둥소리 볼륨 올리고 {dog} 안심시켜주세요.")
+        return (f"🐾⚡ 천둥 코앞 (약 {km}km)",
+                f"약 {km}km 거리까지 낙뢰가 왔어요! 천둥소리 볼륨 올리고 {dog} 안심시켜주세요.")
     if alert_type == "watch":
-        return (f"🐾 천둥 접근 중 — {dog} 적응 타임!",
-                f"진짜 천둥 오기 전에 천둥소리부터 틀어 {dog}가 미리 익숙해지게 🎧")
+        return (f"🐾 천둥 접근 중 (약 {km}km)",
+                f"약 {km}km 거리에서 낙뢰 감지. 진짜 천둥 오기 전에 천둥소리 미리 틀어 {dog}가 익숙해지게 🎧")
     # forecast
     eta = fc["time"].strftime("%H:%M")
     return (f"🐾🌧 곧 비 올 듯 — {dog} 적응 준비!",
@@ -338,7 +339,7 @@ def run_once():
             # --- ⚡ 낙뢰 경보: 가입자 간격과 독립, 무조건 ---
             if lightning_level:
                 if lightning_should_send(s, lightning_level):
-                    title, body = build_message(lightning_level, dog)
+                    title, body = build_message(lightning_level, dog, dist=nearest)
                     ok, status = send_web_push(s["subscription"], title, body)
                     if ok:
                         mark_lightning(s["id"], lightning_level)
