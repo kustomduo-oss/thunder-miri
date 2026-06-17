@@ -36,7 +36,7 @@ WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "10"))  # 10km 이
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "30"))      # 30km 이내: 접근
 COOLDOWN_MIN = int(os.environ.get("COOLDOWN_MIN", "30"))              # 강수예보 기본 간격(가입자 미선택 시)
 LIGHTNING_COOLDOWN_MIN = int(os.environ.get("LIGHTNING_COOLDOWN_MIN", "30"))  # 낙뢰: 같은 단계 유지 시 간격(분). 단계 상승은 즉시
-RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "1"))  # 초단기예보 최소 단위 = 1시간
+RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "3"))  # 앞으로 N시간 내 강수예보를 봄(시야 범위). 10분마다 재확인하며 가까워질수록 정확해짐
 
 # 낙뢰 단계 순위 (높을수록 위급). 단계가 올라가면 쿨다운 무시하고 즉시 발송
 LIGHTNING_RANK = {"watch": 1, "warning": 2}
