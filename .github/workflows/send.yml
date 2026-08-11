@@ -1,7 +1,7 @@
 name: thunder-miri-sender
 
 on:
-  # 정기 실행은 cron-job.org에서 workflow_dispatch API를 10분마다 호출합니다.
+  # 정기 실행은 cron-job.org에서 workflow_dispatch API를 5분마다 호출합니다.
   # GitHub 내장 schedule을 함께 사용하면 중복 발송될 수 있으므로 두지 않습니다.
   workflow_dispatch:          # 버튼 또는 cron-job.org에서 실행 (mode 선택 가능)
     inputs:
