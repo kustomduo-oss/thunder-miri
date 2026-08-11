@@ -132,31 +132,29 @@ QPF_URL = "https://apihub.kma.go.kr/api/typ03/cgi/dfs/nph-qpf_ana_img"
 QPF_STEPS = [int(x) for x in os.environ.get("QPF_STEPS", "30,60,90,120,150,180,240,300,360").split(",")]
 
 
-def build_forecast():
-    """예측 프레임들을 받아 Storage에 올리고 목록(JSON)을 만든다."""
+def build_forecast(lat, lon, key):
+    """예측 프레임을 '우리 동네 투명 오버레이'로 만들어 Storage에 올린다.
+    관측 레이더와 같은 범위·같은 방식이라 지도 위에서 이어서 볼 수 있다."""
     now = datetime.now()
     base = None
-    frames = []
-
-    # 자료 기준시각을 조금 거슬러가며 유효한 것을 찾는다(최신은 아직 없을 수 있음)
     for back in (30, 40, 50, 70):
         t = now - timedelta(minutes=back)
         stamp = t.replace(minute=(t.minute // 10) * 10, second=0)
-        probe = _qpf_image(stamp, QPF_STEPS[0])
-        if probe:
+        if _qpf_image(stamp, QPF_STEPS[0], map_code="HB"):
             base = stamp
             break
     if base is None:
         print("[예측] 사용 가능한 예측 자료 없음")
         return None
 
+    frames, bounds = [], None
     for ef in QPF_STEPS:
-        png = _qpf_image(base, ef)
+        png, bnd = _qpf_overlay(base, ef, lat, lon)
         if not png:
             continue
-        name = f"qpf_{ef}.png"
-        url = upload(name, png, "image/png")
+        url = upload(f"{key}_qpf_{ef}.png", png, "image/png")
         if url:
+            bounds = bnd
             frames.append({
                 "ef": ef,
                 "valid_at": (base + timedelta(minutes=ef)).isoformat(),
@@ -165,20 +163,78 @@ def build_forecast():
 
     meta = {
         "base_time": base.isoformat(),
+        "bounds": bounds,
         "frames": frames,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    upload("forecast.json", json.dumps(meta, ensure_ascii=False).encode("utf-8"), "application/json")
-    print(f"[예측] {base:%H:%M} 기준 {len(frames)}개 프레임 생성 (+{QPF_STEPS[0]}~+{QPF_STEPS[-1]}분)")
+    upload(f"{key}_forecast.json", json.dumps(meta, ensure_ascii=False).encode("utf-8"), "application/json")
+    print(f"[예측] {base:%H:%M} 기준 {len(frames)}개 오버레이 생성 (+{QPF_STEPS[0]}~+{QPF_STEPS[-1]}분)")
     return meta
 
 
-def _qpf_image(base, ef):
+ments_note = """QPF 이미지 좌표 (실측으로 확정, 2026-08-11)
+  map=HB, legend=0, size=600 → 600 x 770 PNG
+  20행·769행이 지도 테두리선 → 지도영역 = rows 20..769(750px) x cols 0..599(600px)
+  이 영역이 레이더 HB 격자(2305x2881 x 0.5km = 1152.5 x 1440.5km)와 동일.
+  검증: 서울·부산·울릉도는 해안선 위, 서해/동해 먼바다는 빈 곳으로 정확히 떨어짐."""
+
+QPF_TOP, QPF_MAPH, QPF_W = 20, 750, 600
+HB_X_KM, HB_Y_KM = 2305 * GRID_KM, 2881 * GRID_KM     # 1152.5 x 1440.5 km
+
+
+def _qpf_overlay(base, ef, lat, lon):
+    """예측 PNG에서 '비 색깔'만 남긴 투명 오버레이를 만든다.
+    기상청 그림엔 해안선·배경이 그려져 있는데, 유채색(비)만 골라내면
+    우리 지도 위에 그대로 겹칠 수 있다."""
+    png = _qpf_image(base, ef, map_code="HB")
+    if not png:
+        return None, None
+    src = np.array(Image.open(io.BytesIO(png)).convert("RGB")).astype(int)
+    if src.shape[0] < QPF_TOP + QPF_MAPH:
+        return None, None
+    area = src[QPF_TOP:QPF_TOP + QPF_MAPH, :QPF_W]     # 테두리 안쪽 지도만
+
+    # 우리 동네 상자를 이미지 픽셀 범위로 환산
+    cx, cy = _fwd.transform(lon, lat)
+    def col_of(x): return (x + HB_X_KM / 2) / HB_X_KM * QPF_W
+    def row_of(y): return (HB_Y_KM / 2 - y) / HB_Y_KM * QPF_MAPH
+    c0, c1 = int(round(col_of(cx - CROP_KM))), int(round(col_of(cx + CROP_KM)))
+    r0, r1 = int(round(row_of(cy + CROP_KM))), int(round(row_of(cy - CROP_KM)))
+    c0, c1 = max(0, c0), min(QPF_W, c1)
+    r0, r1 = max(0, r0), min(QPF_MAPH, r1)
+    if c1 - c0 < 4 or r1 - r0 < 4:
+        return None, None
+    sub = area[r0:r1, c0:c1]
+
+    # 유채색(채도 높은 픽셀) = 강수. 흰 배경·회색 해안선은 버린다.
+    mx, mn = sub.max(axis=2), sub.min(axis=2)
+    rain = (mx - mn) > 30
+    rgba = np.zeros((sub.shape[0], sub.shape[1], 4), dtype=np.uint8)
+    rgba[rain, :3] = sub[rain]
+    rgba[rain, 3] = 205
+
+    img = Image.fromarray(rgba, "RGBA").resize((OUT_PX, OUT_PX), Image.NEAREST)
+
+    # 잘라낸 영역의 실제 위경도 범위
+    x0 = c0 / QPF_W * HB_X_KM - HB_X_KM / 2
+    x1 = c1 / QPF_W * HB_X_KM - HB_X_KM / 2
+    y1 = HB_Y_KM / 2 - r0 / QPF_MAPH * HB_Y_KM
+    y0 = HB_Y_KM / 2 - r1 / QPF_MAPH * HB_Y_KM
+    lon0, lat0 = _inv.transform(x0, y0)
+    lon1, lat1 = _inv.transform(x1, y1)
+    bounds = {"south": lat0, "west": lon0, "north": lat1, "east": lon1}
+
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue(), bounds
+
+
+def _qpf_image(base, ef, map_code="HR"):
     """예측 이미지 1장. 실패하거나 내용이 없으면 None."""
     try:
         res = requests.get(QPF_URL, params={
             "eva": 2, "tm": base.strftime("%Y%m%d%H%M"), "qpf": "B", "ef": ef,
-            "map": "HR", "grid": 2, "legend": 1, "size": 600,
+            "map": map_code, "grid": 2, "legend": 0 if map_code == "HB" else 1, "size": 600,
             "zoom_level": 0, "zoom_x": 0, "zoom_y": 0, "authKey": KMA_API_KEY,
         }, timeout=90)
         # 정상은 PNG. 내용이 거의 없는 빈 프레임(수백 바이트)은 버린다.
@@ -314,13 +370,12 @@ if __name__ == "__main__":
         print("[레이더] 자료 수신 실패")
         raise SystemExit(1)
 
-    # 미래 강수예측 프레임 (전국 공통이라 한 번만)
-    try:
-        build_forecast()
-    except Exception as e:
-        print(f"[예측] 생성 실패(무시하고 계속): {e}")
-
     for (gx, gy), s in grids.items():
+        try:
+            build_forecast(s["lat"], s["lon"], f"{gx}_{gy}")
+        except Exception as e:
+            print(f"[예측] 생성 실패(무시하고 계속): {e}")
+
         strikes = []
         for it in sender.fetch_lightning_data(s["lat"], s["lon"], sender.WATCH_RADIUS_KM):
             try:

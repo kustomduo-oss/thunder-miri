@@ -68,11 +68,6 @@
     <div id="map"></div>
     <div id="emptyMsg" class="radar-empty" style="display:none"></div>
 
-    <!-- 예측 구간에서만 보이는 기상청 예측 그림 -->
-    <div class="fc-stage" id="fcStage" hidden>
-      <img id="fcImg" alt="초단기 강수예측" />
-    </div>
-
     <!-- 과거 관측 → 지금 → 미래 예측을 하나로 잇는 타임바 -->
     <div class="tl">
       <button type="button" id="tlPlay" class="fc-btn" aria-label="재생">▶</button>
@@ -241,15 +236,14 @@ function tlShow(i) {
   const gap = Math.round((f.at.getTime() - Date.now()) / 60000);
   $("tlLabel").textContent = `${fmtClock(f.at)} (${fmtGap(gap)})`;
 
-  if (f.kind === "obs") {
-    $("fcStage").hidden = true;
-    if (overlay) overlay.setUrl(f.image);          // 지도 위 레이더만 교체
-    $("tlKind").innerHTML = "<b>관측</b> · 실제로 내린 비입니다. 지도를 확대·이동할 수 있어요.";
-  } else {
-    $("fcStage").hidden = false;
-    $("fcImg").src = f.image;
-    $("tlKind").innerHTML = "<b>예측</b> · 기상청 초단기 강수예측(앞으로 올 비)입니다. 전국 범위로 표시됩니다.";
+  /* 관측·예측 모두 같은 지도 위 오버레이라 프레임만 갈아끼우면 된다 */
+  if (overlay) {
+    if (f.bounds) overlay.setBounds([[f.bounds.south, f.bounds.west], [f.bounds.north, f.bounds.east]]);
+    overlay.setUrl(f.image);
   }
+  $("tlKind").innerHTML = f.kind === "obs"
+    ? "<b>관측</b> · 실제로 내린 비입니다."
+    : "<b>예측</b> · 기상청 초단기 강수예측(앞으로 올 비)입니다.";
 }
 
 function tlStop() { clearInterval(tlTimer); tlTimer = null; $("tlPlay").textContent = "▶"; }
@@ -271,15 +265,15 @@ function buildTimeline(obsMeta, fcMeta) {
   (obsMeta?.past || []).forEach((p) => {
     const s = p.stamp;   // YYYYMMDDHHMM
     const at = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8), +s.slice(8, 10), +s.slice(10, 12));
-    items.push({ kind: "obs", at, image: p.image });
+    items.push({ kind: "obs", at, image: p.image, bounds: obsMeta.bounds });
   });
   if (!items.length && obsMeta) {
-    items.push({ kind: "obs", at: new Date(obsMeta.observed_at), image: obsMeta.image });
+    items.push({ kind: "obs", at: new Date(obsMeta.observed_at), image: obsMeta.image, bounds: obsMeta.bounds });
   }
   nowIdx = Math.max(0, items.length - 1);
 
   (fcMeta?.frames || []).forEach((f) => {
-    items.push({ kind: "fcst", at: new Date(f.valid_at), image: f.image, ef: f.ef });
+    items.push({ kind: "fcst", at: new Date(f.valid_at), image: f.image, ef: f.ef, bounds: fcMeta.bounds });
   });
 
   items.sort((a, b) => a.at - b.at);
@@ -295,7 +289,7 @@ function buildTimeline(obsMeta, fcMeta) {
 
 async function loadForecast() {
   try {
-    const res = await fetch(`${CONFIG.RADAR_BASE}/forecast.json?t=${Date.now()}`);
+    const res = await fetch(`${CONFIG.RADAR_BASE}/${myGrid()}_forecast.json?t=${Date.now()}`);
     if (!res.ok) throw new Error(res.status);
     lastFcMeta = await res.json();
   } catch (e) {
