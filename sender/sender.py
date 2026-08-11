@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-번개 추적기 — 발송 엔진
+동탄이네 천둥번개 알림이 — 발송 엔진
 GitHub Actions에서 10분마다 실행. 동작 순서:
   1) Supabase에서 구독자(동네·격자·웹푸시토큰) 읽기
   2) 같은 격자끼리 묶어 기상청에 천둥/낙뢰·소나기 조회 (API 절약)
@@ -271,17 +271,19 @@ def send_web_push(subscription, title, body, url=THUNDER_SOUND_URL):
 # 메시지 문구
 # ----------------------------------------------------------------
 def build_message(alert_type, dog, fc=None, dist=None):
+    """알림은 '준비를 시작하라는 신호'.
+    훈련·적응·치료를 지시하지 않는다(보호자가 평소 정해둔 대응을 하도록)."""
     km = round(dist) if dist is not None else None
     if alert_type == "warning":
-        return (f"🐾⚡ 천둥 코앞 (약 {km}km)",
-                f"약 {km}km 거리까지 낙뢰가 왔어요! 천둥소리 볼륨 올리고 {dog} 안심시켜주세요.")
+        return (f"🐾⚡ 천둥 임박 (약 {km}km)",
+                f"약 {km}km 거리에서 낙뢰가 관측됐어요. 지금 {dog} 곁에서 평소 준비한 대응을 시작하세요.")
     if alert_type == "watch":
-        return (f"🐾 천둥 접근 중 (약 {km}km)",
-                f"약 {km}km 거리에서 낙뢰 감지. 진짜 천둥 오기 전에 천둥소리 미리 틀어 {dog}가 익숙해지게 🎧")
+        return (f"🐾 천둥 접근 (약 {km}km)",
+                f"약 {km}km 거리에서 낙뢰가 관측됐어요. {dog}를 위한 준비를 시작할 시간입니다.")
     # forecast
     eta = fc["time"].strftime("%H:%M")
-    return (f"🐾🌧 곧 비 올 듯 — {dog} 적응 준비!",
-            f"약 {fc['mins']}분 뒤({eta}쯤) {fc['pty_text']} 예보. 미리 천둥소리 틀어두세요 🎧")
+    return (f"🐾🌧 비 예보 (약 {fc['mins']}분 뒤)",
+            f"{eta}쯤 {fc['pty_text']} 예보. {dog}를 위해 미리 준비해두세요.")
 
 
 # ----------------------------------------------------------------
@@ -371,7 +373,7 @@ def run_test():
         dog = s.get("dog_name") or "강아지"
         ok, status = send_web_push(
             s["subscription"],
-            "🐾 번개 추적기 테스트",
+            "🐾 동탄이네 천둥번개 알림이 테스트",
             f"{dog} 알림 연결 성공! 천둥이 오면 이렇게 미리 알려드릴게요.",
         )
         print(f"  {s.get('dong') or s['id'][:8]}: {'성공' if ok else f'실패({status})'}")
@@ -400,7 +402,7 @@ if __name__ == "__main__":
     KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY).strip()
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY).strip()
 
-    parser = argparse.ArgumentParser(description="번개 추적기 발송 엔진")
+    parser = argparse.ArgumentParser(description="동탄이네 천둥번개 알림이 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
     args = parser.parse_args()

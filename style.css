@@ -1,14 +1,14 @@
-/* 번개 추적기 — 공유 스타일 (콘텐츠/정책 페이지 공통)
+/* 동탄이네 천둥번개 알림이 — 공유 스타일 (콘텐츠/정책 페이지 공통)
    디자인 수정은 주로 이 파일에서 한다. */
 :root{
-  --navy:#1e3a8a;
-  --navy-deep:#172e6e;
-  --yellow:#ffd54a;
-  --yellow-deep:#f2b705;
-  --ink:#1f2937;
-  --ink-soft:#5b6472;
-  --line:#e7eaf0;
-  --bg:#f7f8fb;
+  --navy:#0879b9;
+  --navy-deep:#07547d;
+  --yellow:#f1c651;
+  --yellow-deep:#c8930d;
+  --ink:#102334;
+  --ink-soft:#5a7181;
+  --line:#d7e4eb;
+  --bg:#f4f8fb;
   --card:#ffffff;
   --radius:16px;
   --wrap:760px;
@@ -23,24 +23,28 @@ a{color:var(--navy);text-decoration:none}
 a:hover{text-decoration:underline}
 
 /* 헤더 */
-.site-header{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;
-  box-shadow:0 2px 12px rgba(30,58,138,.18)}
+.site-header{position:sticky;top:0;z-index:100;background:#0e2e42;color:#fff;
+  box-shadow:0 2px 14px rgba(7,42,62,.2)}
 .site-header .inner{max-width:var(--wrap);margin:0 auto;padding:12px 18px;
   display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:18px;letter-spacing:-.4px;white-space:nowrap;flex-shrink:0}
 .brand:hover{text-decoration:none}
-.nav{display:flex;gap:6px;flex-wrap:wrap}
-.nav a{color:#dbe3ff;font-size:14px;font-weight:600;padding:6px 10px;border-radius:8px}
+.brand-mark{display:grid;place-items:center;width:25px;height:25px;border-radius:6px;background:var(--yellow);color:#173144;font-weight:900}
+.brand-short{display:none}
+.nav{display:flex;gap:6px;flex-wrap:wrap;-ms-overflow-style:none;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:0 0 auto;color:#dbe3ff;font-size:14px;font-weight:600;padding:6px 10px;border-radius:8px;white-space:nowrap}
 .nav a:hover{background:rgba(255,255,255,.12);color:#fff;text-decoration:none}
-.nav a.cta{background:var(--yellow);color:var(--navy-deep)}
+.nav a.cta{background:var(--yellow);color:#173144}
 .nav a.cta:hover{background:var(--yellow-deep);color:#000}
+.menu-toggle{display:none;border:1px solid rgba(255,255,255,.32);border-radius:8px;background:transparent;color:#fff;font:inherit;font-size:13px;font-weight:800;padding:7px 11px;cursor:pointer}
 
 /* 본문 */
 main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .page-title{font-size:28px;font-weight:800;letter-spacing:-.6px;margin:6px 0 4px}
 .page-sub{color:var(--ink-soft);font-size:15px;margin:0 0 26px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:26px 24px;box-shadow:0 6px 20px rgba(30,58,138,.05);margin-bottom:18px}
+  padding:26px 24px;box-shadow:0 8px 24px rgba(20,76,104,.06);margin-bottom:18px}
 .card h2{font-size:20px;margin:26px 0 10px;letter-spacing:-.3px}
 .card h2:first-child{margin-top:0}
 .card h3{font-size:16.5px;margin:20px 0 6px}
@@ -77,3 +81,62 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .footer-nav a{color:var(--ink-soft);font-size:13.5px;font-weight:600}
 .footer-brand{font-weight:800;color:var(--navy);margin-bottom:4px}
 .footer-copy{color:var(--ink-soft);font-size:12.5px;line-height:1.7}
+
+/* 기상 시그널 콘텐츠 페이지 */
+.story-page,.research-page{max-width:860px}
+.story-title{max-width:760px;font-size:clamp(34px,6vw,56px);line-height:1.13;letter-spacing:-1.6px}
+.story-sub{max-width:720px;font-size:17px}
+.story-card{padding:12px 38px 38px}
+.story-card section{padding:32px 0;border-bottom:1px solid var(--line)}
+.story-card section:last-of-type{border-bottom:0}
+.story-card h2{margin:2px 0 14px;font-size:26px}
+.story-card p{font-size:16px;line-height:1.85}
+.story-number{margin:0!important;color:var(--navy)!important;font-size:12px!important;font-weight:800;letter-spacing:.1em}
+.story-card blockquote{margin:24px 0 0;padding:18px 20px;border-left:4px solid var(--yellow);background:#fff8df;color:var(--ink);font-size:20px;font-weight:800;line-height:1.55}
+.source-inline{display:inline-block;margin-top:3px;font-weight:800}
+.story-actions,.research-actions,.button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.btn.outline{background:#fff;color:var(--navy);border:1px solid #a9c9d9;box-shadow:none}
+
+.research-warning{margin:28px 0 34px;border-color:#e6cd70;background:#fff8df}
+.source-group{margin:0 0 46px}
+.source-heading{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:start;margin-bottom:16px}
+.source-heading>span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#e4f2f8;color:var(--navy);font-size:13px;font-weight:800}
+.source-heading h2{margin:0 0 5px;font-size:25px;letter-spacing:-.4px}
+.source-heading p{margin:0;color:var(--ink-soft)}
+.source-card{margin:0 0 12px;padding:23px 24px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 7px 20px rgba(20,76,104,.05)}
+.source-card.featured{border-left:4px solid var(--navy)}
+.source-card h3{margin:5px 0 9px;font-size:18px;line-height:1.5}
+.source-card p{margin:0 0 10px;color:#405767;font-size:15px;line-height:1.75}
+.source-card a{font-size:14px;font-weight:800}
+.source-type{color:var(--navy);font-size:12px;font-weight:800}
+.source-limit{margin:12px 4px;color:var(--ink-soft);font-size:14px;line-height:1.7}
+.claim-boundaries{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.claim-boundaries div{display:grid;gap:6px;padding:20px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.claim-boundaries strong{color:var(--ink)}
+.claim-boundaries span{color:var(--ink-soft);font-size:14px;line-height:1.6}
+
+.signal-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:22px 0 28px;border:1px solid var(--line);border-radius:12px;background:var(--line);overflow:hidden}
+.signal-stat-row div{display:grid;gap:3px;padding:20px;background:#fff;text-align:center}
+.signal-stat-row strong{color:var(--navy);font-size:28px}
+.signal-stat-row span{color:var(--ink-soft);font-size:13px;font-weight:700}
+.how-list{margin-bottom:22px}
+.step-kicker{display:inline-block;margin-bottom:7px;color:var(--navy);font-size:12px;font-weight:800;letter-spacing:.08em}
+
+@media(max-width:650px){
+  .site-header .inner{position:relative;min-height:52px;padding:9px 16px;align-items:center;flex-direction:row}
+  .brand{font-size:16px}
+  .brand-mark{width:24px;height:24px}
+  .brand-full{display:none}
+  .brand-short{display:inline}
+  .menu-toggle{display:inline-flex;align-items:center;justify-content:center}
+  .nav{position:absolute;top:calc(100% + 1px);left:12px;right:12px;width:auto;display:none;flex-direction:column;gap:2px;padding:9px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 36px rgba(7,42,62,.2)}
+  .nav.nav-open{display:flex}
+  .nav a{width:100%;padding:10px 12px;color:var(--ink);font-size:14px}
+  .nav a:hover{background:var(--bg);color:var(--navy)}
+  .nav a.cta{display:none}
+  .story-card{padding:4px 20px 24px}
+  .story-card blockquote{font-size:17px}
+  .claim-boundaries{grid-template-columns:1fr}
+  .signal-stat-row{grid-template-columns:1fr}
+  .signal-stat-row div{display:flex;align-items:center;justify-content:space-between;padding:13px 17px}
+}

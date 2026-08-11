@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>동탄이네 천둥번개 알림이 — 천둥 전에 준비할 시간을 알려드려요</title>
-  <meta name="description" content="우리 동네에 낙뢰가 다가오면 미리 알려, 보호자가 천둥·빗소리 영상을 틀고 실제 천둥에 대비할 시간을 벌어주는 무료 웹 알림 서비스입니다." />
+  <meta name="description" content="우리 동네에 낙뢰가 다가오면 미리 알림, 보호자가 천둥·빗소리 영상을 틀고 실제 천둥에 대비할 시간을 벌어주는 무료 웹 알림 서비스입니다." />
   <meta name="theme-color" content="#0c3448" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="동탄이네 알림이" />
+  <meta name="apple-mobile-web-app-title" content="동탄이네 천둥번개 알림이"/>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
@@ -52,7 +52,7 @@
   <section class="check-section section-pad" id="sound-check">
     <div class="section-heading narrow">
       <p class="step-label">1단계 · 시작 전 필수 확인</p>
-      <h2>영상 속 천둥소리에<br />불안해하지 않는지 먼저 봐주세요.</h2>
+      <h2>테스트 영상 천둥소리에<br />불안해하지 않는지 먼저 봐주세요.</h2>
       <p>동탄이에게 도움이 된 방법은 녹음된 소리에 불안 반응이 없었기 때문에 가능했습니다. 영상 소리에도 놀라는 아이에게는 이 방법을 사용하면 안 됩니다.</p>
     </div>
 

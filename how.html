@@ -3,46 +3,48 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>How It Works — 작동 방식 | 번개 추적기</title>
-<meta name="description" content="번개 추적기는 기상청 낙뢰·강수 정보를 10분마다 확인해 천둥이 오기 전에 알려줍니다. 작동 방식과 활용법을 정리했습니다." />
-<link rel="stylesheet" href="style.css" />
+<title>작동 방식 | 동탄이네 천둥번개 알림이</title>
+<meta name="description" content="동탄이네 천둥번개 알림이가 기상청 낙뢰 관측과 초단기 강수 예보를 확인해 웹푸시로 알리는 방식과 안전한 활용 범위." />
+<link rel="stylesheet" href="style.css?v=signal-5" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 </head>
 <body>
 <main>
   <span class="tag">작동 방식</span>
-  <h1 class="page-title">미리 알면, 미리 준비할 수 있어요</h1>
-  <p class="page-sub">번개 추적기는 주변 낙뢰 신호를 미리 확인할 수 있게 도와줍니다. 보호자는 알림을 바탕으로 실내 환경을 정리하고, 빗소리·천둥 소리를 활용한 루틴을 준비하고, 반려견이 덜 놀라도록 먼저 대응할 수 있습니다.</p>
+  <h1 class="page-title">갑작스러운 천둥을 준비 가능한 신호로.</h1>
+  <p class="page-sub">동탄이네 천둥번개 알림이는 가입한 동네의 낙뢰와 비를 확인하고, 실제 천둥이 들리기 전에 보호자에게 웹푸시 알림을 보냅니다.</p>
 
-  <div class="post-list">
-    <div class="post-card"><h3>① 주변 낙뢰 감지</h3><p>가입한 동네의 실시간 낙뢰와 초단기 강수 예보를 10분마다 자동으로 확인합니다.</p></div>
-    <div class="post-card"><h3>② 천둥 전에 미리 준비</h3><p>천둥이 오기 전에 알림을 받아, 익숙한 천둥소리를 미리 틀고 안전한 공간을 준비합니다.</p></div>
-    <div class="post-card"><h3>③ 갑작스러운 공포 줄이기</h3><p>갑작스러운 공포를 "예측 가능한 상황"으로 바꿔, 반려견이 더 안정적으로 넘어가도록 돕습니다.</p></div>
+  <div class="signal-stat-row">
+    <div><strong>30km</strong><span>낙뢰 접근</span></div>
+    <div><strong>10km</strong><span>낙뢰 임박</span></div>
+    <div><strong>3시간</strong><span>강수 예보 범위</span></div>
   </div>
 
-  <div class="card" style="margin-top:22px">
-    <h2>단계별로 보면</h2>
-    <ol>
-      <li>가입 시 입력한 <b>동네 위치</b>를 기상청 격자 좌표로 변환합니다.</li>
-      <li>10분마다 그 지역의 <b>실시간 낙뢰</b>와 <b>1시간 이내 강수 예보</b>를 확인합니다.</li>
-      <li>천둥·번개가 감지되면 보호자 휴대폰으로 <b>웹푸시 알림</b>을 보냅니다. (강아지 이름으로 개인화)</li>
-      <li>알림을 받으면 천둥소리를 미리 틀어 적응시키고, 곁에서 안심시켜 줍니다.</li>
-    </ol>
+  <div class="post-list how-list">
+    <div class="post-card"><span class="step-kicker">01</span><h3>우리 동네 위치를 기상청 격자로 변환</h3><p>GPS 또는 사용자가 검색한 동네 위치를 기상청 예보 격자로 변환합니다.</p></div>
+    <div class="post-card"><span class="step-kicker">02</span><h3>낙뢰 관측과 강수 예보 확인</h3><p>기상청 자료에서 주변의 최근 낙뢰 좌표와 앞으로 3시간 이내의 초단기 강수 예보를 확인합니다.</p></div>
+    <div class="post-card"><span class="step-kicker">03</span><h3>거리와 상황에 맞는 웹푸시 발송</h3><p>낙뢰가 30km 이내면 접근, 10km 이내면 임박 알림을 보냅니다. 낙뢰가 없을 때는 강수 예보를 알립니다.</p></div>
+    <div class="post-card"><span class="step-kicker">04</span><h3>보호자가 미리 대비</h3><p>알림은 치료나 훈련을 대신하지 않습니다. 보호자가 자신의 반려견에게 맞는 환경과 평소 정해둔 대응을 시작할 시간을 제공합니다.</p></div>
+  </div>
 
-    <h2>어떤 알림이 오나요</h2>
-    <ul>
-      <li><b>천둥 임박</b> — 낙뢰가 10km 이내로 감지될 때</li>
-      <li><b>천둥 접근</b> — 낙뢰가 30km 이내로 감지될 때</li>
-      <li><b>소나기 예보</b> — 낙뢰는 없지만 1시간 이내 비가 예보될 때</li>
-    </ul>
-    <div class="callout">알림을 탭하면 <b>천둥소리 둔감화 영상</b>이 바로 열려, 미리 틀어 적응시킬 수 있습니다.</div>
+  <div class="card">
+    <h2>알림 간격은 어떻게 적용되나요?</h2>
+    <p><strong>낙뢰 알림</strong>은 위급도에 따라 즉시 발송합니다. 접근 단계가 임박 단계로 높아지면 선택한 비 예보 간격과 관계없이 다시 알려드립니다.</p>
+    <p><strong>비 예보 알림</strong>은 사용자가 선택한 10분·20분·30분 간격을 적용합니다.</p>
 
-    <h2>설치가 필요한가요?</h2>
-    <p>아니요. 앱 설치 없이 웹에서 바로 알림을 켤 수 있습니다. 단 <b>아이폰</b>은 사파리에서 "홈 화면에 추가" 후 그 앱으로 열어 알림을 켜야 합니다(iOS 특성). 안드로이드·PC는 페이지에서 바로 됩니다.</p>
+    <h2>소리 훈련을 해야 하나요?</h2>
+    <p>아닙니다. 녹음된 빗소리나 천둥소리에 불안 반응을 보이는 강아지는 소리를 재생하지 않고 알림만 이용할 수 있습니다.</p>
+    <div class="callout"><strong>소리 적응과 실제 폭풍 대응은 구분해야 합니다.</strong><br />평온한 날 공포 반응이 없는 작은 강도에서 진행하는 적응 과정과, 실제 천둥이 다가왔을 때 안전한 환경을 준비하는 것은 서로 다른 상황입니다.</div>
 
-    <p><a class="btn" href="index.html">무료로 알림 받기 →</a></p>
+    <h2>앱을 설치해야 하나요?</h2>
+    <p>별도 앱은 없습니다. 이 웹페이지를 휴대폰 홈 화면에 추가해 사용합니다. 아이폰은 Safari의 공유 버튼에서 <strong>홈 화면에 추가</strong>한 뒤, 추가된 아이콘으로 열어 알림을 켜야 합니다. 안드로이드는 브라우저 메뉴에서 홈 화면에 추가할 수 있습니다.</p>
+
+    <h2>날씨 정보의 한계</h2>
+    <p>관측과 예보에는 지연이나 오차가 있을 수 있으며 모든 천둥을 사전에 보장하지 않습니다. 위험한 날씨에는 기상청의 공식 특보와 안전 안내를 우선 확인해주세요.</p>
+
+    <p class="button-row"><a class="btn" href="index.html#signup">비·낙뢰 알림 설정하기</a><a class="btn outline" href="research.html">근거와 출처 보기</a></p>
   </div>
 </main>
-<script src="nav.js" defer></script>
+<script src="nav.js?v=brand-2" defer></script>
 </body>
 </html>

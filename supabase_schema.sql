@@ -1,4 +1,4 @@
--- 번개 추적기 — 구독자 테이블 (thunder-miri 프로젝트에 적용 완료)
+-- 동탄이네 천둥번개 알림이 — 구독자 테이블 (thunder-miri 프로젝트에 적용 완료)
 -- Supabase 대시보드 > SQL Editor 에 붙여넣고 RUN
 
 create table if not exists subscribers (
