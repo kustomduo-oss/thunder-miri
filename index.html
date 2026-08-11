@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="stylesheet" href="style.css?v=signal-5" />
-  <link rel="stylesheet" href="landing.css?v=hero-map-1" />
+  <link rel="stylesheet" href="landing.css?v=hero-radar-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -76,10 +76,18 @@
       <p class="service-note">무료 · 회원가입 없음 · 소리 자동재생 없음</p>
     </div>
 
-    <!-- 실제 지도: 위치를 입력하면 우리 집에 핑이 찍히고 50/30km 원이 그려진다 -->
+    <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map">
-      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">위치를 입력하면 지도에 표시됩니다</span></div>
-      <div id="heroMap" role="img" aria-label="우리 동네 낙뢰 감시 지도"></div>
+      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">지금 비구름을 불러오는 중…</span></div>
+      <div id="heroMap" role="img" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
+
+      <div class="hero-tl">
+        <button type="button" id="heroPlay" class="hero-play" aria-label="재생">▶</button>
+        <input type="range" id="heroRange" min="0" max="0" value="0" aria-label="시각 선택" />
+        <span id="heroTime" class="hero-time">—</span>
+      </div>
+      <p id="heroKind" class="hero-kind">기상청 레이더 · 5분마다 갱신</p>
+
       <div class="map-flow">
         <div><b>50km</b><span>접근 알림</span></div>
         <i>→</i>
@@ -169,7 +177,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=hero-map-1" defer></script>
+<script src="landing.js?v=hero-radar-1" defer></script>
 <script src="nav.js?v=brand-2" defer></script>
 </body>
 </html>

@@ -197,6 +197,12 @@ QPF_TOP, QPF_MAPH, QPF_W = 20, 750, 600
 HB_X_KM, HB_Y_KM = 2305 * GRID_KM, 2881 * GRID_KM     # 1152.5 x 1440.5 km
 
 
+def fetch_lightning_national():
+    """전국 낙뢰(첫 화면 전국판용). sender의 조회 로직을 넓은 반경으로 재사용."""
+    import sender as _s
+    return _s.fetch_lightning_data(36.5, 127.8, 500)
+
+
 def _qpf_overlay(base, ef, lat, lon):
     """예측 PNG에서 '비 색깔'만 남긴 투명 오버레이를 만든다.
     기상청 그림엔 해안선·배경이 그려져 있는데, 유채색(비)만 골라내면
@@ -292,7 +298,7 @@ def _keep_recent_frames(key, stamp, url):
     return frames[-PAST_KEEP:]
 
 
-def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=None):
+def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=None, key=None):
     """한 동네(기상청 격자)에 대한 레이더 이미지 + 메타 생성·업로드"""
     if raw is None:
         raw, stamp = fetch_radar()
@@ -308,7 +314,7 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
     img.save(buf, "PNG", optimize=True)
     png = buf.getvalue()
 
-    key = f"{nx_grid}_{ny_grid}"
+    key = key or f"{nx_grid}_{ny_grid}"
     img_url = upload(f"{key}.png", png, "image/png")
 
     # 과거 재생용으로 시각별 사본도 남긴다 (오래된 것은 아래에서 정리)
@@ -362,14 +368,30 @@ if __name__ == "__main__":
     grids = {}
     for s in subs:
         grids.setdefault((s["nx"], s["ny"]), s)
-    if not grids:
-        print("[레이더] 구독자 없음 — 생성 생략")
-        raise SystemExit(0)
 
     raw, stamp = fetch_radar()
     if raw is None:
         print("[레이더] 자료 수신 실패")
         raise SystemExit(1)
+
+    # 전국판: 아직 가입하지 않은 방문자도 첫 화면에서 볼 수 있도록 항상 만든다
+    NAT_LAT, NAT_LON = 36.5, 127.8
+    try:
+        nat_strikes = []
+        for it in fetch_lightning_national():
+            try:
+                nat_strikes.append({"lat": float(it["lat"]), "lon": float(it["lon"])})
+            except (TypeError, ValueError):
+                continue
+        build_for(None, None, NAT_LAT, NAT_LON, "전국",
+                  lightning=nat_strikes[:600], raw=raw, stamp=stamp, key="national")
+        build_forecast(NAT_LAT, NAT_LON, "national")
+    except Exception as e:
+        print(f"[전국] 생성 실패(무시하고 계속): {e}")
+
+    if not grids:
+        print("[레이더] 구독자 없음 — 동네별 생성 생략")
+        raise SystemExit(0)
 
     for (gx, gy), s in grids.items():
         try:
