@@ -25,22 +25,25 @@
   .home-dot{background:#1e3a8a;border:3px solid #fff;border-radius:50%;
        box-shadow:0 2px 8px rgba(0,0,0,.35)}
 
-  /* 미래 강수예측 재생 */
-  .fc-section{margin:26px 0 0;padding:20px 0 0;border-top:1px solid var(--line)}
-  .fc-title{font-size:19px;font-weight:800;letter-spacing:-.3px;margin:0 0 6px}
-  .fc-sub{font-size:14px;color:var(--ink-soft);margin:0 0 14px;line-height:1.65}
+  /* 예측 그림 (예측 구간에서만 표시) */
   .fc-stage{position:relative;background:#f4f7fb;border:1px solid var(--line);
-       border-radius:14px;overflow:hidden;min-height:180px;display:flex;align-items:center;justify-content:center}
+       border-radius:16px;overflow:hidden;margin-top:0}
   .fc-stage img{display:block;width:100%;height:auto}
-  .fc-loading{position:absolute;font-size:14px;color:var(--ink-soft)}
-  .fc-controls{display:flex;align-items:center;gap:12px;margin-top:12px}
   .fc-btn{flex:0 0 auto;width:44px;height:44px;border:0;border-radius:50%;
        background:var(--navy,#1e3a8a);color:#fff;font-size:16px;cursor:pointer;
        display:grid;place-items:center;box-shadow:0 4px 12px rgba(30,58,138,.25)}
   .fc-btn:active{transform:translateY(1px)}
-  #fcRange{flex:1;accent-color:var(--navy,#1e3a8a);cursor:pointer}
-  .fc-time{flex:0 0 auto;min-width:118px;text-align:right;font-size:14px;font-weight:700;color:var(--ink)}
-  @media (max-width:520px){ .fc-time{min-width:96px;font-size:13px} }
+  .fc-time{flex:0 0 auto;min-width:120px;text-align:right;font-size:14px;font-weight:700;color:var(--ink)}
+
+  /* 통합 타임바 */
+  .tl{display:flex;align-items:center;gap:12px;margin-top:14px}
+  .tl-main{flex:1;min-width:0}
+  #tlRange{width:100%;accent-color:var(--navy,#1e3a8a);cursor:pointer;margin:0}
+  .tl-marks{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:2px}
+  .tl-marks #tlNowMark{font-weight:800;color:var(--navy,#1e3a8a)}
+  .tl-kind{font-size:13px;color:var(--ink-soft);margin:8px 0 0}
+  .tl-kind b{color:var(--navy,#1e3a8a)}
+  @media (max-width:520px){ .fc-time{min-width:98px;font-size:13px} .tl-marks{font-size:10px} }
   .bolt-dot{background:#ffd54a;border:2px solid #b8860b;border-radius:50%;
        box-shadow:0 0 6px rgba(255,213,74,.9)}
 </style>
@@ -65,20 +68,21 @@
     <div id="map"></div>
     <div id="emptyMsg" class="radar-empty" style="display:none"></div>
 
-    <!-- 앞으로 비구름이 어디로 갈지 (기상청 초단기 강수예측) -->
-    <section class="fc-section">
-      <h2 class="fc-title">앞으로 비구름이 어디로 갈까</h2>
-      <p class="fc-sub">기상청 초단기 강수예측입니다. 재생하면 <b>앞으로 6시간</b> 동안 비구름이 어떻게 움직일지 볼 수 있어요.</p>
-      <div class="fc-stage">
-        <img id="fcImg" alt="초단기 강수예측" />
-        <div id="fcLoading" class="fc-loading">불러오는 중…</div>
+    <!-- 예측 구간에서만 보이는 기상청 예측 그림 -->
+    <div class="fc-stage" id="fcStage" hidden>
+      <img id="fcImg" alt="초단기 강수예측" />
+    </div>
+
+    <!-- 과거 관측 → 지금 → 미래 예측을 하나로 잇는 타임바 -->
+    <div class="tl">
+      <button type="button" id="tlPlay" class="fc-btn" aria-label="재생">▶</button>
+      <div class="tl-main">
+        <input type="range" id="tlRange" min="0" max="0" value="0" aria-label="시각 선택" />
+        <div class="tl-marks"><span>과거 관측</span><span id="tlNowMark">지금</span><span>예측 +6시간</span></div>
       </div>
-      <div class="fc-controls">
-        <button type="button" id="fcPlay" class="fc-btn" aria-label="재생">▶</button>
-        <input type="range" id="fcRange" min="0" max="0" value="0" aria-label="예측 시각" />
-        <span id="fcLabel" class="fc-time">—</span>
-      </div>
-    </section>
+      <span id="tlLabel" class="fc-time">—</span>
+    </div>
+    <p id="tlKind" class="tl-kind">—</p>
 
     <p class="radar-note">
       🔵 우리 집 · 원은 <b>30km(접근)</b>과 <b>10km(임박)</b> 알림 기준 거리입니다.
@@ -141,6 +145,7 @@ const dot = (cls, size) =>
               html: `<div class="${cls}" style="width:${size}px;height:${size}px"></div>` });
 
 let overlay = null;
+let lastObsMeta = null, lastFcMeta = null;
 const strikeLayer = L.layerGroup().addTo(map);
 
 async function load() {
@@ -160,8 +165,9 @@ async function load() {
     return;
   }
 
+  lastObsMeta = meta;
   const home = [meta.home.lat, meta.home.lon];
-  map.setView(home, 9);
+  if (!map._loadedOnce) { map.setView(home, 9); map._loadedOnce = true; }
 
   /* 레이더 이미지를 실제 위경도 범위에 맞춰 얹기 */
   const b = meta.bounds;
@@ -207,57 +213,100 @@ async function load() {
   }
 }
 
-/* ── 미래 강수예측 재생 ──────────────────────────────
-   기상청이 완성해 주는 예측 PNG를 발송 엔진이 받아 올려두면,
-   여기서는 그 목록을 순서대로 넘기며 애니메이션처럼 보여준다.        */
-let fcFrames = [], fcIdx = 0, fcTimer = null;
+/* ── 통합 타임바 ────────────────────────────────────
+   과거 관측(우리 동네 지도 위 레이더) → 지금 → 미래 예측(기상청 그림)을
+   하나의 슬라이더로 잇는다.
+   · 관측 구간: 지도 위 오버레이 이미지를 바꾼다
+   · 예측 구간: 기상청이 완성해 준 예측 그림을 보여준다
+     (예측 자료는 지도가 그려진 완성 이미지라 지도에 겹칠 수 없어 별도로 표시) */
+let timeline = [];       // {kind:'obs'|'fcst', at:Date, image, ef}
+let tlIdx = 0, tlTimer = null, nowIdx = 0;
 
-function fcShow(i) {
-  if (!fcFrames.length) return;
-  fcIdx = (i + fcFrames.length) % fcFrames.length;
-  const f = fcFrames[fcIdx];
-  $("fcImg").src = f.image;
-  $("fcRange").value = fcIdx;
-  const d = new Date(f.valid_at);
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const hrs = f.ef >= 60 ? `${Math.floor(f.ef / 60)}시간${f.ef % 60 ? " " + (f.ef % 60) + "분" : ""}` : `${f.ef}분`;
-  $("fcLabel").textContent = `${hh}:${mm} (${hrs} 뒤)`;
+function fmtClock(d) {
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function fmtGap(mins) {
+  const a = Math.abs(mins);
+  const s = a >= 60 ? `${Math.floor(a / 60)}시간${a % 60 ? " " + (a % 60) + "분" : ""}` : `${a}분`;
+  if (a < 3) return "지금";
+  return mins < 0 ? `${s} 전` : `${s} 뒤`;
 }
 
-function fcStop() {
-  clearInterval(fcTimer); fcTimer = null; $("fcPlay").textContent = "▶";
-}
-function fcPlay() {
-  if (fcTimer) return fcStop();
-  $("fcPlay").textContent = "❚❚";
-  fcTimer = setInterval(() => fcShow(fcIdx + 1), 900);
+function tlShow(i) {
+  if (!timeline.length) return;
+  tlIdx = (i + timeline.length) % timeline.length;
+  const f = timeline[tlIdx];
+  $("tlRange").value = tlIdx;
+
+  const gap = Math.round((f.at.getTime() - Date.now()) / 60000);
+  $("tlLabel").textContent = `${fmtClock(f.at)} (${fmtGap(gap)})`;
+
+  if (f.kind === "obs") {
+    $("fcStage").hidden = true;
+    if (overlay) overlay.setUrl(f.image);          // 지도 위 레이더만 교체
+    $("tlKind").innerHTML = "<b>관측</b> · 실제로 내린 비입니다. 지도를 확대·이동할 수 있어요.";
+  } else {
+    $("fcStage").hidden = false;
+    $("fcImg").src = f.image;
+    $("tlKind").innerHTML = "<b>예측</b> · 기상청 초단기 강수예측(앞으로 올 비)입니다. 전국 범위로 표시됩니다.";
+  }
 }
 
-$("fcPlay").addEventListener("click", fcPlay);
-$("fcRange").addEventListener("input", (e) => { fcStop(); fcShow(+e.target.value); });
+function tlStop() { clearInterval(tlTimer); tlTimer = null; $("tlPlay").textContent = "▶"; }
+function tlToggle() {
+  if (tlTimer) return tlStop();
+  $("tlPlay").textContent = "❚❚";
+  if (tlIdx >= timeline.length - 1) tlIdx = 0;
+  tlTimer = setInterval(() => {
+    if (tlIdx >= timeline.length - 1) { tlShow(0); } else { tlShow(tlIdx + 1); }
+  }, 900);
+}
+$("tlPlay").addEventListener("click", tlToggle);
+$("tlRange").addEventListener("input", (e) => { tlStop(); tlShow(+e.target.value); });
+
+/* 관측 목록(meta.past)과 예측 목록(forecast.json)을 하나로 합친다 */
+function buildTimeline(obsMeta, fcMeta) {
+  const items = [];
+
+  (obsMeta?.past || []).forEach((p) => {
+    const s = p.stamp;   // YYYYMMDDHHMM
+    const at = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8), +s.slice(8, 10), +s.slice(10, 12));
+    items.push({ kind: "obs", at, image: p.image });
+  });
+  if (!items.length && obsMeta) {
+    items.push({ kind: "obs", at: new Date(obsMeta.observed_at), image: obsMeta.image });
+  }
+  nowIdx = Math.max(0, items.length - 1);
+
+  (fcMeta?.frames || []).forEach((f) => {
+    items.push({ kind: "fcst", at: new Date(f.valid_at), image: f.image, ef: f.ef });
+  });
+
+  items.sort((a, b) => a.at - b.at);
+  timeline = items;
+  nowIdx = Math.max(0, timeline.findIndex((f) => f.kind === "fcst") - 1);
+  if (nowIdx < 0) nowIdx = timeline.length - 1;
+
+  $("tlRange").max = Math.max(0, timeline.length - 1);
+  $("tlNowMark").textContent = timeline.length ? `지금 ${fmtClock(timeline[nowIdx].at)}` : "지금";
+  timeline.forEach((f) => { const im = new Image(); im.src = f.image; });   // 미리 받아두기
+  tlShow(nowIdx);   // 기본은 '지금'
+}
 
 async function loadForecast() {
   try {
     const res = await fetch(`${CONFIG.RADAR_BASE}/forecast.json?t=${Date.now()}`);
     if (!res.ok) throw new Error(res.status);
-    const meta = await res.json();
-    fcFrames = meta.frames || [];
-    if (!fcFrames.length) throw new Error("no frames");
-    /* 브라우저가 미리 받아두면 재생이 끊기지 않는다 */
-    fcFrames.forEach((f) => { const im = new Image(); im.src = f.image; });
-    $("fcRange").max = fcFrames.length - 1;
-    $("fcLoading").style.display = "none";
-    fcShow(0);
+    lastFcMeta = await res.json();
   } catch (e) {
     console.warn("예측 자료를 불러오지 못했습니다:", e);
-    $("fcLoading").textContent = "지금은 예측 자료를 불러올 수 없어요.";
+    lastFcMeta = null;
   }
+  buildTimeline(lastObsMeta, lastFcMeta);
 }
 
-load();
-loadForecast();
-setInterval(() => { load(); loadForecast(); }, 5 * 60 * 1000);   // 5분마다 갱신
+(async () => { await load(); await loadForecast(); })();
+setInterval(async () => { await load(); await loadForecast(); }, 5 * 60 * 1000);
 </script>
 <script src="nav.js?v=brand-2" defer></script>
 </body>
