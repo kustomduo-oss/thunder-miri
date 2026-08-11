@@ -78,9 +78,9 @@
     <div class="map-wrap">
       <div id="map"></div>
       <div class="basemap-switch" role="group" aria-label="지도 스타일">
+        <button type="button" data-base="Base">일반</button>
         <button type="button" data-base="white">밝게</button>
         <button type="button" data-base="midnight">어둡게</button>
-        <button type="button" data-base="Base">일반</button>
       </div>
     </div>
     <div id="emptyMsg" class="radar-empty" style="display:none"></div>
@@ -163,8 +163,8 @@ function setBasemap(type) {
   if (map.getPane("tilePane")) baseLayer.setZIndex(1);
 }
 
-let savedBase = "white";
-try { savedBase = localStorage.getItem("thunder_basemap") || "white"; } catch (e) {}
+let savedBase = "Base";
+try { savedBase = localStorage.getItem("thunder_basemap") || "Base"; } catch (e) {}
 setBasemap(savedBase);
 document.querySelectorAll(".basemap-switch button").forEach((b) =>
   b.addEventListener("click", () => setBasemap(b.dataset.base)));
