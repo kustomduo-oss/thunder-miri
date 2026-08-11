@@ -32,8 +32,10 @@ VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").strip()
 
-WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "10"))  # 10km 이내: 임박
-WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "30"))      # 30km 이내: 접근
+WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
+WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
+# 거리를 넓게 잡은 이유: 이 서비스의 목적이 '무방비 노출 방지'라 준비 시간이 길수록 좋다.
+# 뇌우 이동속도 20~60km/h 기준 50km면 약 50분~2.5시간, 30km면 약 30분~1.5시간의 여유.
 COOLDOWN_MIN = int(os.environ.get("COOLDOWN_MIN", "30"))              # 강수예보 기본 간격(가입자 미선택 시)
 LIGHTNING_COOLDOWN_MIN = int(os.environ.get("LIGHTNING_COOLDOWN_MIN", "30"))  # 낙뢰: 같은 단계 유지 시 간격(분). 단계 상승은 즉시
 RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "3"))  # 앞으로 N시간 내 강수예보를 봄(시야 범위). 5분마다 재확인하며 가까워질수록 정확해짐
@@ -319,9 +321,9 @@ def run_once():
         lightning_level = None
         if nearest is not None:
             if nearest <= WARNING_RADIUS_KM:
-                lightning_level = "warning"   # 10km 이내: 임박
+                lightning_level = "warning"   # 30km 이내: 임박
             elif nearest <= WATCH_RADIUS_KM:
-                lightning_level = "watch"      # 30km 이내: 접근
+                lightning_level = "watch"      # 50km 이내: 접근
 
         # 2) 강수 예보(1시간 이내) — 낙뢰 없을 때만 확인(천둥이 우선)
         fc = fetch_forecast(nx, ny) if lightning_level is None else None

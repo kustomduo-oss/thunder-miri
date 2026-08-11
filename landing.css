@@ -52,7 +52,7 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .map-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:9px;align-items:center;margin-top:16px}
 .map-flow div{display:grid;gap:1px;text-align:center}.map-flow b{font-size:20px}.map-flow span{color:#b7d0da;font-size:11px}.map-flow i{color:#72afc5;font-style:normal}
 
-/* 1단계: 영상 반응 확인 */
+/* 소리 적응 확인 (선택 안내) */
 .check-section{scroll-margin-top:62px;background:#fff}
 .check-card{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--signal-line);border-radius:20px;background:var(--signal-line);box-shadow:0 18px 45px rgba(17,60,80,.08);overflow:hidden}
 .check-instructions,.check-decision{padding:34px;background:#fff}
@@ -73,7 +73,7 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .stop-message strong{font-size:17px}.stop-message p{margin:5px 0 12px;color:#785a54;line-height:1.65}
 .stop-message button{padding:0;border:0;background:none;color:var(--signal-stop);font:inherit;font-weight:900;text-decoration:underline;cursor:pointer}
 
-/* 2단계: 알림 설정 */
+/* 알림 설정 (주 행동) */
 .signup-section{display:grid;grid-template-columns:minmax(290px,.85fr) minmax(0,1.15fr);gap:70px;align-items:start;scroll-margin-top:62px;background:#edf5f7}
 .signup-intro h2{margin-bottom:16px;font-size:clamp(34px,5vw,52px);line-height:1.2;letter-spacing:-.045em}
 .signup-intro>p:not(.step-label){font-size:17px;line-height:1.75}
@@ -83,9 +83,6 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .device-guide .current-device{border-color:var(--signal);background:#fff}
 .install-required{margin-top:10px;padding:12px 14px;border-radius:9px;background:var(--signal-warm);color:#6f5715;font-size:13px;font-weight:800}
 .signup-panel{position:relative;padding:32px;border:1px solid var(--signal-line);border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(25,70,91,.1);overflow:hidden}
-.signup-lock{position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;padding:30px;background:rgba(255,255,255,.92);text-align:center;backdrop-filter:blur(3px)}
-.signup-lock span{margin-bottom:9px;color:var(--signal);font-size:12px;font-weight:900;letter-spacing:.08em}.signup-lock strong{margin-bottom:7px;color:var(--signal-ink);font-size:21px}.signup-lock p{max-width:360px;margin:0 0 17px;font-size:13px;line-height:1.65}.signup-lock a{display:inline-flex;padding:10px 15px;border-radius:8px;background:var(--signal);color:#fff;font-size:13px;font-weight:900}.signup-lock a:hover{text-decoration:none;background:var(--signal-deep)}
-.signup-section.is-locked #formView{filter:blur(2px);opacity:.42;pointer-events:none;user-select:none}
 .field{margin-bottom:22px}
 .field label{display:block;margin-bottom:8px;color:var(--signal-ink);font-size:14px;font-weight:900}
 .field label span{color:var(--signal-muted);font-weight:500}

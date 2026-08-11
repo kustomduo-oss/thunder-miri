@@ -27,7 +27,7 @@
         <strong>이 서비스는 천둥번개 소리로 인한 공포를 없애거나 치료하는 것이 목적이 아닙니다.</strong>
         <span>목표는 예고 없이 천둥번개 소리에 노출되지 않게 하는 데 있습니다.</span>
       </div>
-      <a class="primary-action" href="#sound-check">먼저 영상 반응 확인하기</a>
+      <a class="primary-action" href="#signup">무료로 알림 받기</a>
       <p class="service-note">무료 · 회원가입 없음 · 소리 자동재생 없음</p>
     </div>
 
@@ -40,9 +40,9 @@
         <span class="map-bolt">낙뢰</span>
       </div>
       <div class="map-flow">
-        <div><b>30km</b><span>접근 알림</span></div>
+        <div><b>50km</b><span>접근 알림</span></div>
         <i>→</i>
-        <div><b>10km</b><span>임박 알림</span></div>
+        <div><b>30km</b><span>임박 알림</span></div>
         <i>→</i>
         <div><b>영상</b><span>미리 재생</span></div>
       </div>
@@ -51,9 +51,9 @@
 
   <section class="check-section section-pad" id="sound-check">
     <div class="section-heading narrow">
-      <p class="step-label">1단계 · 시작 전 필수 확인</p>
+      <p class="step-label">선택 · 소리 적응을 해보고 싶다면</p>
       <h2>영상 속 천둥소리에<br />불안해하지 않는지 먼저 봐주세요.</h2>
-      <p>동탄이에게 도움이 된 방법은 녹음된 소리에 불안 반응이 없었기 때문에 가능했습니다. 영상 소리에도 놀라는 아이에게는 이 방법을 사용하면 안 됩니다.</p>
+      <p>알림만 받아도 충분합니다. 다만 동탄이처럼 <b>평소 소리로 미리 준비하는 방법</b>을 써보고 싶다면, 영상 소리에 불안 반응이 없는지 먼저 확인해주세요. 영상 소리에도 놀라는 아이에게는 이 방법을 쓰면 안 됩니다.</p>
     </div>
 
     <div class="check-card">
@@ -76,16 +76,16 @@
     </div>
 
     <div class="stop-message" id="soundStopMessage" role="status" hidden>
-      <strong>영상을 끄고 더 진행하지 마세요.</strong>
-      <p>동탄이에게 사용한 영상 대비 방식은 이 아이에게 맞지 않을 수 있습니다. 공포를 참고 견디게 하지 마세요.</p>
+      <strong>영상을 끄고 소리는 쓰지 마세요.</strong>
+      <p>동탄이에게 사용한 영상 대비 방식은 이 아이에게 맞지 않을 수 있습니다. 공포를 참고 견디게 하지 마세요. <b>소리 없이 낙뢰·비 알림만 이용하셔도 됩니다.</b></p>
       <button type="button" id="checkAgain">다시 확인하기</button>
     </div>
   </section>
 
-  <section class="signup-section section-pad is-locked" id="signup">
+  <section class="signup-section section-pad" id="signup">
     <div class="signup-intro">
-      <p class="step-label">2단계 · 무료 알림 설정</p>
-      <h2>이제 우리 동네 낙뢰 알림을 켜주세요.</h2>
+      <p class="step-label">무료 알림 설정</p>
+      <h2>우리 동네 낙뢰 알림을 켜주세요.</h2>
       <p>위치만 설정하면 됩니다. 강아지 이름과 비 예보 간격은 선택 사항입니다.</p>
 
       <div class="device-guide" id="deviceGuide">
@@ -98,13 +98,12 @@
     </div>
 
     <div class="signup-panel">
-      <div class="signup-lock" id="signupLock">
-        <span>알림 신청</span>
-        <strong>영상 반응 확인 후 열립니다.</strong>
-        <p>먼저 영상 속 천둥소리에 불안 반응이 없는지 확인해주세요.</p>
-        <a href="#sound-check">1단계 확인하러 가기</a>
-      </div>
       <div id="formView">
+        <div class="field">
+          <label for="dogName">강아지 이름 <span style="font-weight:400;opacity:.7">(선택)</span></label>
+          <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
+        </div>
+
         <div class="field">
           <label>우리 동네 위치</label>
           <button type="button" class="loc-btn" id="locBtn">현재 위치 가져오기</button>
@@ -119,10 +118,6 @@
 
         <details class="optional-settings">
           <summary>선택 설정</summary>
-          <div class="field">
-            <label for="dogName">강아지 이름 <span>(선택)</span></label>
-            <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
-          </div>
           <div class="field">
             <label>비 예보 알림 간격</label>
             <div class="iv-row">
@@ -154,7 +149,7 @@
     </div>
     <ol class="process-list">
       <li><span>1</span><div><b>평온한 날 미리 적응</b><p>영상 소리에 불안 반응이 없는 범위에서만 익숙하게 합니다.</p></div></li>
-      <li><span>2</span><div><b>낙뢰 접근 알림</b><p>30km 이내 접근과 10km 이내 임박을 웹푸시로 알려드립니다.</p></div></li>
+      <li><span>2</span><div><b>낙뢰 접근 알림</b><p>50km 이내 접근과 30km 이내 임박을 웹푸시로 알려드립니다.</p></div></li>
       <li><span>3</span><div><b>영상으로 먼저 준비</b><p>알림을 받으면 낮은 음량부터 평소 들려준 영상을 재생합니다.</p></div></li>
       <li><span>4</span><div><b>실제 천둥을 맞이</b><p>갑작스러운 첫 소리가 되지 않도록 준비된 환경을 만듭니다.</p></div></li>
     </ol>

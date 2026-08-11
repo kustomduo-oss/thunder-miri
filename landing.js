@@ -16,6 +16,8 @@ function toast(message){
   window.setTimeout(() => element.classList.remove("show"), 3000);
 }
 
+/* 소리 적응 확인은 '선택 안내'일 뿐, 알림 가입을 막지 않는다.
+   이 서비스의 목적은 소리 훈련이 아니라 '무방비 노출을 막는 알림'이기 때문. */
 function setSoundCheckPassed(passed){
   try{
     if(passed) localStorage.setItem(SOUND_CHECK_KEY, "v1");
@@ -23,36 +25,22 @@ function setSoundCheckPassed(passed){
   }catch(error){ /* 저장이 막혀도 현재 이용은 계속합니다. */ }
 }
 
-function revealSignup(shouldScroll){
-  $("soundStopMessage").hidden = true;
-  $("signup").classList.remove("is-locked");
-  $("signupLock").hidden = true;
-  $("soundPass").textContent = "확인 완료 · 알림 설정 보기";
-  setSoundCheckPassed(true);
-  if(shouldScroll){
-    window.setTimeout(() => $("signup").scrollIntoView({behavior:"smooth", block:"start"}), 80);
-  }
-}
-
 function stopSoundMethod(){
   setSoundCheckPassed(false);
-  $("signup").classList.add("is-locked");
-  $("signupLock").hidden = false;
-  $("soundPass").textContent = "불안 반응이 없었습니다";
-  $("soundStopMessage").hidden = false;
-  $("soundStopMessage").scrollIntoView({behavior:"smooth", block:"center"});
+  if($("soundStopMessage")) $("soundStopMessage").hidden = false;
+  if($("soundStopMessage")) $("soundStopMessage").scrollIntoView({behavior:"smooth", block:"center"});
 }
 
-$("soundPass").addEventListener("click", () => revealSignup(true));
-$("soundStop").addEventListener("click", stopSoundMethod);
-$("checkAgain").addEventListener("click", () => {
-  $("soundStopMessage").hidden = true;
-  $("sound-check").scrollIntoView({behavior:"smooth", block:"start"});
+if($("soundPass")) $("soundPass").addEventListener("click", () => {
+  setSoundCheckPassed(true);
+  if($("soundStopMessage")) $("soundStopMessage").hidden = true;
+  $("soundPass").textContent = "확인 완료";
 });
-
-let soundCheckPassed = false;
-try{ soundCheckPassed = localStorage.getItem(SOUND_CHECK_KEY) === "v1"; }catch(error){ /* 무시 */ }
-if(soundCheckPassed) revealSignup(false);
+if($("soundStop")) $("soundStop").addEventListener("click", stopSoundMethod);
+if($("checkAgain")) $("checkAgain").addEventListener("click", () => {
+  $("soundStopMessage").hidden = true;
+  document.getElementById("sound-check").scrollIntoView({behavior:"smooth", block:"start"});
+});
 
 const userAgent = navigator.userAgent || "";
 const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

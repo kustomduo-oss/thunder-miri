@@ -97,7 +97,7 @@
     <p id="tlKind" class="tl-kind">—</p>
 
     <p class="radar-note">
-      🔵 우리 집 · 원은 <b>30km(접근)</b>과 <b>10km(임박)</b> 알림 기준 거리입니다.
+      🔵 우리 집 · 원은 <b>50km(접근)</b>과 <b>30km(임박)</b> 알림 기준 거리입니다.
       ⚡ 노란 점은 <b>최근 관측된 낙뢰</b>입니다(예보가 아니라 이미 친 낙뢰).<br />
       자료: 기상청 레이더·낙뢰 관측 · 배경지도: 국토교통부 브이월드
     </p>
@@ -206,8 +206,8 @@ async function load() {
 
   /* 우리 집 + 알림 기준 반경 */
   L.marker(home, { icon: dot("home-dot", 16), title: "우리 집" }).addTo(map);
-  L.circle(home, { radius: 30000, color: "#1e3a8a", weight: 1.2, fill: false, dashArray: "5,6" }).addTo(map);
-  L.circle(home, { radius: 10000, color: "#e74c3c", weight: 1.4, fill: false, dashArray: "5,6" }).addTo(map);
+  L.circle(home, { radius: 50000, color: "#1e3a8a", weight: 1.2, fill: false, dashArray: "5,6" }).addTo(map);
+  L.circle(home, { radius: 30000, color: "#e74c3c", weight: 1.4, fill: false, dashArray: "5,6" }).addTo(map);
 
   /* 최근 낙뢰 */
   strikeLayer.clearLayers();
