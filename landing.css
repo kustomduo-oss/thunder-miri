@@ -107,7 +107,8 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .iv-btn{min-height:64px;border:1px solid #bfd2da;border-radius:9px;background:#fff;color:#536874;font:inherit;font-size:15px;font-weight:900;cursor:pointer}.iv-btn small{display:block;margin-top:2px;font-size:10px;font-weight:600}
 .iv-btn.active{border-color:var(--signal);background:#e7f4f9;color:var(--signal)}
 .iv-note{margin:9px 0 0;font-size:11px;line-height:1.55}.iv-note strong{color:var(--signal-deep)}
-.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(--signal);color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer}.cta:disabled{background:#afc1c9;cursor:not-allowed}
+/* button.cta 로 한정 — 헤더의 <a class="cta">(nav.js 주입)까지 늘어나던 버그 방지 */
+button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(--signal);color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer}button.cta:disabled{background:#afc1c9;cursor:not-allowed}
 .privacy-note{margin:11px 0 0;text-align:center;font-size:11px}
 .success{display:none;padding:25px 0;text-align:center}.success.show{display:block}.success-symbol{display:grid;place-items:center;width:62px;height:62px;margin:0 auto 16px;border-radius:50%;background:#daf2e9;color:#167d5c;font-size:28px;font-weight:900}.success h2{margin-bottom:8px}.success p{line-height:1.7}.secondary-action{margin-top:10px;border:1px solid var(--signal);color:var(--signal);background:#fff}
 
