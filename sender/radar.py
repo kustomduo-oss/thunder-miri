@@ -125,6 +125,70 @@ def render(raw, lat, lon):
     return img, bounds, stats
 
 
+# ── 미래 강수예측(QPF) ──────────────────────────────────
+# 기상청이 완성해서 주는 PNG(해안선·범례 포함). 관측 레이더와 달리
+# '앞으로 비구름이 어디로 갈지'를 보여준다. ef = 예측시간(분).
+QPF_URL = "https://apihub.kma.go.kr/api/typ03/cgi/dfs/nph-qpf_ana_img"
+QPF_STEPS = [int(x) for x in os.environ.get("QPF_STEPS", "30,60,90,120,150,180,240,300,360").split(",")]
+
+
+def build_forecast():
+    """예측 프레임들을 받아 Storage에 올리고 목록(JSON)을 만든다."""
+    now = datetime.now()
+    base = None
+    frames = []
+
+    # 자료 기준시각을 조금 거슬러가며 유효한 것을 찾는다(최신은 아직 없을 수 있음)
+    for back in (30, 40, 50, 70):
+        t = now - timedelta(minutes=back)
+        stamp = t.replace(minute=(t.minute // 10) * 10, second=0)
+        probe = _qpf_image(stamp, QPF_STEPS[0])
+        if probe:
+            base = stamp
+            break
+    if base is None:
+        print("[예측] 사용 가능한 예측 자료 없음")
+        return None
+
+    for ef in QPF_STEPS:
+        png = _qpf_image(base, ef)
+        if not png:
+            continue
+        name = f"qpf_{ef}.png"
+        url = upload(name, png, "image/png")
+        if url:
+            frames.append({
+                "ef": ef,
+                "valid_at": (base + timedelta(minutes=ef)).isoformat(),
+                "image": url,
+            })
+
+    meta = {
+        "base_time": base.isoformat(),
+        "frames": frames,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    upload("forecast.json", json.dumps(meta, ensure_ascii=False).encode("utf-8"), "application/json")
+    print(f"[예측] {base:%H:%M} 기준 {len(frames)}개 프레임 생성 (+{QPF_STEPS[0]}~+{QPF_STEPS[-1]}분)")
+    return meta
+
+
+def _qpf_image(base, ef):
+    """예측 이미지 1장. 실패하거나 내용이 없으면 None."""
+    try:
+        res = requests.get(QPF_URL, params={
+            "eva": 2, "tm": base.strftime("%Y%m%d%H%M"), "qpf": "B", "ef": ef,
+            "map": "HR", "grid": 2, "legend": 1, "size": 600,
+            "zoom_level": 0, "zoom_x": 0, "zoom_y": 0, "authKey": KMA_API_KEY,
+        }, timeout=90)
+        # 정상은 PNG. 내용이 거의 없는 빈 프레임(수백 바이트)은 버린다.
+        if res.content[:4] == b"\x89PNG" and len(res.content) > 3000:
+            return res.content
+    except requests.exceptions.RequestException as e:
+        print(f"[예측] ef=+{ef} 수신 실패: {e}")
+    return None
+
+
 def upload(path, data, content_type):
     """Supabase Storage에 덮어쓰기 업로드 → 공개 URL 반환"""
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{path}"
@@ -212,6 +276,12 @@ if __name__ == "__main__":
     if raw is None:
         print("[레이더] 자료 수신 실패")
         raise SystemExit(1)
+
+    # 미래 강수예측 프레임 (전국 공통이라 한 번만)
+    try:
+        build_forecast()
+    except Exception as e:
+        print(f"[예측] 생성 실패(무시하고 계속): {e}")
 
     for (gx, gy), s in grids.items():
         strikes = []
