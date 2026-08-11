@@ -26,21 +26,20 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .section-heading>p:last-child{max-width:720px;margin-bottom:0;font-size:17px;line-height:1.8}
 .step-label,.brand-kicker{margin-bottom:14px!important;color:var(--signal)!important;font-size:13px;font-weight:900;letter-spacing:.08em}
 
-/* 첫 화면: 목적을 한 문장으로 이해 */
-.purpose-hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);gap:60px;align-items:start;min-height:0;scroll-margin-top:62px;padding:96px max(22px,calc((100vw - 1120px)/2));background:linear-gradient(135deg,#fff 0%,#edf6f8 100%);border-bottom:1px solid var(--signal-line)}
-.purpose-copy h1{margin-bottom:25px;font-size:clamp(48px,6.5vw,76px);line-height:1.12;letter-spacing:-.058em}
+/* 첫 화면: 설명 → 레이더 → 가입 흐름 */
+.purpose-hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);grid-template-areas:"copy map" "signup map";column-gap:60px;row-gap:30px;align-items:start;min-height:0;padding:48px max(22px,calc((100vw - 1120px)/2)) 64px;background:linear-gradient(135deg,#fff 0%,#edf6f8 100%);border-bottom:1px solid var(--signal-line)}
+.purpose-copy{grid-area:copy}
+.purpose-copy h1{margin-bottom:20px;font-size:clamp(34px,4vw,52px);line-height:1.12;letter-spacing:-.058em}
 .purpose-copy h1 span{color:var(--signal)}
-.purpose-lead{max-width:700px;margin-bottom:24px;font-size:18px;line-height:1.85}
-.purpose-boundary{display:grid;gap:4px;max-width:700px;margin-bottom:28px;padding:16px 18px;border-left:4px solid var(--signal-yellow);background:var(--signal-warm)}
+.purpose-lead{max-width:700px;margin-bottom:20px;font-size:17px;line-height:1.75}
+.purpose-boundary{display:grid;gap:4px;max-width:700px;margin:18px 0 0;padding:16px 18px;border-left:4px solid var(--signal-yellow);background:var(--signal-warm)}
 .purpose-boundary strong{color:var(--signal-ink);font-size:15px}
 .purpose-boundary span{color:var(--signal-muted);font-size:14px;line-height:1.65}
 .primary-action,.video-action,.secondary-action{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:13px 21px;border-radius:9px;font-weight:900;text-align:center;text-decoration:none;transition:transform .15s,background .15s}
 .primary-action{background:var(--signal);color:#fff;box-shadow:0 12px 26px rgba(8,127,186,.22)}
 .primary-action:hover,.video-action:hover,.secondary-action:hover{text-decoration:none;transform:translateY(-1px)}
 .primary-action:hover{background:var(--signal-deep)}
-.service-note{margin:13px 0 0;font-size:13px}
-
-.purpose-map{position:sticky;top:86px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
+.purpose-map{grid-area:map;position:sticky;top:86px;scroll-margin-top:74px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
 .map-status{display:flex;align-items:center;gap:8px;margin-bottom:18px;color:#cae0e9;font-size:13px;font-weight:800}
 .status-dot{width:8px;height:8px;border-radius:50%;background:#56d6b0;box-shadow:0 0 0 5px rgba(86,214,176,.12)}
 /* 실제 레이더 지도 (비구름 + 핑 + 타임바). 레이더 페이지와 같은 조작 지원 */
@@ -89,8 +88,7 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .stop-message strong{font-size:17px}.stop-message p{margin:5px 0 12px;color:#785a54;line-height:1.65}
 .stop-message button{padding:0;border:0;background:none;color:var(--signal-stop);font:inherit;font-weight:900;text-decoration:underline;cursor:pointer}
 
-/* 알림 설정 (주 행동) — 첫 화면 히어로 안에 들어간다 */
-.purpose-copy .signup-panel{margin-top:26px}
+/* 알림 설정 (주 행동) */
 .boundary-section{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:40px;align-items:center;padding-top:52px;padding-bottom:52px;background:#fff;border-bottom:1px solid var(--signal-line)}
 .boundary-section .purpose-boundary{margin-bottom:0}
 .boundary-section .device-guide{margin-top:0}
@@ -98,32 +96,29 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .device-guide>div{display:grid;grid-template-columns:105px 1fr;gap:10px;padding:13px 15px;border:1px solid var(--signal-line);border-radius:10px;background:rgba(255,255,255,.66)}
 .device-guide strong{font-size:13px}.device-guide span{color:var(--signal-muted);font-size:12px;line-height:1.6}
 .device-guide .current-device{border-color:var(--signal);background:#fff}
-.install-required{margin-top:10px;padding:12px 14px;border-radius:9px;background:var(--signal-warm);color:#6f5715;font-size:13px;font-weight:800}
-.signup-panel{position:relative;padding:32px;border:1px solid var(--signal-line);border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(25,70,91,.1);overflow:hidden}
-.field{margin-bottom:22px}
+.signup-panel{grid-area:signup;position:relative;scroll-margin-top:74px;padding:24px;border:1px solid var(--signal-line);border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(25,70,91,.1);overflow:hidden}
+.field{margin-bottom:15px}
 .field label{display:block;margin-bottom:8px;color:var(--signal-ink);font-size:14px;font-weight:900}
 .field label span{color:var(--signal-muted);font-weight:500}
 .field input[type=text]{width:100%;padding:14px;border:1px solid #b9ced7;border-radius:9px;background:#fff;color:var(--signal-ink);font:inherit;font-size:16px;outline:none}
 .field input[type=text]:focus{border-color:var(--signal);box-shadow:0 0 0 3px rgba(8,127,186,.1)}
-.loc-btn{width:100%;min-height:55px;border:1px solid var(--signal);border-radius:9px;background:#fff;color:var(--signal);font:inherit;font-size:15px;font-weight:900;cursor:pointer}
-.loc-btn::before{content:"◎";margin-right:8px}
-.or-divider{display:flex;align-items:center;gap:10px;margin:17px 0;color:#7c909a;font-size:11px}
-.or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--signal-line)}
 .addr-row{display:grid;grid-template-columns:1fr auto;gap:8px}
 .addr-btn{min-width:72px;border:0;border-radius:9px;background:var(--signal);color:#fff;font:inherit;font-weight:900;cursor:pointer}
+.address-hint{margin:7px 2px 0!important;font-size:11.5px!important;line-height:1.55!important}
 .search-privacy{margin:8px 2px 0!important;font-size:11px!important;line-height:1.55!important}
 .loc-result{display:none;align-items:center;gap:8px;margin-top:10px;padding:11px 13px;border-radius:9px;background:#e7f6ef;color:#17664c;font-size:13px;font-weight:800}.loc-result.show{display:flex}
 .check-dot{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#239c72;color:#fff;font-size:12px}
-.optional-settings{margin:5px 0 22px;padding:0 16px;border:1px solid var(--signal-line);border-radius:10px;background:var(--signal-bg)}
+.optional-settings{margin:5px 0 10px;padding:0 16px;border:1px solid var(--signal-line);border-radius:10px;background:var(--signal-bg)}
 .optional-settings summary{padding:14px 0;color:var(--signal-deep);font-size:13px;font-weight:900;cursor:pointer}
 .optional-settings[open] summary{margin-bottom:15px;border-bottom:1px solid var(--signal-line)}
 .iv-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .iv-btn{min-height:64px;border:1px solid #bfd2da;border-radius:9px;background:#fff;color:#536874;font:inherit;font-size:15px;font-weight:900;cursor:pointer}.iv-btn small{display:block;margin-top:2px;font-size:10px;font-weight:600}
 .iv-btn.active{border-color:var(--signal);background:#e7f4f9;color:var(--signal)}
 .iv-note{margin:9px 0 0;font-size:11px;line-height:1.55}.iv-note strong{color:var(--signal-deep)}
-/* button.cta 로 한정 — 헤더의 <a class="cta">(nav.js 주입)까지 늘어나던 버그 방지 */
-button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(--signal);color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer}button.cta:disabled{background:#afc1c9;cursor:not-allowed}
-.privacy-note{margin:11px 0 0;text-align:center;font-size:11px}
+/* 주소 확인 후 반드시 거쳐야 하는 기기 알림 설정 */
+.notification-required{display:grid;gap:3px;margin:14px 0 10px;padding:14px 15px;border-radius:10px;background:#fff2ef;color:#6f342d}
+.notification-required strong{font-size:14px}.notification-required span{font-size:12px;line-height:1.6}
+button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74736;color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px rgba(199,71,54,.2)}button.cta:disabled{background:#afc1c9;box-shadow:none;cursor:not-allowed}
 .success{display:none;padding:25px 0;text-align:center}.success.show{display:block}.success-symbol{display:grid;place-items:center;width:62px;height:62px;margin:0 auto 16px;border-radius:50%;background:#daf2e9;color:#167d5c;font-size:28px;font-weight:900}.success h2{margin-bottom:8px}.success p{line-height:1.7}.secondary-action{margin-top:10px;border:1px solid var(--signal);color:var(--signal);background:#fff}
 
 /* 설명과 결과 */
@@ -142,9 +137,24 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(
 
 .toast{position:fixed;left:50%;bottom:28px;z-index:300;max-width:calc(100vw - 32px);padding:12px 18px;border-radius:10px;background:#102c3b;color:#fff;font-size:13px;opacity:0;pointer-events:none;transform:translate(-50%,15px);transition:.22s}.toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* 알림 권한을 요청하기 전에 이유와 기기별 절차를 설명하는 바텀시트 */
+.notify-sheet{position:fixed;inset:0;z-index:500;display:grid;align-items:end;justify-items:center}
+.notify-sheet-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(7,35,50,.56);cursor:pointer}
+.notify-sheet-card{position:relative;width:min(520px,100%);max-height:calc(100dvh - 24px);padding:28px 26px calc(26px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;background:#fff;box-shadow:0 -18px 50px rgba(7,35,50,.22);overflow:auto}
+.notify-sheet-close{position:absolute;top:13px;right:15px;width:38px;height:38px;border:0;border-radius:50%;background:#eef4f6;color:#335463;font-size:25px;line-height:1;cursor:pointer}
+.notify-sheet-kicker{margin:0 42px 7px 0!important;color:#c74736!important;font-size:13px!important;font-weight:900}
+.notify-sheet-card h2{margin:0 42px 8px 0;font-size:25px;line-height:1.3}
+.notify-sheet-card>p:not(.notify-sheet-kicker){margin-bottom:19px;font-size:14px;line-height:1.7}
+.notify-guide{padding:17px;border:1px solid #edc2bc;border-radius:13px;background:#fff8f6}
+.notify-guide>strong{display:block;margin-bottom:10px;color:#6b2f28;font-size:15px}
+.notify-guide ol{margin:0 0 17px;padding-left:22px;color:#3a4f59;font-size:14px;line-height:1.75}
+.allow-notify,.notify-later{width:100%;min-height:54px;border:0;border-radius:9px;font:inherit;font-weight:900;cursor:pointer}
+.allow-notify{background:#c74736;color:#fff}.allow-notify:disabled{background:#b7c4ca}
+.notify-later{border:1px solid #bdcfd6;background:#fff;color:#405b67}
+
 @media(max-width:900px){
   .section-pad{padding-top:76px;padding-bottom:76px}
-  .purpose-hero{grid-template-columns:1fr;min-height:0;padding-top:80px;padding-bottom:72px}
+  .purpose-hero{grid-template-columns:1fr;grid-template-areas:"copy" "map" "signup";gap:32px;min-height:0;padding-top:48px;padding-bottom:64px}
   .purpose-map{position:static;max-width:620px;width:100%}
   .check-card,.boundary-section,.result-section{grid-template-columns:1fr;gap:34px}
   .process-list{grid-template-columns:1fr 1fr}
@@ -152,9 +162,9 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(
 
 @media(max-width:620px){
   .section-pad{padding:64px 18px}
-  .purpose-hero{gap:42px;padding:58px 18px 62px}
-  .purpose-copy h1{font-size:40px;line-height:1.18}
-  .purpose-lead{font-size:16px;line-height:1.8}
+  .purpose-hero{gap:26px;padding:38px 18px 54px}
+  .purpose-copy h1{font-size:36px;line-height:1.15}
+  .purpose-lead{font-size:15px;line-height:1.7}
   .purpose-boundary{padding:14px}
   .primary-action{width:100%}
   .purpose-map{padding:16px;border-radius:17px}
@@ -171,4 +181,5 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(
   .result-section{gap:36px}
   .more-section{grid-template-columns:1fr}
   .more-section a{padding:23px}
+  .notify-sheet-card{padding:25px 20px calc(22px + env(safe-area-inset-bottom))}
 }

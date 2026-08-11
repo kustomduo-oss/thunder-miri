@@ -1,27 +1,37 @@
-/* 동탄이네 천둥번개 알림이 — 공유 헤더/푸터 (모든 페이지 공통)
+/* 반려견 천둥번개 알림 — 공유 헤더/푸터 (모든 페이지 공통)
    메뉴를 바꾸려면 이 파일 한 곳만 수정하면 전체 페이지에 반영된다. */
 (function () {
   var header =
     '<header class="site-header"><div class="inner">' +
-      '<a class="brand" href="index.html"><span class="brand-mark">↯</span><span class="brand-full">동탄이네 천둥번개 알림이</span><span class="brand-short">동탄이네 알림이</span></a>' +
+      '<a class="brand" href="index.html"><span class="brand-mark">↯</span><span class="brand-full">반려견 천둥번개 알림</span><span class="brand-short">반려견 천둥번개 알림</span></a>' +
       '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="siteMenu">메뉴</button>' +
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
-        '<a href="index.html">홈</a>' +
-        '<a href="radar.html">우리 동네 레이더</a>' +
-        '<a href="how.html">작동 방식</a>' +
-        '<a href="story.html">동탄이 이야기</a>' +
-        '<a href="research.html">참고자료</a>' +
-        '<a href="guide.html">도움말</a>' +
-        '<a class="cta" href="index.html#sound-check">시작 전 확인</a>' +
+        '<a href="index.html#radar">우리 동네 레이더</a>' +
+        '<a href="index.html#signup">알림 받기</a>' +
+        '<a href="story.html">만든 이야기</a>' +
+        '<a href="guide-training.html">동탄이의 소리 적응</a>' +
       '</nav>' +
-    '</div></header>';
+    '</div></header>' +
+    '<div class="alert-status-bar" id="alertStatusBar" hidden>' +
+      '<span><i></i><b id="alertStatusText">알림 켜짐</b></span>' +
+      '<button type="button" id="alertManageButton">알림 관리</button>' +
+    '</div>' +
+    '<div class="alert-manage-overlay" id="alertManageOverlay" hidden>' +
+      '<button type="button" class="alert-manage-backdrop" id="alertManageBackdrop" aria-label="알림 관리 닫기"></button>' +
+      '<section class="alert-manage-card" role="dialog" aria-modal="true" aria-labelledby="alertManageTitle">' +
+        '<button type="button" class="alert-manage-close" id="alertManageClose" aria-label="닫기">×</button>' +
+        '<h2 id="alertManageTitle">알림 관리</h2>' +
+        '<p id="alertManageLocation">현재 기기에서 천둥번개 알림을 받고 있습니다.</p>' +
+        '<button type="button" class="alert-off-button" id="alertOffButton">알림 끄기</button>' +
+      '</section>' +
+    '</div>';
 
   var footer =
     '<footer class="site-footer"><div class="inner">' +
-      '<div class="footer-brand">동탄이네 천둥번개 알림이</div>' +
+      '<div class="footer-brand">반려견 천둥번개 알림</div>' +
       '<nav class="footer-nav">' +
-        '<a href="story.html">동탄이 이야기</a>' +
-        '<a href="research.html">참고자료</a>' +
+        '<a href="story.html">만든 이야기</a>' +
+        '<a href="guide-training.html">동탄이의 소리 적응</a>' +
         '<a href="blog.html">블로그</a>' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
@@ -30,7 +40,7 @@
         '<a href="disclaimer.html">면책 고지</a>' +
         '<a href="cookies.html">쿠키 고지</a>' +
       '</nav>' +
-      '<div class="footer-copy">천둥이 들리기 전에 준비할 시간을 알려주는 무료 웹 알림 · 날씨 데이터: 기상청 API<br/>© 2026 동탄이네 천둥번개 알림이</div>' +
+      '<div class="footer-copy">우리 동네 천둥번개 접근을 미리 알려주는 웹 알림 · 날씨 데이터: 기상청 API<br/>© 2026 반려견 천둥번개 알림</div>' +
     '</div></footer>';
 
   function mount() {
@@ -65,6 +75,81 @@
         if (event.key === 'Escape') closeMenu();
       });
     }
+
+    var statusBar = document.getElementById('alertStatusBar');
+    var manageOverlay = document.getElementById('alertManageOverlay');
+    var manageButton = document.getElementById('alertManageButton');
+    var manageClose = document.getElementById('alertManageClose');
+    var manageBackdrop = document.getElementById('alertManageBackdrop');
+    var alertOffButton = document.getElementById('alertOffButton');
+
+    function readProfile() {
+      try { return JSON.parse(localStorage.getItem('thunder_alert_profile') || '{}'); }
+      catch (error) { return {}; }
+    }
+
+    function closeManage() {
+      if (!manageOverlay) return;
+      manageOverlay.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    function openManage() {
+      if (!manageOverlay) return;
+      var profile = readProfile();
+      var locationText = document.getElementById('alertManageLocation');
+      if (locationText) locationText.textContent = (profile.dong ? profile.dong + '에서 ' : '현재 기기에서 ') + '천둥번개 알림을 받고 있습니다.';
+      manageOverlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if (alertOffButton) alertOffButton.focus();
+    }
+
+    async function refreshSubscriptionStatus() {
+      if (!statusBar || !('serviceWorker' in navigator)) return;
+      try {
+        var registration = await navigator.serviceWorker.getRegistration();
+        var subscription = registration && await registration.pushManager.getSubscription();
+        statusBar.hidden = !subscription;
+        if (subscription) {
+          var profile = readProfile();
+          var statusText = document.getElementById('alertStatusText');
+          if (statusText) statusText.textContent = '알림 켜짐' + (profile.dong ? ' · ' + profile.dong : '');
+        }
+      } catch (error) {
+        statusBar.hidden = true;
+      }
+    }
+
+    if (manageButton) manageButton.addEventListener('click', openManage);
+    if (manageClose) manageClose.addEventListener('click', closeManage);
+    if (manageBackdrop) manageBackdrop.addEventListener('click', closeManage);
+    if (alertOffButton) alertOffButton.addEventListener('click', async function () {
+      if (!window.confirm('이 기기에서 천둥번개 알림을 끌까요?')) return;
+      alertOffButton.disabled = true;
+      alertOffButton.textContent = '알림 끄는 중…';
+      try {
+        var registration = await navigator.serviceWorker.getRegistration();
+        var subscription = registration && await registration.pushManager.getSubscription();
+        if (subscription) await subscription.unsubscribe();
+        try {
+          localStorage.removeItem('thunder_grid');
+          localStorage.removeItem('thunder_alert_profile');
+        } catch (error) {}
+        closeManage();
+        statusBar.hidden = true;
+        window.dispatchEvent(new CustomEvent('thunder-subscription-changed'));
+      } catch (error) {
+        window.alert('알림을 끄지 못했습니다. 브라우저의 사이트 설정에서 알림을 차단해주세요.');
+      } finally {
+        alertOffButton.disabled = false;
+        alertOffButton.textContent = '알림 끄기';
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && manageOverlay && !manageOverlay.hidden) closeManage();
+    });
+    window.addEventListener('thunder-subscription-changed', refreshSubscriptionStatus);
+    refreshSubscriptionStatus();
   }
 
   if (document.readyState === 'loading') {

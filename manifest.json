@@ -1,7 +1,7 @@
 {
-  "name": "동탄이네 천둥번개 알림이",
-  "short_name": "천둥번개 알림이",
-  "description": "천둥이 들리기 전에 준비할 시간을 알려주는 무료 웹 알림",
+  "name": "반려견 천둥번개 알림",
+  "short_name": "천둥번개 알림",
+  "description": "우리 동네로 다가오는 천둥번개를 보호자에게 미리 알려주는 웹 알림",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

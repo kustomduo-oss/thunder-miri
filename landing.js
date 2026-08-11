@@ -46,13 +46,6 @@ const userAgent = navigator.userAgent || "";
 const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 
-if(isIOS){
-  $("iosGuide").classList.add("current-device");
-  if(isStandalone) $("iosGuide").querySelector("span").textContent = "홈 화면에서 실행 중입니다. 아래에서 위치와 알림을 설정하세요.";
-}else{
-  $("otherGuide").classList.add("current-device");
-}
-
 function toGrid(lat, lon){
   const RE=6371.00877, GRID=5.0, SLAT1=30.0, SLAT2=60.0, OLON=126.0, OLAT=38.0, XO=43, YO=136;
   const DEGRAD=Math.PI/180.0;
@@ -247,24 +240,12 @@ function setLocation(lat, lon, dongHint){
   state.nx=grid.nx;
   state.ny=grid.ny;
   state.dong=dongHint || null;
-  $("locText").textContent=(state.dong || "현재 위치") + ` · 격자 ${grid.nx},${grid.ny}`;
+  $("locText").textContent=(state.dong || "선택한 주소") + " · 알림 위치 확인됨";
   $("locResult").classList.add("show");
   $("ctaBtn").disabled=false;
-  $("ctaBtn").textContent="우리 동네 낙뢰 알림 받기";
+  $("ctaBtn").textContent="🚨 필수 · 알림 설정 완료하기";
   pinHome(lat, lon, state.dong);
 }
-
-$("locBtn").addEventListener("click", () => {
-  if(!navigator.geolocation){ toast("이 브라우저는 위치 기능을 지원하지 않습니다"); return; }
-  $("locBtn").textContent="위치 확인 중…";
-  navigator.geolocation.getCurrentPosition(position => {
-    setLocation(position.coords.latitude, position.coords.longitude);
-    $("locBtn").textContent="현재 위치 다시 가져오기";
-  }, error => {
-    $("locBtn").textContent="현재 위치 가져오기";
-    toast(error.code===1 ? "위치 권한을 허용하거나 동네 검색을 이용해주세요" : "위치를 가져오지 못했습니다");
-  }, {enableHighAccuracy:true, timeout:10000});
-});
 
 $("addrBtn").addEventListener("click", async () => {
   const query=$("addrInput").value.trim();
@@ -274,8 +255,8 @@ $("addrBtn").addEventListener("click", async () => {
   const hit=await forwardGeocode(query);
   $("addrBtn").textContent="검색";
   $("addrBtn").disabled=false;
-  if(!hit){ toast("주소를 찾지 못했습니다. 시·군·구와 동을 함께 입력해보세요"); return; }
-  setLocation(hit.lat,hit.lon,query);
+  if(!hit){ toast("주소를 찾지 못했습니다. 도로명이나 시·군·구를 함께 입력해보세요"); return; }
+  setLocation(hit.lat,hit.lon,hit.label || query);
 });
 
 $("addrInput").addEventListener("keydown", event => {
@@ -293,39 +274,74 @@ document.querySelectorAll(".iv-btn").forEach(button => button.addEventListener("
 
 async function forwardGeocode(query){
   try{
-    const response=await fetch(`https://nominatim.openstreetmap.org/search?format=json&accept-language=ko&countrycodes=kr&limit=1&q=${encodeURIComponent(query)}`);
+    const response=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&accept-language=ko&countrycodes=kr&limit=1&q=${encodeURIComponent(query)}`);
     if(!response.ok) return null;
     const json=await response.json();
     if(!json.length) return null;
-    return {lat:parseFloat(json[0].lat), lon:parseFloat(json[0].lon)};
+    return {lat:parseFloat(json[0].lat), lon:parseFloat(json[0].lon), label:json[0].display_name};
   }catch(error){
     return null;
   }
 }
 
-$("ctaBtn").addEventListener("click", async () => {
+function closeNotificationSheet(){
+  $("notifySheet").hidden=true;
+  document.body.style.overflow="";
+}
+
+function openNotificationSheet(){
+  $("iosInstallGuide").hidden=!(isIOS && !isStandalone);
+  $("directNotifyGuide").hidden=isIOS && !isStandalone;
+  $("notifySheet").hidden=false;
+  document.body.style.overflow="hidden";
+  window.setTimeout(() => {
+    const target=isIOS && !isStandalone ? $("iosGuideDone") : $("allowNotifyBtn");
+    if(target) target.focus();
+  },0);
+}
+
+$("ctaBtn").addEventListener("click", () => {
   if(state.nx==null){ toast("먼저 위치를 등록해주세요"); return; }
+  openNotificationSheet();
+});
+
+$("notifySheetClose").addEventListener("click", closeNotificationSheet);
+$("notifySheetBackdrop").addEventListener("click", closeNotificationSheet);
+$("iosGuideDone").addEventListener("click", closeNotificationSheet);
+document.addEventListener("keydown", event => {
+  if(event.key==="Escape" && !$("notifySheet").hidden) closeNotificationSheet();
+});
+
+$("allowNotifyBtn").addEventListener("click", completeSubscription);
+
+async function completeSubscription(){
+  if(state.nx==null){ closeNotificationSheet(); toast("먼저 주소를 등록해주세요"); return; }
 
   if(isIOS && !isStandalone){
-    $("installRequired").hidden=false;
-    $("installRequired").scrollIntoView({behavior:"smooth", block:"center"});
+    openNotificationSheet();
     return;
   }
 
-  $("ctaBtn").disabled=true;
-  $("ctaBtn").textContent="알림 연결 중…";
+  $("allowNotifyBtn").disabled=true;
+  $("allowNotifyBtn").textContent="알림 연결 중…";
 
   if(!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)){
     toast("이 브라우저에서는 웹푸시 알림을 사용할 수 없습니다");
-    resetCta();
+    resetNotifyButton();
     return;
   }
 
   let permission=Notification.permission;
-  if(permission==="default") permission=await Notification.requestPermission();
+  try{
+    if(permission==="default") permission=await Notification.requestPermission();
+  }catch(error){
+    toast("알림 권한 확인창을 열지 못했습니다. 브라우저 설정을 확인해주세요");
+    resetNotifyButton();
+    return;
+  }
   if(permission!=="granted"){
     toast("알림을 받으려면 알림 권한을 허용해주세요");
-    resetCta();
+    resetNotifyButton();
     return;
   }
 
@@ -346,7 +362,7 @@ $("ctaBtn").addEventListener("click", async () => {
 
   if(!subscription){
     toast("알림 등록에 실패했습니다. 새로고침 후 다시 시도해주세요");
-    resetCta();
+    resetNotifyButton();
     return;
   }
 
@@ -369,20 +385,22 @@ $("ctaBtn").addEventListener("click", async () => {
     });
     if(!response.ok){
       console.warn("저장 실패:",response.status,await response.text());
+      try{ await subscription.unsubscribe(); }catch(error){}
       toast("저장 중 문제가 생겼습니다. 잠시 후 다시 시도해주세요");
-      resetCta();
+      resetNotifyButton();
       return;
     }
   }catch(error){
     console.warn("저장 실패:",error);
+    try{ await subscription.unsubscribe(); }catch(unsubscribeError){}
     toast("네트워크 오류로 저장하지 못했습니다");
-    resetCta();
+    resetNotifyButton();
     return;
   }
 
   try{
     const registration=await navigator.serviceWorker.ready;
-    await registration.showNotification("동탄이네 천둥번개 알림이 연결 완료",{
+    await registration.showNotification("반려견 천둥번개 알림 연결 완료",{
       body:`${$("dogName").value.trim() || "우리 아이"}를 위한 낙뢰 알림을 켰습니다. 천둥이 가까워지면 미리 알려드릴게요.`,
       icon:"icon-192.png",
       badge:"icon-192.png",
@@ -393,17 +411,22 @@ $("ctaBtn").addEventListener("click", async () => {
   }
 
   // 레이더 화면이 '우리 동네'를 보여줄 수 있게 격자를 기억해둔다
-  try{ localStorage.setItem("thunder_grid", state.nx+"_"+state.ny); }catch(e){}
+  try{
+    localStorage.setItem("thunder_grid", state.nx+"_"+state.ny);
+    localStorage.setItem("thunder_alert_profile", JSON.stringify({dong:state.dong,cooldown:state.cooldown}));
+  }catch(e){}
 
+  closeNotificationSheet();
   $("successDog").textContent=$("dogName").value.trim() || "우리 아이";
   $("formView").style.display="none";
   $("successView").classList.add("show");
   $("signup").scrollIntoView({behavior:"smooth",block:"start"});
-});
+  window.dispatchEvent(new CustomEvent("thunder-subscription-changed"));
+}
 
-function resetCta(){
-  $("ctaBtn").disabled=false;
-  $("ctaBtn").textContent="우리 동네 낙뢰 알림 받기";
+function resetNotifyButton(){
+  $("allowNotifyBtn").disabled=false;
+  $("allowNotifyBtn").textContent="알림 허용하기";
 }
 
 function urlBase64ToUint8Array(base64String){

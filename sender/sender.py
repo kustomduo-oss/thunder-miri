@@ -377,7 +377,7 @@ def run_test():
         dog = s.get("dog_name") or "강아지"
         ok, status = send_web_push(
             s["subscription"],
-            "🐾 동탄이네 천둥번개 알림이 테스트",
+            "🐾 반려견 천둥번개 알림 테스트",
             f"{dog} 알림 연결 성공! 천둥이 오면 이렇게 미리 알려드릴게요.",
         )
         print(f"  {s.get('dong') or s['id'][:8]}: {'성공' if ok else f'실패({status})'}")
@@ -406,7 +406,7 @@ if __name__ == "__main__":
     KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY).strip()
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY).strip()
 
-    parser = argparse.ArgumentParser(description="동탄이네 천둥번개 알림이 발송 엔진")
+    parser = argparse.ArgumentParser(description="반려견 천둥번개 알림 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
     args = parser.parse_args()

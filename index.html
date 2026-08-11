@@ -3,81 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>동탄이네 천둥번개 알림이 — 천둥 전에 준비할 시간을 알려드려요</title>
-  <meta name="description" content="우리 동네에 낙뢰가 다가오면 미리 알려, 보호자가 천둥·빗소리 영상을 틀고 실제 천둥에 대비할 시간을 벌어주는 무료 웹 알림 서비스입니다." />
+  <title>반려견 천둥번개 알림 — 우리 동네 천둥번개를 미리 알려드려요</title>
+  <meta name="description" content="기상청 낙뢰 관측 정보를 5분마다 확인해, 우리 동네로 다가오는 천둥번개를 보호자에게 빠르게 알려드립니다." />
   <meta name="theme-color" content="#0c3448" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="동탄이네 알림이" />
+  <meta name="apple-mobile-web-app-title" content="천둥번개 알림" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=signal-5" />
-  <link rel="stylesheet" href="landing.css?v=hero-radar-2" />
+<link rel="stylesheet" href="style.css?v=subscription-status-1" />
+  <link rel="stylesheet" href="landing.css?v=mobile-flow-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
 
 <main class="landing-main">
-  <section class="purpose-hero" id="signup">
+  <section class="purpose-hero">
     <div class="purpose-copy">
-      <p class="brand-kicker">동탄이네 천둥번개 알림이</p>
-      <h1>천둥이 들리기 전에,<br /><span>준비할 시간을 알려드려요.</span></h1>
-      <p class="purpose-lead">우리 동네로 낙뢰가 다가오면 보호자에게 먼저 알려드립니다. 무방비로 천둥소리를 맞지 않도록, 미리 준비할 시간을 벌어드립니다.</p>
-
-      <div class="signup-panel">
-        <div id="formView">
-          <div class="field">
-            <label for="dogName">강아지 이름 <span>(선택)</span></label>
-            <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
-          </div>
-
-          <div class="field">
-            <label>우리 동네 위치</label>
-            <button type="button" class="loc-btn" id="locBtn">현재 위치 가져오기</button>
-            <div class="or-divider"><span>또는 동네 검색</span></div>
-            <div class="addr-row">
-              <input type="text" id="addrInput" placeholder="예: 청주시 용암동" autocomplete="off" />
-              <button type="button" class="addr-btn" id="addrBtn">검색</button>
-            </div>
-            <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">위치 확인됨</span></div>
-          </div>
-
-          <details class="optional-settings">
-            <summary>선택 설정</summary>
-            <div class="field">
-              <label>비 예보 알림 간격</label>
-              <div class="iv-row">
-                <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
-                <button type="button" class="iv-btn active" data-min="20">20분<small>기본</small></button>
-                <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
-              </div>
-              <p class="iv-note"><strong>낙뢰 경보는 선택한 간격과 관계없이 즉시 알립니다.</strong></p>
-            </div>
-            <p class="search-privacy">동네 검색을 누르면 입력한 검색어가 OpenStreetMap Nominatim으로 전송됩니다. GPS 좌표는 이 검색 서비스로 보내지 않습니다.</p>
-          </details>
-
-          <div class="install-required" id="installRequired" role="status" hidden>
-            iPhone 웹푸시는 홈 화면에 추가한 뒤 사용할 수 있습니다.
-          </div>
-
-          <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
-          <p class="privacy-note">언제든 알림을 끌 수 있습니다 · 별도 회원가입 없음</p>
-        </div>
-
-        <div class="success" id="successView">
-          <div class="success-symbol">✓</div>
-          <h2>알림이 켜졌습니다.</h2>
-          <p>이제 낙뢰가 가까워지면 <strong id="successDog">강아지</strong>를 위해 미리 알려드릴게요.</p>
-          <a class="secondary-action" href="radar.html">우리 동네 레이더 보기 →</a>
-        </div>
-      </div>
-
-      <p class="service-note">무료 · 회원가입 없음 · 소리 자동재생 없음</p>
+      <h1>우리 동네로 다가오는<br /><span>천둥번개,</span><br />보호자에게 미리<br /><span>알려드려요.</span></h1>
+      <p class="purpose-lead">기상청 낙뢰 관측 정보를 5분마다 확인해,<br />천둥번개 접근을 빠르게 알려드려요.</p>
+      <a class="primary-action" href="#signup">우리 동네 알림 받기</a>
     </div>
 
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
-    <div class="purpose-map">
+    <div class="purpose-map" id="radar">
       <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">지금 비구름을 불러오는 중…</span></div>
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
@@ -103,88 +53,94 @@
         <div><b>영상</b><span>미리 재생</span></div>
       </div>
     </div>
-  </section>
 
-  <section class="boundary-section section-pad">
-    <div class="purpose-boundary">
-      <strong>이 서비스는 천둥번개 소리로 인한 공포를 없애거나 치료하는 것이 목적이 아닙니다.</strong>
-      <span>목표는 예고 없이 천둥번개 소리에 노출되지 않게 하는 데 있습니다.</span>
-    </div>
-    <div class="device-guide" id="deviceGuide">
-      <div id="iosGuide"><strong>iPhone</strong><span>Safari에서 공유 버튼 → 홈 화면에 추가한 뒤 아이콘으로 열어주세요.</span></div>
-      <div id="otherGuide"><strong>Android·PC</strong><span>현재 브라우저에서 바로 알림을 설정할 수 있습니다.</span></div>
-    </div>
-  </section>
+    <div class="signup-panel" id="signup">
+      <div id="formView">
+        <div class="field">
+          <label for="addrInput">알림 받을 주소</label>
+          <div class="addr-row">
+            <input type="text" id="addrInput" placeholder="예: 동탄반석로 또는 반송동" autocomplete="street-address" />
+            <button type="button" class="addr-btn" id="addrBtn">검색</button>
+          </div>
+          <p class="address-hint">도로명 주소·지번 주소·동네 이름으로 검색할 수 있어요.</p>
+          <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">주소 확인됨</span></div>
+        </div>
 
-  <section class="check-section section-pad" id="sound-check">
-    <div class="section-heading narrow">
-      <p class="step-label">선택 · 소리 적응을 해보고 싶다면</p>
-      <h2>영상 속 천둥소리에<br />불안해하지 않는지 먼저 봐주세요.</h2>
-      <p>알림만 받아도 충분합니다. 다만 동탄이처럼 <b>평소 소리로 미리 준비하는 방법</b>을 써보고 싶다면, 영상 소리에 불안 반응이 없는지 먼저 확인해주세요. 영상 소리에도 놀라는 아이에게는 이 방법을 쓰면 안 됩니다.</p>
-    </div>
+        <div class="field">
+          <label for="dogName">강아지 이름 <span>(선택)</span></label>
+          <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
+        </div>
 
-    <div class="check-card">
-      <div class="check-instructions">
-        <h3>확인 방법</h3>
-        <ol>
-          <li>보호자가 바로 끌 수 있는 상태에서 시작합니다.</li>
-          <li>휴대폰 음량을 가장 낮게 설정합니다.</li>
-          <li>숨기·떨기·헐떡임·반응 단절이 보이면 즉시 끕니다.</li>
-        </ol>
-        <a class="video-action" href="https://youtu.be/u_YoR8OZvRA?si=Zjy68dTBNHZD54zh" target="_blank" rel="noopener noreferrer external">낮은 음량으로 테스트 영상 열기 <span aria-hidden="true">↗</span></a>
+        <details class="optional-settings">
+          <summary>알림 설정</summary>
+          <div class="field">
+            <label>비 예보 알림 간격</label>
+            <div class="iv-row">
+              <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
+              <button type="button" class="iv-btn active" data-min="20">20분<small>기본</small></button>
+              <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
+            </div>
+            <p class="iv-note"><strong>낙뢰 경보는 선택한 간격과 관계없이 즉시 알립니다.</strong></p>
+          </div>
+          <p class="search-privacy">주소 검색 시 입력한 검색어가 OpenStreetMap Nominatim으로 전송됩니다.</p>
+        </details>
+
+        <div class="notification-required">
+          <strong>아직 알림 설정이 끝나지 않았어요.</strong>
+          <span>기기에서 알림을 허용해야 실제로 천둥번개 알림을 받을 수 있습니다.</span>
+        </div>
+        <button class="cta" id="ctaBtn" disabled>주소를 먼저 등록해주세요</button>
+
+        <div class="purpose-boundary">
+          <strong>이 알림은 치료나 훈련을 목적으로 하지 않습니다.</strong>
+          <span>반려견의 천둥 공포를 없애는 서비스가 아니라, 갑작스러운 천둥번개 소리에 대비할 시간을 드리기 위한 알림입니다.</span>
+        </div>
       </div>
 
-      <div class="check-decision" aria-labelledby="decisionTitle">
-        <h3 id="decisionTitle">우리 아이는 어떻게 반응했나요?</h3>
-        <button type="button" class="decision-button safe" id="soundPass">불안 반응이 없었습니다</button>
-        <button type="button" class="decision-button stop" id="soundStop">조금이라도 불안해했습니다</button>
-        <p class="check-fine">낮은 음량에서 한 번 괜찮았다고 높은 음량까지 안전하다는 뜻은 아닙니다. 이후에도 반응을 살피며 천천히 조절해야 합니다.</p>
+      <div class="success" id="successView">
+        <div class="success-symbol">✓</div>
+        <h2>알림이 켜졌습니다.</h2>
+        <p>이제 천둥번개가 가까워지면 <strong id="successDog">우리 아이</strong>를 위해 미리 알려드릴게요.</p>
+        <a class="secondary-action" href="#radar">우리 동네 레이더 보기 →</a>
       </div>
     </div>
-
-    <div class="stop-message" id="soundStopMessage" role="status" hidden>
-      <strong>영상을 끄고 소리는 쓰지 마세요.</strong>
-      <p>동탄이에게 사용한 영상 대비 방식은 이 아이에게 맞지 않을 수 있습니다. 공포를 참고 견디게 하지 마세요. <b>소리 없이 낙뢰·비 알림만 이용하셔도 됩니다.</b></p>
-      <button type="button" id="checkAgain">다시 확인하기</button>
-    </div>
   </section>
 
-
-  <section class="how-section section-pad" id="how-it-works">
-    <div class="section-heading narrow">
-      <p class="step-label">이 서비스가 하는 일</p>
-      <h2>알림은 치료가 아니라<br />준비를 시작하라는 신호입니다.</h2>
-    </div>
-    <ol class="process-list">
-      <li><span>1</span><div><b>평온한 날 미리 적응</b><p>영상 소리에 불안 반응이 없는 범위에서만 익숙하게 합니다.</p></div></li>
-      <li><span>2</span><div><b>낙뢰 접근 알림</b><p>50km 이내 접근과 30km 이내 임박을 웹푸시로 알려드립니다.</p></div></li>
-      <li><span>3</span><div><b>영상으로 먼저 준비</b><p>알림을 받으면 낮은 음량부터 평소 들려준 영상을 재생합니다.</p></div></li>
-      <li><span>4</span><div><b>실제 천둥을 맞이</b><p>갑작스러운 첫 소리가 되지 않도록 준비된 환경을 만듭니다.</p></div></li>
-    </ol>
-  </section>
-
-  <section class="result-section section-pad">
-    <div class="result-copy">
-      <p class="step-label">동탄이에게 있었던 변화</p>
-      <h2>두려움이 사라진 것은 아닙니다.<br />패닉에 빠지는 상황이 줄었습니다.</h2>
-      <p>동탄이는 실제 천둥을 여전히 알아차립니다. 하지만 알림을 받고 영상을 먼저 틀어주면, 예고 없이 천둥을 들었을 때보다 스스로 안정을 찾으려는 모습을 보였습니다.</p>
-      <p class="personal-note">이는 동탄이 한 마리에 대한 보호자의 관찰이며, 모든 강아지에게 같은 결과를 보장하지 않습니다.</p>
-    </div>
-    <div class="result-contrast">
-      <div><span>이전</span><strong>갑작스러운 천둥</strong><p>숨기, 심한 헐떡임, 시선이 흐려질 정도의 패닉</p></div>
-      <div><span>이후</span><strong>알림 후 미리 준비</strong><p>두려움은 남아 있지만 패닉으로 커지기 전에 대응</p></div>
-    </div>
-  </section>
-
-  <section class="more-section section-pad">
-    <a href="story.html"><span>동탄이의 실제 이야기</span><b>침수 이후부터 알림이를 만들기까지 →</b></a>
-    <a href="research.html"><span>참고자료와 한계</span><b>군견 적응훈련과 소음 공포 연구 →</b></a>
-  </section>
 </main>
+
+<div class="notify-sheet" id="notifySheet" hidden>
+  <button type="button" class="notify-sheet-backdrop" id="notifySheetBackdrop" aria-label="알림 설정 창 닫기"></button>
+  <section class="notify-sheet-card" role="dialog" aria-modal="true" aria-labelledby="notifySheetTitle">
+    <button type="button" class="notify-sheet-close" id="notifySheetClose" aria-label="닫기">×</button>
+    <p class="notify-sheet-kicker">🚨 필수 · 알림 설정</p>
+    <h2 id="notifySheetTitle">기기 알림을 허용해주세요.</h2>
+    <p>주소 등록만으로는 알림이 오지 않습니다. 아래 단계를 마치면 실제 천둥번개 알림을 받을 수 있어요.</p>
+
+    <div class="notify-guide" id="iosInstallGuide" hidden>
+      <strong>iPhone은 홈 화면에서 한 번 더 열어야 해요.</strong>
+      <ol>
+        <li>Safari 하단의 <b>공유</b> 버튼을 누릅니다.</li>
+        <li><b>홈 화면에 추가</b>를 선택합니다.</li>
+        <li>추가된 아이콘으로 이 서비스를 다시 엽니다.</li>
+        <li>같은 주소를 확인한 뒤 <b>알림 허용</b>을 누릅니다.</li>
+      </ol>
+      <button type="button" class="notify-later" id="iosGuideDone">확인했어요</button>
+    </div>
+
+    <div class="notify-guide" id="directNotifyGuide" hidden>
+      <strong>Android·PC는 두 단계면 끝나요.</strong>
+      <ol>
+        <li>아래 <b>알림 허용하기</b>를 누릅니다.</li>
+        <li>브라우저 확인창에서 <b>허용</b>을 선택합니다.</li>
+      </ol>
+      <button type="button" class="allow-notify" id="allowNotifyBtn">알림 허용하기</button>
+    </div>
+  </section>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=hero-radar-2" defer></script>
-<script src="nav.js?v=brand-2" defer></script>
+<script src="landing.js?v=notification-flow-1" defer></script>
+<script src="nav.js?v=content-menu-1" defer></script>
 </body>
 </html>

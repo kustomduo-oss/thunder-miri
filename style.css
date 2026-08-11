@@ -38,6 +38,18 @@ a:hover{text-decoration:underline}
 .nav a.cta{background:var(--yellow);color:#173144}
 .nav a.cta:hover{background:var(--yellow-deep);color:#000}
 .menu-toggle{display:none;border:1px solid rgba(255,255,255,.32);border-radius:8px;background:transparent;color:#fff;font:inherit;font-size:13px;font-weight:800;padding:7px 11px;cursor:pointer}
+.alert-status-bar{position:sticky;top:57px;z-index:90;min-height:38px;padding:7px max(18px,calc((100vw - var(--wrap))/2));background:#fff8df;border-bottom:1px solid #eadb9d;color:#5c4a0d;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;box-shadow:0 4px 12px rgba(7,42,62,.06)}
+.alert-status-bar[hidden],.alert-manage-overlay[hidden]{display:none!important}
+.alert-status-bar>span{display:flex;align-items:center;gap:7px;min-width:0}.alert-status-bar i{width:8px;height:8px;border-radius:50%;background:#21a06f;box-shadow:0 0 0 4px rgba(33,160,111,.12)}
+.alert-status-bar b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.alert-status-bar button{flex:0 0 auto;border:0;background:none;color:#775d00;font:inherit;font-weight:900;text-decoration:underline;cursor:pointer}
+.alert-manage-overlay{position:fixed;inset:0;z-index:600;display:grid;place-items:center;padding:18px}
+.alert-manage-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(7,35,50,.56);cursor:pointer}
+.alert-manage-card{position:relative;width:min(430px,100%);padding:27px;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(7,35,50,.28)}
+.alert-manage-card h2{margin:0 40px 7px 0;font-size:23px}.alert-manage-card p{margin:0 0 18px;color:var(--ink-soft);font-size:14px;line-height:1.65}
+.alert-manage-close{position:absolute;top:13px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:#eef4f6;color:#335463;font-size:24px;cursor:pointer}
+.alert-manage-change,.alert-off-button{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:10px;font:inherit;font-weight:900;cursor:pointer}
+.alert-manage-change{margin-bottom:9px;border:1px solid #9fc3d3;background:#fff;color:var(--navy)}.alert-manage-change:hover{text-decoration:none;background:#f3f9fb}
+.alert-off-button{border:1px solid #d8aca6;background:#fff5f2;color:#a13f32}.alert-off-button:disabled{opacity:.6;cursor:wait}
 
 /* 본문 */
 main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
@@ -122,6 +134,20 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .how-list{margin-bottom:22px}
 .step-kicker{display:inline-block;margin-bottom:7px;color:var(--navy);font-size:12px;font-weight:800;letter-spacing:.08em}
 
+/* 동탄이의 소리 적응 기록 + 참고자료 통합 페이지 */
+.sound-story-card section{padding:12px 0 30px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.sound-story-card section:last-child{margin-bottom:0;padding-bottom:4px;border-bottom:0}
+.experience-steps{display:grid;gap:9px;margin:20px 0 16px!important;padding:0!important;list-style:none;counter-reset:experience}
+.experience-steps li{counter-increment:experience;display:grid;grid-template-columns:34px 150px 1fr;gap:10px;align-items:start;padding:14px 15px;border-radius:11px;background:var(--bg)}
+.experience-steps li::before{content:counter(experience);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:900}
+.experience-steps strong{color:var(--ink)}.experience-steps span{color:var(--ink-soft);font-size:14px;line-height:1.6}
+.stop-signals{margin-top:18px}.sound-video-link{margin-top:18px}
+.reference-details{margin:20px 0 24px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(20,76,104,.06);overflow:hidden}
+.reference-details>summary{padding:20px 23px;color:var(--navy);font-size:16px;font-weight:900;cursor:pointer;list-style-position:inside}
+.reference-details[open]>summary{border-bottom:1px solid var(--line);background:#f4f9fb}
+.reference-details-body{padding:24px}.reference-details-body .source-group:last-child{margin-bottom:0}
+.service-limits{margin:24px 0}
+
 @media(max-width:650px){
   .site-header .inner{position:relative;min-height:52px;padding:9px 16px;align-items:center;flex-direction:row}
   .brand{font-size:16px}
@@ -129,6 +155,7 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
   .brand-full{display:none}
   .brand-short{display:inline}
   .menu-toggle{display:inline-flex;align-items:center;justify-content:center}
+  .alert-status-bar{top:52px;padding:7px 16px}
   .nav{position:absolute;top:calc(100% + 1px);left:12px;right:12px;width:auto;display:none;flex-direction:column;gap:2px;padding:9px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 36px rgba(7,42,62,.2)}
   .nav.nav-open{display:flex}
   .nav a{width:100%;padding:10px 12px;color:var(--ink);font-size:14px}
@@ -139,4 +166,6 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
   .claim-boundaries{grid-template-columns:1fr}
   .signal-stat-row{grid-template-columns:1fr}
   .signal-stat-row div{display:flex;align-items:center;justify-content:space-between;padding:13px 17px}
+  .experience-steps li{grid-template-columns:30px 1fr;gap:7px 10px}.experience-steps li span{grid-column:2}
+  .reference-details-body{padding:18px}
 }

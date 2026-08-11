@@ -1,4 +1,4 @@
-/* 동탄이네 천둥번개 알림이 — 웹푸시 서비스워커 */
+/* 반려견 천둥번개 알림 — 웹푸시 서비스워커 */
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -7,15 +7,15 @@ self.addEventListener("push", (event) => {
     data = { body: event.data && event.data.text() };
   }
 
-  const title = data.title || "동탄이네 천둥번개 알림이";
+  const title = data.title || "반려견 천둥번개 알림";
   const options = {
-    body: data.body || "낙뢰가 가까워지고 있습니다. 평소 들려준 영상을 낮은 음량부터 준비해주세요.",
+    body: data.body || "천둥번개가 가까워지고 있습니다. 우리 동네 레이더를 확인해주세요.",
     icon: data.icon || "icon-192.png",
     badge: "icon-192.png",
     vibrate: [200, 100, 200],
     tag: data.tag || "thunder-alert",
     renotify: true,
-    data: { url: data.url || "https://youtu.be/u_YoR8OZvRA?si=Zjy68dTBNHZD54zh" }
+    data: { url: data.url || "./index.html#radar" }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
