@@ -72,6 +72,46 @@ function toGrid(lat, lon){
   return { nx:Math.floor(ra*Math.sin(theta)+XO+0.5), ny:Math.floor(ro-ra*Math.cos(theta)+YO+0.5) };
 }
 
+/* ── 첫 화면 지도 ────────────────────────────────────
+   위치를 입력하면 우리 집에 핑을 찍고 알림 기준 원(50km/30km)을 그린다.
+   "내 위치가 잡혔다"를 눈으로 바로 확인시켜 주는 것이 목적.       */
+let heroMap = null, heroLayer = null;
+
+function initHeroMap(){
+  const el = document.getElementById("heroMap");
+  if(!el || typeof L === "undefined" || heroMap) return;
+  heroMap = L.map(el, {
+    zoomControl:false, attributionControl:false,
+    dragging:false, scrollWheelZoom:false, doubleClickZoom:false,
+    touchZoom:false, keyboard:false, tap:false
+  }).setView([36.5, 127.8], 6);
+  L.tileLayer(
+    "https://api.vworld.kr/req/wmts/1.0.0/12A21CCD-E7FC-3E4E-B6A5-F8DE7A32A24D/midnight/{z}/{y}/{x}.png",
+    { maxZoom:18 }
+  ).addTo(heroMap);
+  heroLayer = L.layerGroup().addTo(heroMap);
+}
+
+function pinHome(lat, lon, label){
+  if(!heroMap) initHeroMap();
+  if(!heroMap) return;
+  heroLayer.clearLayers();
+
+  // 50km = 접근(바깥, 옅게) / 30km = 임박(안쪽, 진하게) — 목업과 같은 위계
+  L.circle([lat,lon], { radius:50000, color:"#3cc4dc", weight:1.2, opacity:.75,
+                        fillColor:"#3cc4dc", fillOpacity:.06 }).addTo(heroLayer);
+  L.circle([lat,lon], { radius:30000, color:"#6fd8ea", weight:1.6, opacity:.95,
+                        fillColor:"#3cc4dc", fillOpacity:.12 }).addTo(heroLayer);
+  L.marker([lat,lon], { icon: L.divIcon({
+      className:"", iconSize:[64,64], iconAnchor:[32,32],
+      html:'<div class="hero-pin">우리 집</div>'
+  }), keyboard:false }).addTo(heroLayer);
+
+  heroMap.setView([lat,lon], 8);
+  const status = document.getElementById("mapStatus");
+  if(status) status.textContent = (label || "우리 동네") + " 낙뢰 감시 중";
+}
+
 function setLocation(lat, lon, dongHint){
   state.lat=lat;
   state.lon=lon;
@@ -83,6 +123,7 @@ function setLocation(lat, lon, dongHint){
   $("locResult").classList.add("show");
   $("ctaBtn").disabled=false;
   $("ctaBtn").textContent="우리 동네 낙뢰 알림 받기";
+  pinHome(lat, lon, state.dong);
 }
 
 $("locBtn").addEventListener("click", () => {
@@ -245,3 +286,5 @@ function urlBase64ToUint8Array(base64String){
   for(let index=0;index<raw.length;index++) output[index]=raw.charCodeAt(index);
   return output;
 }
+
+initHeroMap();

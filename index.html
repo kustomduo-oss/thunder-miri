@@ -13,32 +13,73 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="stylesheet" href="style.css?v=signal-5" />
-  <link rel="stylesheet" href="landing.css?v=purpose-3" />
+  <link rel="stylesheet" href="landing.css?v=hero-map-1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
 
 <main class="landing-main">
-  <section class="purpose-hero">
+  <section class="purpose-hero" id="signup">
     <div class="purpose-copy">
       <p class="brand-kicker">동탄이네 천둥번개 알림이</p>
       <h1>천둥이 들리기 전에,<br /><span>준비할 시간을 알려드려요.</span></h1>
-      <p class="purpose-lead">우리 동네로 낙뢰가 다가오면 보호자에게 먼저 알려드립니다. 알림을 받으면 평소 익숙하게 들려준 천둥번개, 빗소리 영상을 먼저 틀어, 실제 천둥번개 소리에 갑자기 노출되지 않도록 준비할 수 있습니다.</p>
-      <div class="purpose-boundary">
-        <strong>이 서비스는 천둥번개 소리로 인한 공포를 없애거나 치료하는 것이 목적이 아닙니다.</strong>
-        <span>목표는 예고 없이 천둥번개 소리에 노출되지 않게 하는 데 있습니다.</span>
+      <p class="purpose-lead">우리 동네로 낙뢰가 다가오면 보호자에게 먼저 알려드립니다. 무방비로 천둥소리를 맞지 않도록, 미리 준비할 시간을 벌어드립니다.</p>
+
+      <div class="signup-panel">
+        <div id="formView">
+          <div class="field">
+            <label for="dogName">강아지 이름 <span>(선택)</span></label>
+            <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label>우리 동네 위치</label>
+            <button type="button" class="loc-btn" id="locBtn">현재 위치 가져오기</button>
+            <div class="or-divider"><span>또는 동네 검색</span></div>
+            <div class="addr-row">
+              <input type="text" id="addrInput" placeholder="예: 청주시 용암동" autocomplete="off" />
+              <button type="button" class="addr-btn" id="addrBtn">검색</button>
+            </div>
+            <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">위치 확인됨</span></div>
+          </div>
+
+          <details class="optional-settings">
+            <summary>선택 설정</summary>
+            <div class="field">
+              <label>비 예보 알림 간격</label>
+              <div class="iv-row">
+                <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
+                <button type="button" class="iv-btn active" data-min="20">20분<small>기본</small></button>
+                <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
+              </div>
+              <p class="iv-note"><strong>낙뢰 경보는 선택한 간격과 관계없이 즉시 알립니다.</strong></p>
+            </div>
+            <p class="search-privacy">동네 검색을 누르면 입력한 검색어가 OpenStreetMap Nominatim으로 전송됩니다. GPS 좌표는 이 검색 서비스로 보내지 않습니다.</p>
+          </details>
+
+          <div class="install-required" id="installRequired" role="status" hidden>
+            iPhone 웹푸시는 홈 화면에 추가한 뒤 사용할 수 있습니다.
+          </div>
+
+          <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
+          <p class="privacy-note">언제든 알림을 끌 수 있습니다 · 별도 회원가입 없음</p>
+        </div>
+
+        <div class="success" id="successView">
+          <div class="success-symbol">✓</div>
+          <h2>알림이 켜졌습니다.</h2>
+          <p>이제 낙뢰가 가까워지면 <strong id="successDog">강아지</strong>를 위해 미리 알려드릴게요.</p>
+          <a class="secondary-action" href="radar.html">우리 동네 레이더 보기 →</a>
+        </div>
       </div>
-      <a class="primary-action" href="#signup">무료로 알림 받기</a>
+
       <p class="service-note">무료 · 회원가입 없음 · 소리 자동재생 없음</p>
     </div>
 
-    <div class="purpose-map" aria-label="알림 작동 과정 요약">
-      <div class="map-status"><span class="status-dot"></span> 우리 동네 낙뢰 감시 중</div>
-      <div class="map-radar" aria-hidden="true">
-        <span class="map-ring ring-a"></span>
-        <span class="map-ring ring-b"></span>
-        <span class="map-home">우리 집</span>
-        <span class="map-bolt">낙뢰</span>
-      </div>
+    <!-- 실제 지도: 위치를 입력하면 우리 집에 핑이 찍히고 50/30km 원이 그려진다 -->
+    <div class="purpose-map">
+      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">위치를 입력하면 지도에 표시됩니다</span></div>
+      <div id="heroMap" role="img" aria-label="우리 동네 낙뢰 감시 지도"></div>
       <div class="map-flow">
         <div><b>50km</b><span>접근 알림</span></div>
         <i>→</i>
@@ -46,6 +87,17 @@
         <i>→</i>
         <div><b>영상</b><span>미리 재생</span></div>
       </div>
+    </div>
+  </section>
+
+  <section class="boundary-section section-pad">
+    <div class="purpose-boundary">
+      <strong>이 서비스는 천둥번개 소리로 인한 공포를 없애거나 치료하는 것이 목적이 아닙니다.</strong>
+      <span>목표는 예고 없이 천둥번개 소리에 노출되지 않게 하는 데 있습니다.</span>
+    </div>
+    <div class="device-guide" id="deviceGuide">
+      <div id="iosGuide"><strong>iPhone</strong><span>Safari에서 공유 버튼 → 홈 화면에 추가한 뒤 아이콘으로 열어주세요.</span></div>
+      <div id="otherGuide"><strong>Android·PC</strong><span>현재 브라우저에서 바로 알림을 설정할 수 있습니다.</span></div>
     </div>
   </section>
 
@@ -82,65 +134,6 @@
     </div>
   </section>
 
-  <section class="signup-section section-pad" id="signup">
-    <div class="signup-intro">
-      <p class="step-label">무료 알림 설정</p>
-      <h2>우리 동네 낙뢰 알림을 켜주세요.</h2>
-      <p>위치만 설정하면 됩니다. 강아지 이름과 비 예보 간격은 선택 사항입니다.</p>
-
-      <div class="device-guide" id="deviceGuide">
-        <div id="iosGuide"><strong>iPhone</strong><span>Safari에서 공유 버튼 → 홈 화면에 추가한 뒤 아이콘으로 열어주세요.</span></div>
-        <div id="otherGuide"><strong>Android·PC</strong><span>현재 브라우저에서 바로 알림을 설정할 수 있습니다.</span></div>
-      </div>
-      <div class="install-required" id="installRequired" role="status" hidden>
-        iPhone 웹푸시는 홈 화면에 추가한 뒤 사용할 수 있습니다.
-      </div>
-    </div>
-
-    <div class="signup-panel">
-      <div id="formView">
-        <div class="field">
-          <label for="dogName">강아지 이름 <span style="font-weight:400;opacity:.7">(선택)</span></label>
-          <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
-        </div>
-
-        <div class="field">
-          <label>우리 동네 위치</label>
-          <button type="button" class="loc-btn" id="locBtn">현재 위치 가져오기</button>
-          <div class="or-divider"><span>또는 동네 검색</span></div>
-          <div class="addr-row">
-            <input type="text" id="addrInput" placeholder="예: 청주시 용암동" autocomplete="off" />
-            <button type="button" class="addr-btn" id="addrBtn">검색</button>
-          </div>
-          <p class="search-privacy">동네 검색을 누르면 입력한 검색어가 OpenStreetMap Nominatim으로 전송됩니다. GPS 좌표는 이 검색 서비스로 보내지 않습니다.</p>
-          <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">위치 확인됨</span></div>
-        </div>
-
-        <details class="optional-settings">
-          <summary>선택 설정</summary>
-          <div class="field">
-            <label>비 예보 알림 간격</label>
-            <div class="iv-row">
-              <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
-              <button type="button" class="iv-btn active" data-min="20">20분<small>기본</small></button>
-              <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
-            </div>
-            <p class="iv-note"><strong>낙뢰 경보는 선택한 간격과 관계없이 즉시 알립니다.</strong></p>
-          </div>
-        </details>
-
-        <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
-        <p class="privacy-note">언제든 알림을 끌 수 있습니다 · 별도 회원가입 없음</p>
-      </div>
-
-      <div class="success" id="successView">
-        <div class="success-symbol">✓</div>
-        <h2>알림이 켜졌습니다.</h2>
-        <p>이제 낙뢰가 가까워지면 <strong id="successDog">강아지</strong>를 위해 미리 알려드릴게요.</p>
-        <a class="secondary-action" href="radar.html">우리 동네 레이더 보기 →</a>
-      </div>
-    </div>
-  </section>
 
   <section class="how-section section-pad" id="how-it-works">
     <div class="section-heading narrow">
@@ -175,7 +168,8 @@
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="landing.js?v=purpose-2" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="landing.js?v=hero-map-1" defer></script>
 <script src="nav.js?v=brand-2" defer></script>
 </body>
 </html>

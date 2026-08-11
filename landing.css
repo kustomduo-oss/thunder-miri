@@ -27,7 +27,7 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .step-label,.brand-kicker{margin-bottom:14px!important;color:var(--signal)!important;font-size:13px;font-weight:900;letter-spacing:.08em}
 
 /* 첫 화면: 목적을 한 문장으로 이해 */
-.purpose-hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);gap:72px;align-items:center;min-height:720px;padding:96px max(22px,calc((100vw - 1120px)/2));background:linear-gradient(135deg,#fff 0%,#edf6f8 100%);border-bottom:1px solid var(--signal-line)}
+.purpose-hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);gap:60px;align-items:start;min-height:0;scroll-margin-top:62px;padding:96px max(22px,calc((100vw - 1120px)/2));background:linear-gradient(135deg,#fff 0%,#edf6f8 100%);border-bottom:1px solid var(--signal-line)}
 .purpose-copy h1{margin-bottom:25px;font-size:clamp(48px,6.5vw,76px);line-height:1.12;letter-spacing:-.058em}
 .purpose-copy h1 span{color:var(--signal)}
 .purpose-lead{max-width:700px;margin-bottom:24px;font-size:18px;line-height:1.85}
@@ -40,15 +40,13 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .primary-action:hover{background:var(--signal-deep)}
 .service-note{margin:13px 0 0;font-size:13px}
 
-.purpose-map{padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
+.purpose-map{position:sticky;top:86px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
 .map-status{display:flex;align-items:center;gap:8px;margin-bottom:18px;color:#cae0e9;font-size:13px;font-weight:800}
 .status-dot{width:8px;height:8px;border-radius:50%;background:#56d6b0;box-shadow:0 0 0 5px rgba(86,214,176,.12)}
-.map-radar{position:relative;height:330px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background-image:linear-gradient(rgba(153,205,225,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(153,205,225,.08) 1px,transparent 1px);background-size:33px 33px;overflow:hidden}
-.map-ring{position:absolute;left:50%;top:52%;border:1px solid rgba(60,196,220,.44);border-radius:50%;transform:translate(-50%,-50%)}
-.ring-a{width:155px;height:155px}.ring-b{width:290px;height:290px}
-.map-home{position:absolute;left:50%;top:52%;display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:var(--signal);font-size:13px;font-weight:900;transform:translate(-50%,-50%);box-shadow:0 0 0 9px rgba(8,127,186,.17)}
-.map-bolt{position:absolute;right:14%;top:17%;padding:8px 11px;border-radius:7px;background:var(--signal-yellow);color:#173746;font-size:12px;font-weight:900}
-.map-bolt::before{content:"↯ ";font-size:17px}
+/* 실제 지도 (주소 입력하면 핑이 찍힌다) */
+#heroMap{height:330px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#0a2b3c;overflow:hidden}
+#heroMap .leaflet-container{background:#0a2b3c;font:inherit}
+.hero-pin{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--signal);color:#fff;font-size:13px;font-weight:900;box-shadow:0 0 0 9px rgba(8,127,186,.22)}
 .map-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:9px;align-items:center;margin-top:16px}
 .map-flow div{display:grid;gap:1px;text-align:center}.map-flow b{font-size:20px}.map-flow span{color:#b7d0da;font-size:11px}.map-flow i{color:#72afc5;font-style:normal}
 
@@ -73,10 +71,11 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .stop-message strong{font-size:17px}.stop-message p{margin:5px 0 12px;color:#785a54;line-height:1.65}
 .stop-message button{padding:0;border:0;background:none;color:var(--signal-stop);font:inherit;font-weight:900;text-decoration:underline;cursor:pointer}
 
-/* 알림 설정 (주 행동) */
-.signup-section{display:grid;grid-template-columns:minmax(290px,.85fr) minmax(0,1.15fr);gap:70px;align-items:start;scroll-margin-top:62px;background:#edf5f7}
-.signup-intro h2{margin-bottom:16px;font-size:clamp(34px,5vw,52px);line-height:1.2;letter-spacing:-.045em}
-.signup-intro>p:not(.step-label){font-size:17px;line-height:1.75}
+/* 알림 설정 (주 행동) — 첫 화면 히어로 안에 들어간다 */
+.purpose-copy .signup-panel{margin-top:26px}
+.boundary-section{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:40px;align-items:center;padding-top:52px;padding-bottom:52px;background:#fff;border-bottom:1px solid var(--signal-line)}
+.boundary-section .purpose-boundary{margin-bottom:0}
+.boundary-section .device-guide{margin-top:0}
 .device-guide{display:grid;gap:8px;margin-top:25px}
 .device-guide>div{display:grid;grid-template-columns:105px 1fr;gap:10px;padding:13px 15px;border:1px solid var(--signal-line);border-radius:10px;background:rgba(255,255,255,.66)}
 .device-guide strong{font-size:13px}.device-guide span{color:var(--signal-muted);font-size:12px;line-height:1.6}
@@ -128,9 +127,8 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:var(
 @media(max-width:900px){
   .section-pad{padding-top:76px;padding-bottom:76px}
   .purpose-hero{grid-template-columns:1fr;min-height:0;padding-top:80px;padding-bottom:72px}
-  .purpose-map{max-width:620px;width:100%}
-  .check-card,.signup-section,.result-section{grid-template-columns:1fr;gap:34px}
-  .signup-section{gap:38px}
+  .purpose-map{position:static;max-width:620px;width:100%}
+  .check-card,.boundary-section,.result-section{grid-template-columns:1fr;gap:34px}
   .process-list{grid-template-columns:1fr 1fr}
 }
 
