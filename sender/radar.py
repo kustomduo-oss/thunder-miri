@@ -116,7 +116,13 @@ def render(raw, lat, lon):
     img = Image.fromarray(np.flipud(rgba), "RGBA")   # 자료는 남→북 순서라 뒤집기
     img = img.resize((OUT_PX, OUT_PX), Image.NEAREST)
     bounds = {"south": lat0, "west": lon0, "north": lat1, "east": lon1}
-    return img, bounds, int(rain.sum())
+    # 화면에 "볼 만한 비"가 있는지 판단할 근거도 함께 넘긴다
+    stats = {
+        "rain_cells": int(rain.sum()),
+        "total_cells": int(sub.size),
+        "max_dbz": round(float(dbz[rain].max()), 1) if rain.any() else None,
+    }
+    return img, bounds, stats
 
 
 def upload(path, data, content_type):
@@ -141,9 +147,10 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
     if raw is None:
         return None
 
-    img, bounds, rain_cells = render(raw, lat, lon)
+    img, bounds, stats = render(raw, lat, lon)
     if img is None:
         return None
+    rain_cells = stats["rain_cells"]
 
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
@@ -160,6 +167,8 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
         "bounds": bounds,
         "image": img_url,
         "rain_cells": rain_cells,
+        "total_cells": stats["total_cells"],
+        "max_dbz": stats["max_dbz"],
         "observed_at": obs.isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "lightning": lightning or [],

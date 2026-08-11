@@ -135,7 +135,7 @@ async function load() {
   const b = meta.bounds;
   if (overlay) map.removeLayer(overlay);
   overlay = L.imageOverlay(`${meta.image}?t=${Date.now()}`,
-    [[b.south, b.west], [b.north, b.east]], { opacity: 0.68 }).addTo(map);
+    [[b.south, b.west], [b.north, b.east]], { opacity: 0.82 }).addTo(map);
 
   /* 우리 집 + 알림 기준 반경 */
   L.marker(home, { icon: dot("home-dot", 16), title: "우리 집" }).addTo(map);
@@ -153,10 +153,23 @@ async function load() {
   $("obsTime").textContent =
     `${String(obs.getHours()).padStart(2, "0")}:${String(obs.getMinutes()).padStart(2, "0")} (${mins}분 전)`;
 
+  /* 상황을 정직하게 알려준다.
+     비가 아주 미미하면 화면상 거의 안 보이므로, 고장이 아님을 명시한다. */
   const empty = $("emptyMsg");
-  if (!meta.rain_cells && !(meta.lightning || []).length) {
-    empty.style.display = "block";
+  const cells = meta.rain_cells || 0;
+  const total = meta.total_cells || 1;
+  const ratio = cells / total;              // 화면에서 비가 차지하는 비율
+  const maxDbz = meta.max_dbz;
+  const strikes = (meta.lightning || []).length;
+
+  empty.style.display = "block";
+  if (!cells && !strikes) {
     empty.innerHTML = "지금 우리 동네 주변에는 <b>비구름과 낙뢰가 없습니다.</b> 비가 오면 이 지도에 표시돼요.";
+  } else if (ratio < 0.01 && (maxDbz === null || maxDbz < 20) && !strikes) {
+    empty.innerHTML =
+      "지금은 <b>아주 약한 비구름만 조금</b> 있어요" +
+      (maxDbz !== null ? ` (최대 ${maxDbz} dBZ)` : "") +
+      ". 지도에는 거의 보이지 않을 수 있습니다 — 고장이 아니에요.";
   } else {
     empty.style.display = "none";
   }
