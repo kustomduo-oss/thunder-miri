@@ -10,8 +10,18 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   .radar-wrap{max-width:var(--wrap);margin:0 auto;padding:0 18px}
+  .map-wrap{position:relative}
   #map{height:min(70vh,560px);border-radius:16px;border:1px solid var(--line);
        box-shadow:0 8px 24px rgba(30,58,138,.08);background:#dfe8f0}
+  /* 배경지도 채도를 낮춰 강수 색이 도드라지게 (오버레이·마커는 그대로) */
+  .leaflet-tile-pane{filter:saturate(.75)}
+  .basemap-switch{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:4px;
+       background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:10px;padding:3px;
+       box-shadow:0 2px 8px rgba(0,0,0,.14)}
+  .basemap-switch button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;
+       color:var(--ink-soft);padding:5px 9px;border-radius:7px;cursor:pointer;white-space:nowrap}
+  .basemap-switch button[aria-pressed="true"]{background:var(--navy,#1e3a8a);color:#fff}
+  @media (max-width:520px){ .basemap-switch button{font-size:11px;padding:5px 7px} }
   .radar-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:14px 0 10px}
   .radar-bar .obs{font-size:14px;color:var(--ink-soft)}
   .radar-bar .obs b{color:var(--ink)}
@@ -65,7 +75,14 @@
       </div>
     </div>
 
-    <div id="map"></div>
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="basemap-switch" role="group" aria-label="지도 스타일">
+        <button type="button" data-base="white">밝게</button>
+        <button type="button" data-base="midnight">어둡게</button>
+        <button type="button" data-base="Base">일반</button>
+      </div>
+    </div>
     <div id="emptyMsg" class="radar-empty" style="display:none"></div>
 
     <!-- 과거 관측 → 지금 → 미래 예측을 하나로 잇는 타임바 -->
@@ -117,23 +134,40 @@ function myGrid() {
 
 const map = L.map("map", { zoomControl: true, attributionControl: true });
 
-/* 배경지도: 브이월드(국토교통부). 실패 시 OSM으로 자동 전환 */
-const vworld = L.tileLayer(
-  `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.VWORLD_KEY}/Base/{z}/{y}/{x}.png`,
-  { maxZoom: 18, attribution: "배경지도 © 국토교통부 브이월드" }
-);
+/* 배경지도: 브이월드(국토교통부).
+   비 색깔과 지도 색이 겹치지 않도록 '밝게(white)'를 기본으로 쓴다.
+   브이월드가 안 되면 OpenStreetMap으로 자동 전환.                     */
 const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18, attribution: "© OpenStreetMap 기여자",
 });
-let fellBack = false;
-vworld.on("tileerror", () => {
-  if (fellBack) return;
-  fellBack = true;
-  console.warn("브이월드 타일 실패 → OpenStreetMap으로 전환");
-  map.removeLayer(vworld);
-  osm.addTo(map);
-});
-vworld.addTo(map);
+let baseLayer = null, fellBack = false;
+
+function setBasemap(type) {
+  try { localStorage.setItem("thunder_basemap", type); } catch (e) {}
+  document.querySelectorAll(".basemap-switch button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.base === type)));
+  if (fellBack) return;                       // OSM으로 넘어간 상태면 그대로 둔다
+  if (baseLayer) map.removeLayer(baseLayer);
+  baseLayer = L.tileLayer(
+    `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.VWORLD_KEY}/${type}/{z}/{y}/{x}.png`,
+    { maxZoom: 18, attribution: "배경지도 © 국토교통부 브이월드" }
+  );
+  baseLayer.on("tileerror", () => {
+    if (fellBack) return;
+    fellBack = true;
+    console.warn("브이월드 타일 실패 → OpenStreetMap으로 전환");
+    if (baseLayer) map.removeLayer(baseLayer);
+    osm.addTo(map);
+  });
+  baseLayer.addTo(map);
+  if (map.getPane("tilePane")) baseLayer.setZIndex(1);
+}
+
+let savedBase = "white";
+try { savedBase = localStorage.getItem("thunder_basemap") || "white"; } catch (e) {}
+setBasemap(savedBase);
+document.querySelectorAll(".basemap-switch button").forEach((b) =>
+  b.addEventListener("click", () => setBasemap(b.dataset.base)));
 
 const dot = (cls, size) =>
   L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
