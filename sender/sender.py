@@ -41,6 +41,8 @@ RAIN_FORECAST_HOURS = int(os.environ.get("RAIN_FORECAST_HOURS", "3"))  # 앞으�
 # 낙뢰 단계 순위 (높을수록 위급). 단계가 올라가면 쿨다운 무시하고 즉시 발송
 LIGHTNING_RANK = {"watch": 1, "warning": 2}
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
+# 알림을 탭하면 열리는 화면. 보호자가 실제로 하는 행동(레이더로 상황 확인)에 맞춤.
+ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://kustomduo-oss.github.io/thunder-miri/radar.html")
 
 PTY_TEXT = {0: "강수 없음", 1: "비", 2: "비/눈", 3: "눈", 5: "빗방울", 6: "빗방울/눈날림", 7: "눈날림"}
 
@@ -251,7 +253,7 @@ def lightning_should_send(sub, cur_level):
 # ----------------------------------------------------------------
 # 웹푸시 발송
 # ----------------------------------------------------------------
-def send_web_push(subscription, title, body, url=THUNDER_SOUND_URL):
+def send_web_push(subscription, title, body, url=ALERT_CLICK_URL):
     payload = json.dumps({"title": title, "body": body, "url": url}, ensure_ascii=False)
     try:
         webpush(

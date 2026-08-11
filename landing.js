@@ -235,6 +235,9 @@ $("ctaBtn").addEventListener("click", async () => {
     console.warn("환영 알림 실패:",error);
   }
 
+  // 레이더 화면이 '우리 동네'를 보여줄 수 있게 격자를 기억해둔다
+  try{ localStorage.setItem("thunder_grid", state.nx+"_"+state.ny); }catch(e){}
+
   $("successDog").textContent=$("dogName").value.trim() || "우리 아이";
   $("formView").style.display="none";
   $("successView").classList.add("show");

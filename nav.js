@@ -7,6 +7,7 @@
       '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="siteMenu">메뉴</button>' +
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
         '<a href="index.html">홈</a>' +
+        '<a href="radar.html">우리 동네 레이더</a>' +
         '<a href="how.html">작동 방식</a>' +
         '<a href="story.html">동탄이 이야기</a>' +
         '<a href="research.html">참고자료</a>' +

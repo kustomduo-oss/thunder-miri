@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>우리 동네 레이더 — 동탄이네 천둥번개 알림이</title>
+<meta name="description" content="우리 동네 주변의 비구름과 낙뢰를 지도에서 확인하세요. 기상청 레이더 자료를 5분마다 갱신합니다." />
+<link rel="stylesheet" href="style.css?v=signal-5" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  .radar-wrap{max-width:var(--wrap);margin:0 auto;padding:0 18px}
+  #map{height:min(70vh,560px);border-radius:16px;border:1px solid var(--line);
+       box-shadow:0 8px 24px rgba(30,58,138,.08);background:#dfe8f0}
+  .radar-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:14px 0 10px}
+  .radar-bar .obs{font-size:14px;color:var(--ink-soft)}
+  .radar-bar .obs b{color:var(--ink)}
+  .legend{display:flex;align-items:center;gap:0;font-size:11px;color:var(--ink-soft)}
+  .legend i{width:26px;height:11px;display:inline-block}
+  .legend span{margin:0 6px}
+  .radar-note{font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin:12px 0 0}
+  .radar-empty{background:#eef6ff;border:1px solid #cfe2ff;border-radius:12px;
+       padding:13px 15px;font-size:14px;margin:12px 0 0}
+  .leaflet-container{font:inherit}
+  .home-dot{background:#1e3a8a;border:3px solid #fff;border-radius:50%;
+       box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .bolt-dot{background:#ffd54a;border:2px solid #b8860b;border-radius:50%;
+       box-shadow:0 0 6px rgba(255,213,74,.9)}
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">우리 동네 레이더</span>
+  <h1 class="page-title">지금 비구름이 어디쯤 왔나</h1>
+  <p class="page-sub">기상청 레이더 자료를 5분마다 받아 우리 동네 주변만 보여드립니다. 낙뢰가 관측되면 지도에 함께 표시됩니다.</p>
+
+  <div class="radar-wrap" style="padding:0">
+    <div class="radar-bar">
+      <div class="obs">관측 시각 <b id="obsTime">불러오는 중…</b></div>
+      <div class="legend" aria-label="강수 강도">
+        <span>약함</span>
+        <i style="background:#8ed1fc"></i><i style="background:#3aa0ff"></i><i style="background:#2ecc71"></i>
+        <i style="background:#f1c40f"></i><i style="background:#e67e22"></i><i style="background:#e74c3c"></i>
+        <span>강함</span>
+      </div>
+    </div>
+
+    <div id="map"></div>
+    <div id="emptyMsg" class="radar-empty" style="display:none"></div>
+
+    <p class="radar-note">
+      🔵 우리 집 · 원은 <b>30km(접근)</b>과 <b>10km(임박)</b> 알림 기준 거리입니다.
+      ⚡ 노란 점은 <b>최근 관측된 낙뢰</b>입니다(예보가 아니라 이미 친 낙뢰).<br />
+      자료: 기상청 레이더·낙뢰 관측 · 배경지도: 국토교통부 브이월드
+    </p>
+
+    <p style="margin:18px 0 0"><a class="btn" href="index.html">알림 받기 →</a></p>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   우리 동네 레이더 화면
+   - 발송 엔진(sender/radar.py)이 5분마다 만들어 올린
+     PNG + 메타(JSON)를 읽어 지도에 겹쳐 보여준다.
+   ============================================================ */
+const CONFIG = {
+  RADAR_BASE: "https://pdlohzenslwbiyoxwjom.supabase.co/storage/v1/object/public/radar",
+  VWORLD_KEY: "12A21CCD-E7FC-3E4E-B6A5-F8DE7A32A24D",  // 도메인 잠금 키(공개 안전)
+  DEFAULT_GRID: "69_106",   // 아직 위치를 모를 때 기본(청주)
+};
+
+const $ = (id) => document.getElementById(id);
+
+/* 가입 때 저장해둔 우리 동네 격자가 있으면 그걸 쓴다 */
+function myGrid() {
+  const q = new URLSearchParams(location.search).get("grid");
+  if (q) return q;
+  try {
+    const saved = localStorage.getItem("thunder_grid");
+    if (saved) return saved;
+  } catch (e) {}
+  return CONFIG.DEFAULT_GRID;
+}
+
+const map = L.map("map", { zoomControl: true, attributionControl: true });
+
+/* 배경지도: 브이월드(국토교통부). 실패 시 OSM으로 자동 전환 */
+const vworld = L.tileLayer(
+  `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.VWORLD_KEY}/Base/{z}/{y}/{x}.png`,
+  { maxZoom: 18, attribution: "배경지도 © 국토교통부 브이월드" }
+);
+const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18, attribution: "© OpenStreetMap 기여자",
+});
+let fellBack = false;
+vworld.on("tileerror", () => {
+  if (fellBack) return;
+  fellBack = true;
+  console.warn("브이월드 타일 실패 → OpenStreetMap으로 전환");
+  map.removeLayer(vworld);
+  osm.addTo(map);
+});
+vworld.addTo(map);
+
+const dot = (cls, size) =>
+  L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+              html: `<div class="${cls}" style="width:${size}px;height:${size}px"></div>` });
+
+let overlay = null;
+const strikeLayer = L.layerGroup().addTo(map);
+
+async function load() {
+  const grid = myGrid();
+  let meta;
+  try {
+    const res = await fetch(`${CONFIG.RADAR_BASE}/${grid}.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(res.status);
+    meta = await res.json();
+  } catch (e) {
+    console.warn("레이더 정보를 불러오지 못했습니다:", e);
+    $("obsTime").textContent = "불러오기 실패";
+    $("emptyMsg").style.display = "block";
+    $("emptyMsg").innerHTML =
+      "아직 이 동네의 레이더 화면이 준비되지 않았어요. 알림에 가입하면 우리 동네 화면이 만들어집니다.";
+    map.setView([36.6139, 127.5127], 9);
+    return;
+  }
+
+  const home = [meta.home.lat, meta.home.lon];
+  map.setView(home, 9);
+
+  /* 레이더 이미지를 실제 위경도 범위에 맞춰 얹기 */
+  const b = meta.bounds;
+  if (overlay) map.removeLayer(overlay);
+  overlay = L.imageOverlay(`${meta.image}?t=${Date.now()}`,
+    [[b.south, b.west], [b.north, b.east]], { opacity: 0.68 }).addTo(map);
+
+  /* 우리 집 + 알림 기준 반경 */
+  L.marker(home, { icon: dot("home-dot", 16), title: "우리 집" }).addTo(map);
+  L.circle(home, { radius: 30000, color: "#1e3a8a", weight: 1.2, fill: false, dashArray: "5,6" }).addTo(map);
+  L.circle(home, { radius: 10000, color: "#e74c3c", weight: 1.4, fill: false, dashArray: "5,6" }).addTo(map);
+
+  /* 최근 낙뢰 */
+  strikeLayer.clearLayers();
+  (meta.lightning || []).forEach((s) =>
+    L.marker([s.lat, s.lon], { icon: dot("bolt-dot", 9), title: "최근 관측된 낙뢰" }).addTo(strikeLayer)
+  );
+
+  const obs = new Date(meta.observed_at);
+  const mins = Math.max(0, Math.round((Date.now() - obs.getTime()) / 60000));
+  $("obsTime").textContent =
+    `${String(obs.getHours()).padStart(2, "0")}:${String(obs.getMinutes()).padStart(2, "0")} (${mins}분 전)`;
+
+  const empty = $("emptyMsg");
+  if (!meta.rain_cells && !(meta.lightning || []).length) {
+    empty.style.display = "block";
+    empty.innerHTML = "지금 우리 동네 주변에는 <b>비구름과 낙뢰가 없습니다.</b> 비가 오면 이 지도에 표시돼요.";
+  } else {
+    empty.style.display = "none";
+  }
+}
+
+load();
+setInterval(load, 5 * 60 * 1000);   // 5분마다 갱신
+</script>
+<script src="nav.js?v=brand-2" defer></script>
+</body>
+</html>

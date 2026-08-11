@@ -28,6 +28,20 @@ jobs:
       - name: run sender
         run: python sender/sender.py --${{ inputs.mode || 'once' }}
         env:
+          TZ: Asia/Seoul
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+
+      # 레이더 화면용 이미지 생성 (실패해도 알림 발송에는 영향 없게 continue-on-error)
+      - name: build radar images
+        if: ${{ inputs.mode != 'test' }}
+        continue-on-error: true
+        run: python sender/radar.py
+        env:
           TZ: Asia/Seoul   # 발송 서버를 한국시간으로 (UTC면 기상청 예보 시각이 9시간 어긋남)
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
