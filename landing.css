@@ -43,9 +43,17 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .purpose-map{position:sticky;top:86px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
 .map-status{display:flex;align-items:center;gap:8px;margin-bottom:18px;color:#cae0e9;font-size:13px;font-weight:800}
 .status-dot{width:8px;height:8px;border-radius:50%;background:#56d6b0;box-shadow:0 0 0 5px rgba(86,214,176,.12)}
-/* 실제 레이더 지도 (비구름 + 핑 + 타임바) */
-#heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#0a2b3c;overflow:hidden}
-#heroMap .leaflet-container{background:#0a2b3c;font:inherit}
+/* 실제 레이더 지도 (비구름 + 핑 + 타임바). 레이더 페이지와 같은 조작 지원 */
+.hero-map-wrap{position:relative}
+#heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#dfe8f0;overflow:hidden}
+#heroMap.leaflet-container{font:inherit}
+#heroMap .leaflet-tile-pane{filter:saturate(.75)}
+.hero-base{position:absolute;top:9px;right:9px;z-index:500;display:flex;gap:3px;
+  background:rgba(255,255,255,.92);border:1px solid var(--signal-line);border-radius:9px;padding:3px;
+  box-shadow:0 2px 8px rgba(0,0,0,.16)}
+.hero-base button{border:0;background:transparent;font:inherit;font-size:11.5px;font-weight:800;
+  color:var(--signal-muted);padding:4px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.hero-base button[aria-pressed="true"]{background:var(--signal);color:#fff}
 .hero-pin{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;background:var(--signal);color:#fff;font-size:12px;font-weight:900;box-shadow:0 0 0 8px rgba(8,127,186,.22)}
 .hero-bolt{width:9px;height:9px;border-radius:50%;background:var(--signal-yellow);border:2px solid #b8860b;box-shadow:0 0 7px rgba(242,201,76,.9)}
 

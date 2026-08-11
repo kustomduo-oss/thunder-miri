@@ -77,19 +77,44 @@ function toGrid(lat, lon){
    "내 위치가 잡혔다"를 눈으로 바로 확인시켜 주는 것이 목적.       */
 let heroMap = null, heroLayer = null;
 
+/* 배경지도: 브이월드(국토교통부). 실패 시 OSM으로 자동 전환.
+   레이더 페이지와 같은 설정을 쓰고, 선택도 함께 기억한다(thunder_basemap). */
+const VWORLD_KEY = "12A21CCD-E7FC-3E4E-B6A5-F8DE7A32A24D";
+let baseLayer = null, fellBack = false;
+const osmLayer = () => L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { maxZoom:18, attribution:"© OpenStreetMap 기여자" });
+
+function setBasemap(type){
+  try{ localStorage.setItem("thunder_basemap", type); }catch(e){}
+  document.querySelectorAll(".hero-base button").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.base === type)));
+  if(!heroMap || fellBack) return;
+  if(baseLayer) heroMap.removeLayer(baseLayer);
+  baseLayer = L.tileLayer(
+    `https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/${type}/{z}/{y}/{x}.png`,
+    { maxZoom:18, attribution:"배경지도 © 국토교통부 브이월드" }
+  );
+  baseLayer.on("tileerror", () => {
+    if(fellBack) return;
+    fellBack = true;
+    if(baseLayer) heroMap.removeLayer(baseLayer);
+    osmLayer().addTo(heroMap);
+  });
+  baseLayer.addTo(heroMap);
+  baseLayer.setZIndex(1);
+}
+
 function initHeroMap(){
   const el = document.getElementById("heroMap");
   if(!el || typeof L === "undefined" || heroMap) return;
-  heroMap = L.map(el, {
-    zoomControl:false, attributionControl:false,
-    dragging:false, scrollWheelZoom:false, doubleClickZoom:false,
-    touchZoom:false, keyboard:false, tap:false
-  }).setView([36.5, 127.8], 6);
-  L.tileLayer(
-    "https://api.vworld.kr/req/wmts/1.0.0/12A21CCD-E7FC-3E4E-B6A5-F8DE7A32A24D/midnight/{z}/{y}/{x}.png",
-    { maxZoom:18 }
-  ).addTo(heroMap);
+  heroMap = L.map(el, { zoomControl:true, attributionControl:true })
+             .setView([36.5, 127.8], 6);
+  let saved = "Base";
+  try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
+  setBasemap(saved);
   heroLayer = L.layerGroup().addTo(heroMap);
+  document.querySelectorAll(".hero-base button").forEach(b =>
+    b.addEventListener("click", () => setBasemap(b.dataset.base)));
 }
 
 function pinHome(lat, lon, label){

@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="stylesheet" href="style.css?v=signal-5" />
-  <link rel="stylesheet" href="landing.css?v=hero-radar-1" />
+  <link rel="stylesheet" href="landing.css?v=hero-radar-2" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -79,7 +79,14 @@
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map">
       <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">지금 비구름을 불러오는 중…</span></div>
-      <div id="heroMap" role="img" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
+      <div class="hero-map-wrap">
+        <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
+        <div class="hero-base" role="group" aria-label="지도 스타일">
+          <button type="button" data-base="Base">일반</button>
+          <button type="button" data-base="white">밝게</button>
+          <button type="button" data-base="midnight">어둡게</button>
+        </div>
+      </div>
 
       <div class="hero-tl">
         <button type="button" id="heroPlay" class="hero-play" aria-label="재생">▶</button>
@@ -177,7 +184,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=hero-radar-1" defer></script>
+<script src="landing.js?v=hero-radar-2" defer></script>
 <script src="nav.js?v=brand-2" defer></script>
 </body>
 </html>
