@@ -162,7 +162,7 @@ async function load() {
 
   lastObsMeta = meta;
   const home = [meta.home.lat, meta.home.lon];
-  if (!map._loadedOnce) { map.setView(home, 9); map._loadedOnce = true; }
+  if (!map._loadedOnce) { map.setView(home, 7); map._loadedOnce = true; }   // 넓게 시작
 
   /* 레이더 이미지를 실제 위경도 범위에 맞춰 얹기 */
   const b = meta.bounds;
@@ -241,9 +241,14 @@ function tlShow(i) {
     if (f.bounds) overlay.setBounds([[f.bounds.south, f.bounds.west], [f.bounds.north, f.bounds.east]]);
     overlay.setUrl(f.image);
   }
-  $("tlKind").innerHTML = f.kind === "obs"
-    ? "<b>관측</b> · 실제로 내린 비입니다."
-    : "<b>예측</b> · 기상청 초단기 강수예측(앞으로 올 비)입니다.";
+  if (f.kind === "obs") {
+    $("tlKind").innerHTML = "<b>관측</b> · 실제로 내린 비입니다.";
+  } else if (f.rain_px === 0) {
+    // 비가 없어 화면이 비는 경우, 고장으로 오해하지 않게 알려준다
+    $("tlKind").innerHTML = "<b>예측</b> · 이 시각엔 이 지역에 <b>예보된 비가 없습니다.</b>";
+  } else {
+    $("tlKind").innerHTML = "<b>예측</b> · 기상청 초단기 강수예측(앞으로 올 비)입니다.";
+  }
 }
 
 function tlStop() { clearInterval(tlTimer); tlTimer = null; $("tlPlay").textContent = "▶"; }
@@ -273,7 +278,8 @@ function buildTimeline(obsMeta, fcMeta) {
   nowIdx = Math.max(0, items.length - 1);
 
   (fcMeta?.frames || []).forEach((f) => {
-    items.push({ kind: "fcst", at: new Date(f.valid_at), image: f.image, ef: f.ef, bounds: fcMeta.bounds });
+    items.push({ kind: "fcst", at: new Date(f.valid_at), image: f.image, ef: f.ef,
+                 bounds: fcMeta.bounds, rain_px: f.rain_px });
   });
 
   items.sort((a, b) => a.at - b.at);

@@ -32,8 +32,8 @@ SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
 
 RADAR_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-rdr_cmp1_api"
 BUCKET = "radar"
-CROP_KM = float(os.environ.get("RADAR_CROP_KM", "120"))   # 우리집 기준 ±거리
-OUT_PX = int(os.environ.get("RADAR_OUT_PX", "700"))       # 출력 이미지 한 변
+CROP_KM = float(os.environ.get("RADAR_CROP_KM", "520"))   # 우리집 기준 ±거리(넓게 보이도록)
+OUT_PX = int(os.environ.get("RADAR_OUT_PX", "900"))       # 출력 이미지 한 변
 
 # 기상청 레이더 합성 격자의 투영법 (검증 완료: 청주·서울·부산·제주·울릉도 모두 일치)
 RADAR_CRS = CRS.from_proj4(
@@ -86,40 +86,53 @@ def to_grid_index(lat, lon, nx, ny):
     return x / GRID_KM + nx / 2, y / GRID_KM + ny / 2
 
 
+def view_bounds(lat, lon):
+    """우리집 기준 ±CROP_KM 상자를 감싸는 위경도 범위.
+    레이더 격자는 LCC 투영이라 위경도로 보면 사각형이 아니다.
+    네 변을 훑어 실제 최소·최대 위경도를 구해야 지도에 정확히 얹힌다."""
+    cx, cy = _fwd.transform(lon, lat)
+    xs = np.linspace(cx - CROP_KM, cx + CROP_KM, 60)
+    ys = np.linspace(cy - CROP_KM, cy + CROP_KM, 60)
+    gx, gy = np.meshgrid(xs, ys)
+    lons, lats = _inv.transform(gx.ravel(), gy.ravel())
+    return {"south": float(np.min(lats)), "north": float(np.max(lats)),
+            "west": float(np.min(lons)), "east": float(np.max(lons))}
+
+
+def latlon_sample_grid(bounds, px):
+    """출력 이미지(위경도 정사각 격자)의 각 픽셀에 대응하는 LCC 좌표를 만든다.
+    이렇게 재투영해야 넓은 범위에서도 한반도가 비뚤어지지 않는다."""
+    lat = np.linspace(bounds["north"], bounds["south"], px)
+    lon = np.linspace(bounds["west"], bounds["east"], px)
+    lon2, lat2 = np.meshgrid(lon, lat)
+    x, y = _fwd.transform(lon2.ravel(), lat2.ravel())
+    return np.asarray(x).reshape(px, px), np.asarray(y).reshape(px, px)
+
+
 def render(raw, lat, lon):
-    """전국 격자에서 우리 동네만 잘라 PNG(투명 배경) + 위경도 범위 반환"""
+    """전국 격자를 위경도 격자로 재투영해 PNG(투명 배경) + 위경도 범위 반환"""
     nx, ny = struct.unpack("<hh", raw[:4])
     grid = np.frombuffer(raw[4:4 + nx * ny * 2], dtype="<i2").reshape(ny, nx)
 
-    cx, cy = _fwd.transform(lon, lat)
-    i0 = int((cx - CROP_KM) / GRID_KM + nx / 2)
-    i1 = int((cx + CROP_KM) / GRID_KM + nx / 2)
-    j0 = int((cy - CROP_KM) / GRID_KM + ny / 2)
-    j1 = int((cy + CROP_KM) / GRID_KM + ny / 2)
-    i0, i1 = max(0, i0), min(nx, i1)
-    j0, j1 = max(0, j0), min(ny, j1)
-    sub = grid[j0:j1, i0:i1]
-    if sub.size == 0:
-        return None, None, 0
+    bounds = view_bounds(lat, lon)
+    gx, gy = latlon_sample_grid(bounds, OUT_PX)
+    ii = np.rint(gx / GRID_KM + nx / 2).astype(int)
+    jj = np.rint(gy / GRID_KM + ny / 2).astype(int)
+    inside = (ii >= 0) & (ii < nx) & (jj >= 0) & (jj < ny)
+    vals = np.full((OUT_PX, OUT_PX), OUT_OF_RANGE, dtype=np.int32)
+    vals[inside] = grid[jj[inside], ii[inside]]
 
-    # 잘라낸 영역의 실제 위경도 범위 (지도에 얹을 때 필요)
-    lon0, lat0 = _inv.transform((i0 - nx / 2) * GRID_KM, (j0 - ny / 2) * GRID_KM)
-    lon1, lat1 = _inv.transform((i1 - nx / 2) * GRID_KM, (j1 - ny / 2) * GRID_KM)
-
-    dbz = sub / 100.0
-    rain = sub > NO_ECHO
-    rgba = np.zeros((sub.shape[0], sub.shape[1], 4), dtype=np.uint8)
+    dbz = vals / 100.0
+    rain = vals > NO_ECHO
+    rgba = np.zeros((OUT_PX, OUT_PX, 4), dtype=np.uint8)
     for lo, c in COLOR_STEPS:
         m = rain & (dbz >= lo)
         rgba[m] = [c[0], c[1], c[2], 200]
 
-    img = Image.fromarray(np.flipud(rgba), "RGBA")   # 자료는 남→북 순서라 뒤집기
-    img = img.resize((OUT_PX, OUT_PX), Image.NEAREST)
-    bounds = {"south": lat0, "west": lon0, "north": lat1, "east": lon1}
-    # 화면에 "볼 만한 비"가 있는지 판단할 근거도 함께 넘긴다
+    img = Image.fromarray(rgba, "RGBA")
     stats = {
         "rain_cells": int(rain.sum()),
-        "total_cells": int(sub.size),
+        "total_cells": int(rain.size),
         "max_dbz": round(float(dbz[rain].max()), 1) if rain.any() else None,
     }
     return img, bounds, stats
@@ -149,9 +162,10 @@ def build_forecast(lat, lon, key):
 
     frames, bounds = [], None
     for ef in QPF_STEPS:
-        png, bnd = _qpf_overlay(base, ef, lat, lon)
-        if not png:
+        out = _qpf_overlay(base, ef, lat, lon)
+        if not out or not out[0]:
             continue
+        png, bnd, rain_px = out
         url = upload(f"{key}_qpf_{ef}.png", png, "image/png")
         if url:
             bounds = bnd
@@ -159,6 +173,7 @@ def build_forecast(lat, lon, key):
                 "ef": ef,
                 "valid_at": (base + timedelta(minutes=ef)).isoformat(),
                 "image": url,
+                "rain_px": rain_px,     # 0이면 '이 시각엔 예보된 비 없음'
             })
 
     meta = {
@@ -194,39 +209,25 @@ def _qpf_overlay(base, ef, lat, lon):
         return None, None
     area = src[QPF_TOP:QPF_TOP + QPF_MAPH, :QPF_W]     # 테두리 안쪽 지도만
 
-    # 우리 동네 상자를 이미지 픽셀 범위로 환산
-    cx, cy = _fwd.transform(lon, lat)
-    def col_of(x): return (x + HB_X_KM / 2) / HB_X_KM * QPF_W
-    def row_of(y): return (HB_Y_KM / 2 - y) / HB_Y_KM * QPF_MAPH
-    c0, c1 = int(round(col_of(cx - CROP_KM))), int(round(col_of(cx + CROP_KM)))
-    r0, r1 = int(round(row_of(cy + CROP_KM))), int(round(row_of(cy - CROP_KM)))
-    c0, c1 = max(0, c0), min(QPF_W, c1)
-    r0, r1 = max(0, r0), min(QPF_MAPH, r1)
-    if c1 - c0 < 4 or r1 - r0 < 4:
-        return None, None
-    sub = area[r0:r1, c0:c1]
+    # 관측과 똑같은 위경도 격자로 재투영 → 두 오버레이가 정확히 겹친다
+    bounds = view_bounds(lat, lon)
+    gx, gy = latlon_sample_grid(bounds, OUT_PX)
+    cc = np.rint((gx + HB_X_KM / 2) / HB_X_KM * QPF_W).astype(int)
+    rr = np.rint((HB_Y_KM / 2 - gy) / HB_Y_KM * QPF_MAPH).astype(int)
+    inside = (cc >= 0) & (cc < QPF_W) & (rr >= 0) & (rr < QPF_MAPH)
+
+    px = np.zeros((OUT_PX, OUT_PX, 3), dtype=int)
+    px[inside] = area[rr[inside], cc[inside]]
 
     # 유채색(채도 높은 픽셀) = 강수. 흰 배경·회색 해안선은 버린다.
-    mx, mn = sub.max(axis=2), sub.min(axis=2)
-    rain = (mx - mn) > 30
-    rgba = np.zeros((sub.shape[0], sub.shape[1], 4), dtype=np.uint8)
-    rgba[rain, :3] = sub[rain]
+    rain = ((px.max(axis=2) - px.min(axis=2)) > 30) & inside
+    rgba = np.zeros((OUT_PX, OUT_PX, 4), dtype=np.uint8)
+    rgba[rain, :3] = px[rain]
     rgba[rain, 3] = 205
 
-    img = Image.fromarray(rgba, "RGBA").resize((OUT_PX, OUT_PX), Image.NEAREST)
-
-    # 잘라낸 영역의 실제 위경도 범위
-    x0 = c0 / QPF_W * HB_X_KM - HB_X_KM / 2
-    x1 = c1 / QPF_W * HB_X_KM - HB_X_KM / 2
-    y1 = HB_Y_KM / 2 - r0 / QPF_MAPH * HB_Y_KM
-    y0 = HB_Y_KM / 2 - r1 / QPF_MAPH * HB_Y_KM
-    lon0, lat0 = _inv.transform(x0, y0)
-    lon1, lat1 = _inv.transform(x1, y1)
-    bounds = {"south": lat0, "west": lon0, "north": lat1, "east": lon1}
-
     buf = io.BytesIO()
-    img.save(buf, "PNG", optimize=True)
-    return buf.getvalue(), bounds
+    Image.fromarray(rgba, "RGBA").save(buf, "PNG", optimize=True)
+    return buf.getvalue(), bounds, int(rain.sum())
 
 
 def _qpf_image(base, ef, map_code="HR"):
