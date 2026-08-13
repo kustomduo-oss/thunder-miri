@@ -30,17 +30,14 @@
     '<footer class="site-footer"><div class="inner">' +
       '<div class="footer-brand">반려견 천둥번개 알림</div>' +
       '<nav class="footer-nav">' +
-        '<a href="story.html">만든 이야기</a>' +
-        '<a href="guide-training.html">동탄이의 소리 적응</a>' +
-        '<a href="blog.html">블로그</a>' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
         '<a href="privacy.html">개인정보처리방침</a>' +
+        '<a href="cookies.html">쿠키 고지</a>' +
         '<a href="terms.html">이용약관</a>' +
         '<a href="disclaimer.html">면책 고지</a>' +
-        '<a href="cookies.html">쿠키 고지</a>' +
       '</nav>' +
-      '<div class="footer-copy">우리 동네 천둥번개 접근을 미리 알려주는 웹 알림 · 날씨 데이터: 기상청 API<br/>© 2026 반려견 천둥번개 알림</div>' +
+      '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 반려견 천둥번개 알림</div>' +
     '</div></footer>';
 
   function mount() {

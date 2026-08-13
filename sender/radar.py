@@ -34,6 +34,7 @@ RADAR_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-rdr_cmp1_api"
 BUCKET = "radar"
 CROP_KM = float(os.environ.get("RADAR_CROP_KM", "520"))   # 우리집 기준 ±거리(넓게 보이도록)
 OUT_PX = int(os.environ.get("RADAR_OUT_PX", "900"))       # 출력 이미지 한 변
+LOCAL_RAIN_RADIUS_KM = float(os.environ.get("LOCAL_RAIN_RADIUS_KM", "5"))
 
 # 기상청 레이더 합성 격자의 투영법 (검증 완료: 청주·서울·부산·제주·울릉도 모두 일치)
 RADAR_CRS = CRS.from_proj4(
@@ -124,6 +125,9 @@ def render(raw, lat, lon):
 
     dbz = vals / 100.0
     rain = vals > NO_ECHO
+    cx, cy = _fwd.transform(lon, lat)
+    local_area = ((gx - cx) ** 2 + (gy - cy) ** 2) <= LOCAL_RAIN_RADIUS_KM ** 2
+    local_rain = rain & local_area
     rgba = np.zeros((OUT_PX, OUT_PX, 4), dtype=np.uint8)
     for lo, c in COLOR_STEPS:
         m = rain & (dbz >= lo)
@@ -134,6 +138,9 @@ def render(raw, lat, lon):
         "rain_cells": int(rain.sum()),
         "total_cells": int(rain.size),
         "max_dbz": round(float(dbz[rain].max()), 1) if rain.any() else None,
+        "local_rain_cells": int(local_rain.sum()),
+        "local_total_cells": int(local_area.sum()),
+        "local_max_dbz": round(float(dbz[local_rain].max()), 1) if local_rain.any() else None,
     }
     return img, bounds, stats
 
@@ -165,7 +172,7 @@ def build_forecast(lat, lon, key):
         out = _qpf_overlay(base, ef, lat, lon)
         if not out or not out[0]:
             continue
-        png, bnd, rain_px = out
+        png, bnd, rain_px, local_rain_px, local_total_px = out
         url = upload(f"{key}_qpf_{ef}.png", png, "image/png")
         if url:
             bounds = bnd
@@ -173,7 +180,10 @@ def build_forecast(lat, lon, key):
                 "ef": ef,
                 "valid_at": (base + timedelta(minutes=ef)).isoformat(),
                 "image": url,
-                "rain_px": rain_px,     # 0이면 '이 시각엔 예보된 비 없음'
+                "rain_px": rain_px,     # 지도에 보여줄 전체 비구름 픽셀 수
+                "local_rain_px": local_rain_px,
+                "local_total_px": local_total_px,
+                "local_radius_km": LOCAL_RAIN_RADIUS_KM,
             })
 
     meta = {
@@ -200,7 +210,7 @@ HB_X_KM, HB_Y_KM = 2305 * GRID_KM, 2881 * GRID_KM     # 1152.5 x 1440.5 km
 def fetch_lightning_national():
     """전국 낙뢰(첫 화면 전국판용). sender의 조회 로직을 넓은 반경으로 재사용."""
     import sender as _s
-    return _s.fetch_lightning_data(36.5, 127.8, 500)
+    return _s.fetch_lightning_data(36.5, 127.8, 500, lookback_minutes=30)
 
 
 def _qpf_overlay(base, ef, lat, lon):
@@ -227,13 +237,16 @@ def _qpf_overlay(base, ef, lat, lon):
 
     # 유채색(채도 높은 픽셀) = 강수. 흰 배경·회색 해안선은 버린다.
     rain = ((px.max(axis=2) - px.min(axis=2)) > 30) & inside
+    cx, cy = _fwd.transform(lon, lat)
+    local_area = (((gx - cx) ** 2 + (gy - cy) ** 2) <= LOCAL_RAIN_RADIUS_KM ** 2) & inside
+    local_rain = rain & local_area
     rgba = np.zeros((OUT_PX, OUT_PX, 4), dtype=np.uint8)
     rgba[rain, :3] = px[rain]
     rgba[rain, 3] = 205
 
     buf = io.BytesIO()
     Image.fromarray(rgba, "RGBA").save(buf, "PNG", optimize=True)
-    return buf.getvalue(), bounds, int(rain.sum())
+    return buf.getvalue(), bounds, int(rain.sum()), int(local_rain.sum()), int(local_area.sum())
 
 
 def _qpf_image(base, ef, map_code="HR"):
@@ -332,6 +345,10 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
         "rain_cells": rain_cells,
         "total_cells": stats["total_cells"],
         "max_dbz": stats["max_dbz"],
+        "local_rain_cells": stats["local_rain_cells"],
+        "local_total_cells": stats["local_total_cells"],
+        "local_max_dbz": stats["local_max_dbz"],
+        "local_radius_km": LOCAL_RAIN_RADIUS_KM,
         "observed_at": obs.isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "lightning": lightning or [],
@@ -380,7 +397,11 @@ if __name__ == "__main__":
         nat_strikes = []
         for it in fetch_lightning_national():
             try:
-                nat_strikes.append({"lat": float(it["lat"]), "lon": float(it["lon"])})
+                nat_strikes.append({
+                    "lat": float(it["lat"]),
+                    "lon": float(it["lon"]),
+                    "tm": it.get("tm"),
+                })
             except (TypeError, ValueError):
                 continue
         build_for(None, None, NAT_LAT, NAT_LON, "전국",
@@ -400,9 +421,15 @@ if __name__ == "__main__":
             print(f"[예측] 생성 실패(무시하고 계속): {e}")
 
         strikes = []
-        for it in sender.fetch_lightning_data(s["lat"], s["lon"], sender.WATCH_RADIUS_KM):
+        for it in sender.fetch_lightning_data(
+            s["lat"], s["lon"], sender.WATCH_RADIUS_KM, lookback_minutes=30
+        ):
             try:
-                strikes.append({"lat": float(it["lat"]), "lon": float(it["lon"])})
+                strikes.append({
+                    "lat": float(it["lat"]),
+                    "lon": float(it["lon"]),
+                    "tm": it.get("tm"),
+                })
             except (TypeError, ValueError):
                 continue
         build_for(gx, gy, s["lat"], s["lon"], s.get("dong"), lightning=strikes, raw=raw, stamp=stamp)

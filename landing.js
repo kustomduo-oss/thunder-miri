@@ -5,7 +5,7 @@ const CONFIG = {
   VAPID_PUBLIC_KEY: "BDpsQ-TxN1fOcZL5JX863gvyPT5QD78S8k94lIEDFZnhUXdEy_ReIxVGmSLeFRWtjxO4EvECDEdsWfTGADfocHQ"
 };
 
-const state = { lat:null, lon:null, nx:null, ny:null, dong:null, cooldown:20 };
+const state = { lat:null, lon:null, nx:null, ny:null, dong:null };
 const $ = id => document.getElementById(id);
 const SOUND_CHECK_KEY = "dongtaniSoundCheckPassed";
 
@@ -85,7 +85,7 @@ function setBasemap(type){
   if(baseLayer) heroMap.removeLayer(baseLayer);
   baseLayer = L.tileLayer(
     `https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/${type}/{z}/{y}/{x}.png`,
-    { maxZoom:18, attribution:"배경지도 © 국토교통부 브이월드" }
+    { maxZoom:18, attribution:'© <a href="https://www.vworld.kr/" target="_blank" rel="noopener">VWorld</a>' }
   );
   baseLayer.on("tileerror", () => {
     if(fellBack) return;
@@ -102,6 +102,7 @@ function initHeroMap(){
   if(!el || typeof L === "undefined" || heroMap) return;
   heroMap = L.map(el, { zoomControl:true, attributionControl:true })
              .setView([36.5, 127.8], 6);
+  heroMap.attributionControl.setPrefix(false);
   let saved = "Base";
   try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
   setBasemap(saved);
@@ -115,14 +116,22 @@ function pinHome(lat, lon, label){
   if(!heroMap) return;
   heroLayer.clearLayers();
 
-  // 50km = 접근(바깥, 옅게) / 30km = 임박(안쪽, 진하게)
-  L.circle([lat,lon], { radius:50000, color:"#3cc4dc", weight:1.2, opacity:.75,
-                        fillColor:"#3cc4dc", fillOpacity:.06 }).addTo(heroLayer);
-  L.circle([lat,lon], { radius:30000, color:"#6fd8ea", weight:1.6, opacity:.95,
-                        fillColor:"#3cc4dc", fillOpacity:.12 }).addTo(heroLayer);
+  // 50km 접근은 청록색, 30km 임박은 주황색으로 구분한다.
+  const circle50 = L.circle([lat,lon], { radius:50000, color:"#007f95", weight:3, opacity:1,
+                        fillColor:"#00a4ba", fillOpacity:.07 }).addTo(heroLayer);
+  const circle30 = L.circle([lat,lon], { radius:30000, color:"#df5b1d", weight:3.5, opacity:1,
+                        fillColor:"#f27a32", fillOpacity:.15 }).addTo(heroLayer);
+  L.marker([lat, circle50.getBounds().getEast()], { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[20,10],
+    html:'<div class="range-distance-label range-50">50km</div>'
+  }), interactive:false }).addTo(heroLayer);
+  L.marker([lat, circle30.getBounds().getEast()], { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[20,10],
+    html:'<div class="range-distance-label range-30">30km</div>'
+  }), interactive:false }).addTo(heroLayer);
   L.marker([lat,lon], { icon: L.divIcon({
-      className:"", iconSize:[60,60], iconAnchor:[30,30],
-      html:'<div class="hero-pin">우리 집</div>'
+      className:"", iconSize:[34,38], iconAnchor:[17,36],
+      html:'<div class="hero-location-pin" title="등록 위치"><span></span></div>'
   }), keyboard:false }).addTo(heroLayer);
 
   heroMap.setView([lat,lon], 8);
@@ -137,8 +146,160 @@ function pinHome(lat, lon, label){
 const RADAR_BASE = `${CONFIG.SUPABASE_URL}/storage/v1/object/public/radar`;
 let radarOverlay = null, strikeLayer = null;
 let tl = [], tlIdx = 0, tlTimer = null;
+let heroRadarMode = "lightning", heroRadarObs = null, heroForecastData = null, heroRadarKey = "national";
+let heroLightningIdx = 2, heroLightningTimer = null;
 
 function fmtClock(d){ return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function parseStrikeTime(value){
+  const s = String(value || "").replace(/\D/g, "");
+  if(s.length < 12) return null;
+  return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8), +s.slice(8,10), +s.slice(10,12), +(s.slice(12,14) || 0));
+}
+function strikeAge(value){
+  const at = parseStrikeTime(value);
+  return at && !Number.isNaN(at.getTime()) ? Math.max(0, Math.floor((Date.now() - at.getTime()) / 60000)) : 0;
+}
+function strikeAgeClass(age){
+  if(age < 10) return "is-fresh";
+  if(age < 20) return "is-mid";
+  return "is-old";
+}
+function lightningWindow(step){
+  return [{ min:20, max:30, label:"20~30분 전" },
+          { min:10, max:20, label:"10~20분 전" },
+          { min:0, max:10, label:"최근 10분" }][step];
+}
+function renderHeroStrikes(step){
+  heroLightningIdx = Math.max(0, Math.min(2, step));
+  const range = document.getElementById("heroLightningRange");
+  if(range) range.value = heroLightningIdx;
+  if(!strikeLayer) strikeLayer = L.layerGroup();
+  strikeLayer.clearLayers();
+  const current = lightningWindow(heroLightningIdx);
+  const strikes = heroRadarObs?.lightning || [];
+  const visible = strikes.filter(s => {
+    const age = strikeAge(s.tm);
+    return age >= current.min && age < 30;
+  });
+  visible.forEach(s => {
+    const age = strikeAge(s.tm);
+    const at = parseStrikeTime(s.tm);
+    L.marker([s.lat,s.lon], { icon:L.divIcon({
+      className:"", iconSize:[11,11], iconAnchor:[5,5],
+      html:`<div class="hero-bolt ${strikeAgeClass(age)}"></div>` }),
+      title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
+    }).addTo(strikeLayer);
+  });
+  const inWindow = strikes.filter(s => {
+    const age = strikeAge(s.tm);
+    return age >= current.min && age < current.max;
+  }).length;
+  const time = document.getElementById("heroLightningTime");
+  if(time) time.textContent = current.label;
+  const status = document.getElementById("heroLightningStatus");
+  if(status) status.textContent = inWindow
+    ? `${current.label} 관측 ${inWindow}건 · 이전 구간부터 누적해 표시합니다.`
+    : `${current.label}에는 관측된 낙뢰가 없습니다.`;
+}
+function stopHeroLightning(){
+  clearInterval(heroLightningTimer); heroLightningTimer=null;
+  const button=document.getElementById("heroLightningPlay");
+  if(button) button.textContent="▶";
+}
+function toggleHeroLightning(){
+  if(heroLightningTimer) return stopHeroLightning();
+  const button=document.getElementById("heroLightningPlay");
+  if(button) button.textContent="❚❚";
+  if(heroLightningIdx >= 2) renderHeroStrikes(0);
+  heroLightningTimer=setInterval(() => renderHeroStrikes(heroLightningIdx >= 2 ? 0 : heroLightningIdx+1), 1100);
+}
+function setHeroRadarMode(mode){
+  heroRadarMode = mode;
+  const isLightning = mode === "lightning";
+  const isWalk = mode === "walk";
+  const forecastTab = document.getElementById("heroForecastTab");
+  const lightningTab = document.getElementById("heroLightningTab");
+  const walkTab = document.getElementById("heroWalkTab");
+  if(forecastTab) forecastTab.setAttribute("aria-selected", String(mode === "forecast"));
+  if(lightningTab) lightningTab.setAttribute("aria-selected", String(isLightning));
+  if(walkTab) walkTab.setAttribute("aria-selected", String(isWalk));
+  const legend = document.getElementById("heroLightningLegend");
+  const lightningStatus = document.getElementById("heroLightningStatus");
+  const timeline = document.getElementById("heroTimeline");
+  const lightningTimeline = document.getElementById("heroLightningTimeline");
+  const kind = document.getElementById("heroKind");
+  const walkPanel = document.getElementById("walkWeatherPanel");
+  if(legend) legend.hidden = !isLightning;
+  if(lightningStatus) lightningStatus.hidden = !isLightning;
+  if(timeline) timeline.hidden = isLightning;
+  if(lightningTimeline) lightningTimeline.hidden = !isLightning;
+  if(kind) kind.hidden = isLightning;
+  if(walkPanel) walkPanel.hidden = !isWalk;
+  if(radarOverlay) radarOverlay.setOpacity(isLightning ? 0 : .82);
+  if(strikeLayer && heroMap){
+    if(isLightning && !heroMap.hasLayer(strikeLayer)) strikeLayer.addTo(heroMap);
+    if(!isLightning && heroMap.hasLayer(strikeLayer)) heroMap.removeLayer(strikeLayer);
+  }
+  if(isLightning){ tlStop(); renderHeroStrikes(heroLightningIdx); }
+  else{
+    stopHeroLightning();
+    if(isWalk) renderWalkWeather();
+  }
+  const status = document.getElementById("mapStatus");
+  if(status) status.textContent = isLightning ? "10분 단위로 확인하는 최근 낙뢰 관측" : (isWalk ? "산책 전 우리 동네 2시간 비 예보" : "앞으로 예상되는 강수 영역");
+  window.setTimeout(() => heroMap && heroMap.invalidateSize(), 0);
+}
+
+function renderWalkWeather(){
+  const title = document.getElementById("walkWeatherTitle");
+  const detail = document.getElementById("walkWeatherDetail");
+  const timeline = document.getElementById("walkWeatherTimeline");
+  if(!title || !detail || !timeline) return;
+  if(heroRadarKey === "national"){
+    title.textContent = "알림 받을 주소를 먼저 검색해주세요.";
+    detail.textContent = "주소를 확인하면 우리 동네 주변의 2시간 비 예보를 보여드려요.";
+    timeline.replaceChildren();
+    return;
+  }
+  const now = new Date();
+  const frames = (heroForecastData?.frames || [])
+    .map(frame => ({
+      ...frame,
+      at:new Date(frame.valid_at),
+      localKnown:Object.prototype.hasOwnProperty.call(frame,"local_rain_px"),
+      rain:Number(frame.local_rain_px || 0) > 0
+    }))
+    .filter(frame => frame.at >= now && frame.at-now <= 130*60*1000)
+    .sort((a,b) => a.at-b.at)
+    .slice(0,4);
+  const currentKnown = Object.prototype.hasOwnProperty.call(heroRadarObs || {},"local_rain_cells");
+  const forecastKnown = frames.length > 0 && frames.every(frame => frame.localKnown);
+  const rainingNow = Number(heroRadarObs?.local_rain_cells || 0) > 0;
+  const firstRain = frames.find(frame => frame.rain);
+  const firstDry = frames.find(frame => !frame.rain);
+  if(!currentKnown || !forecastKnown){
+    title.textContent = "우리 동네 비 예보를 새 기준으로 갱신 중이에요.";
+    detail.textContent = "등록 위치 반경 5km의 강수 자료가 준비되면 정확하게 안내할게요.";
+  }else if(!frames.length){
+    title.textContent = "지금은 2시간 비 예보를 불러올 수 없어요.";
+    detail.textContent = "잠시 뒤 다시 확인하거나 강수 예측 지도를 참고해주세요.";
+  }else if(rainingNow){
+    title.textContent = "현재 우리 동네 주변에 비구름이 있어요.";
+    detail.textContent = firstDry ? `약 ${Math.max(10,Math.round((firstDry.at-now)/600000)*10)}분 뒤 비구름이 약해질 가능성이 있어요.` : "앞으로 2시간 동안 비구름이 이어질 가능성이 있어요.";
+  }else if(firstRain){
+    title.textContent = `약 ${Math.max(10,Math.round((firstRain.at-now)/600000)*10)}분 뒤 비구름이 다가올 수 있어요.`;
+    detail.textContent = "산책한다면 예상 시각 전에 돌아오는 편이 좋아요.";
+  }else{
+    title.textContent = "앞으로 2시간 동안 뚜렷한 비 예보가 없어요.";
+    detail.textContent = "지금 산책하기 괜찮아 보여요. 출발 전 지도를 한 번 더 확인해주세요.";
+  }
+  timeline.replaceChildren(...frames.map(frame => {
+    const item = document.createElement("span");
+    item.className = !frame.localKnown ? "" : (frame.rain ? "rain" : "dry");
+    item.innerHTML = `<b>${fmtClock(frame.at)}</b>${!frame.localKnown ? "갱신 중" : (frame.rain ? "비 가능" : "비 없음")}`;
+    return item;
+  }));
+}
 function fmtGap(mins){
   const a = Math.abs(mins);
   if(a < 3) return "지금";
@@ -190,7 +351,10 @@ async function loadRadar(key, silentFail){
     ]);
     if(!oRes.ok) throw new Error(oRes.status);
     const obs = await oRes.json();
+    heroRadarObs = obs;
     const fc = fRes && fRes.ok ? await fRes.json() : null;
+    heroForecastData = fc;
+    heroRadarKey = key;
 
     const items = [];
     (obs.past || []).forEach(p => {
@@ -212,12 +376,11 @@ async function loadRadar(key, silentFail){
 
     // 낙뢰 표시
     if(!strikeLayer) strikeLayer = L.layerGroup().addTo(heroMap);
-    strikeLayer.clearLayers();
-    (obs.lightning || []).forEach(s => L.marker([s.lat,s.lon], { icon:L.divIcon({
-        className:"", iconSize:[9,9], iconAnchor:[4,4], html:'<div class="hero-bolt"></div>' }) }).addTo(strikeLayer));
+    renderHeroStrikes(heroLightningIdx);
 
     const status = document.getElementById("mapStatus");
     if(status && key === "national") status.textContent = "지금 전국 비구름 · 위치를 입력하면 우리 동네로";
+    setHeroRadarMode(heroRadarMode);
   }catch(e){
     if(!silentFail){
       const status = document.getElementById("mapStatus");
@@ -228,9 +391,29 @@ async function loadRadar(key, silentFail){
 
 document.addEventListener("click", e => {
   if(e.target && e.target.id === "heroPlay") tlToggle();
+  if(e.target && e.target.id === "heroForecastTab") setHeroRadarMode("forecast");
+  if(e.target && e.target.id === "heroLightningTab") setHeroRadarMode("lightning");
+  if(e.target && e.target.id === "heroWalkTab") openWalkWeather();
+  if(e.target && e.target.id === "heroLightningPlay") toggleHeroLightning();
 });
+
+async function openWalkWeather(){
+  let key = state.nx != null ? `${state.nx}_${state.ny}` : "";
+  if(!key){
+    try{ key = localStorage.getItem("thunder_grid") || ""; }catch(error){}
+  }
+  if(new URLSearchParams(location.search).get("preview") === "walk-rain") key = "69_106";
+  if(!key){
+    toast("우리 동네 예보를 보려면 주소를 먼저 검색해주세요.");
+    document.getElementById("addressField")?.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  if(heroRadarKey !== key) await loadRadar(key, true);
+  setHeroRadarMode("walk");
+}
 document.addEventListener("input", e => {
   if(e.target && e.target.id === "heroRange"){ tlStop(); tlShow(+e.target.value); }
+  if(e.target && e.target.id === "heroLightningRange"){ stopHeroLightning(); renderHeroStrikes(+e.target.value); }
 });
 
 function setLocation(lat, lon, dongHint){
@@ -239,12 +422,22 @@ function setLocation(lat, lon, dongHint){
   const grid=toGrid(lat,lon);
   state.nx=grid.nx;
   state.ny=grid.ny;
-  state.dong=dongHint || null;
+  state.dong=shortLocationLabel(dongHint) || null;
   $("locText").textContent=(state.dong || "선택한 주소") + " · 알림 위치 확인됨";
   $("locResult").classList.add("show");
+  $("addressField").classList.add("has-location");
   $("ctaBtn").disabled=false;
   $("ctaBtn").textContent="🚨 필수 · 알림 설정 완료하기";
   pinHome(lat, lon, state.dong);
+}
+
+function shortLocationLabel(label){
+  if(!label) return "";
+  return label.split(",")
+    .map(part => part.trim())
+    .filter(part => part && part !== "대한민국" && !/^\d{5}$/.test(part))
+    .slice(0,4)
+    .join(" ");
 }
 
 $("addrBtn").addEventListener("click", async () => {
@@ -266,12 +459,6 @@ $("addrInput").addEventListener("keydown", event => {
   }
 });
 
-document.querySelectorAll(".iv-btn").forEach(button => button.addEventListener("click", () => {
-  document.querySelectorAll(".iv-btn").forEach(item => item.classList.remove("active"));
-  button.classList.add("active");
-  state.cooldown=parseInt(button.dataset.min,10);
-}));
-
 async function forwardGeocode(query){
   try{
     const response=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&accept-language=ko&countrycodes=kr&limit=1&q=${encodeURIComponent(query)}`);
@@ -289,15 +476,23 @@ function closeNotificationSheet(){
   document.body.style.overflow="";
 }
 
+function showIosNotificationGuide(){
+  $("iosInstallGuide").hidden=false;
+  $("directNotifyGuide").hidden=true;
+  window.setTimeout(() => $("iosGuideDone").focus(),0);
+}
+
+function showDirectNotificationGuide(){
+  $("iosInstallGuide").hidden=true;
+  $("directNotifyGuide").hidden=false;
+  window.setTimeout(() => $("allowNotifyBtn").focus(),0);
+}
+
 function openNotificationSheet(){
-  $("iosInstallGuide").hidden=!(isIOS && !isStandalone);
-  $("directNotifyGuide").hidden=isIOS && !isStandalone;
+  if(isIOS && !isStandalone) showIosNotificationGuide();
+  else showDirectNotificationGuide();
   $("notifySheet").hidden=false;
   document.body.style.overflow="hidden";
-  window.setTimeout(() => {
-    const target=isIOS && !isStandalone ? $("iosGuideDone") : $("allowNotifyBtn");
-    if(target) target.focus();
-  },0);
 }
 
 $("ctaBtn").addEventListener("click", () => {
@@ -308,11 +503,37 @@ $("ctaBtn").addEventListener("click", () => {
 $("notifySheetClose").addEventListener("click", closeNotificationSheet);
 $("notifySheetBackdrop").addEventListener("click", closeNotificationSheet);
 $("iosGuideDone").addEventListener("click", closeNotificationSheet);
+$("showIosGuide").addEventListener("click", showIosNotificationGuide);
+$("showDirectGuide").addEventListener("click", showDirectNotificationGuide);
 document.addEventListener("keydown", event => {
   if(event.key==="Escape" && !$("notifySheet").hidden) closeNotificationSheet();
 });
 
 $("allowNotifyBtn").addEventListener("click", completeSubscription);
+
+async function syncInlineSubscriptionStatus(){
+  const panel=$("inlineSubscriptionStatus");
+  if(!panel || !("serviceWorker" in navigator)) return;
+  try{
+    const registration=await navigator.serviceWorker.getRegistration();
+    const subscription=registration && await registration.pushManager.getSubscription();
+    panel.hidden=!subscription;
+    if(subscription){
+      let profile={};
+      try{ profile=JSON.parse(localStorage.getItem("thunder_alert_profile") || "{}"); }catch(error){}
+      $("inlineSubscriptionLocation").textContent=(profile.dong ? profile.dong+"에서 " : "현재 기기에서 ")+"천둥번개 알림을 받고 있습니다.";
+    }
+  }catch(error){
+    panel.hidden=true;
+  }
+}
+
+$("inlineAlertOffButton").addEventListener("click", () => {
+  const sharedOffButton=document.getElementById("alertOffButton");
+  if(sharedOffButton) sharedOffButton.click();
+  else toast("상단 메뉴의 알림 관리에서 알림을 꺼주세요");
+});
+window.addEventListener("thunder-subscription-changed", syncInlineSubscriptionStatus);
 
 async function completeSubscription(){
   if(state.nx==null){ closeNotificationSheet(); toast("먼저 주소를 등록해주세요"); return; }
@@ -373,7 +594,7 @@ async function completeSubscription(){
     nx:state.nx,
     ny:state.ny,
     dong:state.dong,
-    cooldown_min:state.cooldown,
+    cooldown_min:30,
     subscription:subscription.toJSON ? subscription.toJSON() : subscription
   };
 
@@ -413,7 +634,7 @@ async function completeSubscription(){
   // 레이더 화면이 '우리 동네'를 보여줄 수 있게 격자를 기억해둔다
   try{
     localStorage.setItem("thunder_grid", state.nx+"_"+state.ny);
-    localStorage.setItem("thunder_alert_profile", JSON.stringify({dong:state.dong,cooldown:state.cooldown}));
+    localStorage.setItem("thunder_alert_profile", JSON.stringify({dong:state.dong}));
   }catch(e){}
 
   closeNotificationSheet();
@@ -441,3 +662,4 @@ function urlBase64ToUint8Array(base64String){
 initHeroMap();
 loadRadar("national");                    // 첫 화면엔 전국 비구름
 setInterval(() => loadRadar(state.nx!=null ? `${state.nx}_${state.ny}` : "national", true), 5*60*1000);
+syncInlineSubscriptionStatus();

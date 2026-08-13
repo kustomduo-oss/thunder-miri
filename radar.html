@@ -25,6 +25,9 @@
   .radar-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:14px 0 10px}
   .radar-bar .obs{font-size:14px;color:var(--ink-soft)}
   .radar-bar .obs b{color:var(--ink)}
+  .radar-view-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0 11px;padding:4px;border:1px solid var(--line);border-radius:11px;background:#eef4f7}
+  .radar-view-tabs button{min-height:44px;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+  .radar-view-tabs button[aria-selected="true"]{background:var(--navy,#1e3a8a);color:#fff;box-shadow:0 3px 9px rgba(30,58,138,.2)}
   .legend{display:flex;align-items:center;gap:0;font-size:11px;color:var(--ink-soft)}
   .legend i{width:26px;height:11px;display:inline-block}
   .legend span{margin:0 6px}
@@ -34,6 +37,10 @@
   .leaflet-container{font:inherit}
   .home-dot{background:#1e3a8a;border:3px solid #fff;border-radius:50%;
        box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .range-distance-label{padding:3px 6px;border:2px solid #fff;border-radius:8px;color:#fff;
+       font-size:10px;font-weight:800;line-height:1;box-shadow:0 2px 7px rgba(11,52,72,.3);
+       white-space:nowrap}
+  .range-distance-label.range-50{background:#007f95}.range-distance-label.range-30{background:#df5b1d}
 
   /* 예측 그림 (예측 구간에서만 표시) */
   .fc-stage{position:relative;background:#f4f7fb;border:1px solid var(--line);
@@ -48,14 +55,20 @@
   /* 통합 타임바 */
   .tl{display:flex;align-items:center;gap:12px;margin-top:14px}
   .tl-main{flex:1;min-width:0}
-  #tlRange{width:100%;accent-color:var(--navy,#1e3a8a);cursor:pointer;margin:0}
+  #tlRange,#lightningRange{width:100%;accent-color:var(--navy,#1e3a8a);cursor:pointer;margin:0}
   .tl-marks{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:2px}
   .tl-marks #tlNowMark{font-weight:800;color:var(--navy,#1e3a8a)}
   .tl-kind{font-size:13px;color:var(--ink-soft);margin:8px 0 0}
   .tl-kind b{color:var(--navy,#1e3a8a)}
   @media (max-width:520px){ .fc-time{min-width:98px;font-size:13px} .tl-marks{font-size:10px} }
-  .bolt-dot{background:#ffd54a;border:2px solid #b8860b;border-radius:50%;
-       box-shadow:0 0 6px rgba(255,213,74,.9)}
+  .bolt-dot{border:2px solid #fff;border-radius:50%;box-shadow:0 1px 6px rgba(15,42,54,.4)}
+  .bolt-dot.is-fresh{background:#df4433;box-shadow:0 0 8px rgba(223,68,51,.72)}
+  .bolt-dot.is-mid{background:#f08a2b;box-shadow:0 0 7px rgba(240,138,43,.62)}
+  .bolt-dot.is-old{background:#82939c}
+  .strike-legend{display:flex;flex-wrap:wrap;gap:6px 13px;margin:9px 0 2px;font-size:11.5px;color:var(--ink-soft)}
+  .strike-legend span{display:inline-flex;align-items:center;gap:5px}
+  .strike-legend i{width:10px;height:10px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(20,45,58,.14)}
+  .strike-legend .fresh{background:#df4433}.strike-legend .mid{background:#f08a2b}.strike-legend .old{background:#82939c}
 </style>
 </head>
 <body>
@@ -65,14 +78,33 @@
   <p class="page-sub">기상청 레이더 자료를 5분마다 받아 우리 동네 주변만 보여드립니다. 낙뢰가 관측되면 지도에 함께 표시됩니다.</p>
 
   <div class="radar-wrap" style="padding:0">
+    <div class="radar-view-tabs" role="tablist" aria-label="레이더 정보 선택">
+      <button type="button" id="forecastTab" role="tab" aria-selected="true">비구름 예측</button>
+      <button type="button" id="lightningTab" role="tab" aria-selected="false">최근 낙뢰</button>
+    </div>
     <div class="radar-bar">
       <div class="obs">관측 시각 <b id="obsTime">불러오는 중…</b></div>
-      <div class="legend" aria-label="강수 강도">
+      <div class="legend" id="rainLegend" aria-label="강수 강도">
         <span>약함</span>
         <i style="background:#8ed1fc"></i><i style="background:#3aa0ff"></i><i style="background:#2ecc71"></i>
         <i style="background:#f1c40f"></i><i style="background:#e67e22"></i><i style="background:#e74c3c"></i>
         <span>강함</span>
       </div>
+    </div>
+
+    <div class="strike-legend" id="strikeLegend" aria-label="낙뢰 관측 시간별 색상" hidden>
+      <span><i class="fresh"></i>10분 이내</span>
+      <span><i class="mid"></i>10~20분 전</span>
+      <span><i class="old"></i>20~30분 전</span>
+    </div>
+    <div id="lightningStatus" class="radar-empty" hidden></div>
+    <div class="tl" id="lightningTimeline" hidden>
+      <button type="button" id="lightningPlay" class="fc-btn" aria-label="낙뢰 관측 재생">▶</button>
+      <div class="tl-main">
+        <input type="range" id="lightningRange" min="0" max="2" value="2" aria-label="낙뢰 관측 시간 선택" />
+        <div class="tl-marks"><span>30분 전</span><span>20분 전</span><span>10분 전</span><span>지금</span></div>
+      </div>
+      <span id="lightningLabel" class="fc-time">최근 10분</span>
     </div>
 
     <div class="map-wrap">
@@ -86,7 +118,7 @@
     <div id="emptyMsg" class="radar-empty" style="display:none"></div>
 
     <!-- 과거 관측 → 지금 → 미래 예측을 하나로 잇는 타임바 -->
-    <div class="tl">
+    <div class="tl" id="radarTimeline">
       <button type="button" id="tlPlay" class="fc-btn" aria-label="재생">▶</button>
       <div class="tl-main">
         <input type="range" id="tlRange" min="0" max="0" value="0" aria-label="시각 선택" />
@@ -98,7 +130,7 @@
 
     <p class="radar-note">
       🔵 우리 집 · 원은 <b>50km(접근)</b>과 <b>30km(임박)</b> 알림 기준 거리입니다.
-      ⚡ 노란 점은 <b>최근 관측된 낙뢰</b>입니다(예보가 아니라 이미 친 낙뢰).<br />
+      ⚡ 색 점은 <b>최근 30분 동안 관측된 낙뢰</b>이며, 색이 흐릴수록 오래된 관측입니다.<br />
       자료: 기상청 레이더·낙뢰 관측 · 배경지도: 국토교통부 브이월드
     </p>
 
@@ -133,6 +165,7 @@ function myGrid() {
 }
 
 const map = L.map("map", { zoomControl: true, attributionControl: true });
+map.attributionControl.setPrefix(false);
 
 /* 배경지도: 브이월드(국토교통부).
    비 색깔과 지도 색이 겹치지 않도록 '밝게(white)'를 기본으로 쓴다.
@@ -150,7 +183,7 @@ function setBasemap(type) {
   if (baseLayer) map.removeLayer(baseLayer);
   baseLayer = L.tileLayer(
     `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.VWORLD_KEY}/${type}/{z}/{y}/{x}.png`,
-    { maxZoom: 18, attribution: "배경지도 © 국토교통부 브이월드" }
+    { maxZoom: 18, attribution: '© <a href="https://www.vworld.kr/" target="_blank" rel="noopener">VWorld</a>' }
   );
   baseLayer.on("tileerror", () => {
     if (fellBack) return;
@@ -173,9 +206,103 @@ const dot = (cls, size) =>
   L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
               html: `<div class="${cls}" style="width:${size}px;height:${size}px"></div>` });
 
+function parseStrikeTime(value) {
+  const s = String(value || "").replace(/\D/g, "");
+  if (s.length < 12) return null;
+  return new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8),
+                  +s.slice(8, 10), +s.slice(10, 12), +(s.slice(12, 14) || 0));
+}
+function strikeAge(value) {
+  const at = parseStrikeTime(value);
+  return at && !Number.isNaN(at.getTime())
+    ? Math.max(0, Math.floor((Date.now() - at.getTime()) / 60000)) : 0;
+}
+function strikeAgeClass(age) {
+  if (age < 10) return "is-fresh";
+  if (age < 20) return "is-mid";
+  return "is-old";
+}
+
 let overlay = null;
 let lastObsMeta = null, lastFcMeta = null;
+const rangeLayer = L.layerGroup().addTo(map);
 const strikeLayer = L.layerGroup().addTo(map);
+let radarMode = "forecast";
+let lightningIdx = 2, lightningTimer = null;
+
+function lightningWindow(step) {
+  return [{ min: 20, max: 30, label: "20~30분 전" },
+          { min: 10, max: 20, label: "10~20분 전" },
+          { min: 0, max: 10, label: "최근 10분" }][step];
+}
+function renderStrikes(step) {
+  lightningIdx = Math.max(0, Math.min(2, step));
+  $("lightningRange").value = lightningIdx;
+  strikeLayer.clearLayers();
+  const current = lightningWindow(lightningIdx);
+  const strikes = lastObsMeta?.lightning || [];
+  strikes.filter((s) => {
+    const age = strikeAge(s.tm);
+    return age >= current.min && age < 30;
+  }).forEach((s) => {
+    const age = strikeAge(s.tm);
+    const at = parseStrikeTime(s.tm);
+    const clock = at ? `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")} · ` : "";
+    L.marker([s.lat, s.lon], {
+      icon: dot(`bolt-dot ${strikeAgeClass(age)}`, 11),
+      title: `${clock}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
+    }).addTo(strikeLayer);
+  });
+  const inWindow = strikes.filter((s) => {
+    const age = strikeAge(s.tm);
+    return age >= current.min && age < current.max;
+  }).length;
+  $("lightningLabel").textContent = current.label;
+  $("lightningStatus").innerHTML = inWindow
+    ? `${current.label} 관측 <b>${inWindow}건</b> · 이전 구간부터 누적해 표시합니다.`
+    : `${current.label}에는 관측된 낙뢰가 없습니다.`;
+}
+function stopLightning() {
+  clearInterval(lightningTimer); lightningTimer = null;
+  $("lightningPlay").textContent = "▶";
+}
+function toggleLightning() {
+  if (lightningTimer) return stopLightning();
+  $("lightningPlay").textContent = "❚❚";
+  if (lightningIdx >= 2) renderStrikes(0);
+  lightningTimer = setInterval(() => renderStrikes(lightningIdx >= 2 ? 0 : lightningIdx + 1), 1100);
+}
+
+function setRadarMode(mode) {
+  radarMode = mode;
+  const isLightning = mode === "lightning";
+  $("forecastTab").setAttribute("aria-selected", String(!isLightning));
+  $("lightningTab").setAttribute("aria-selected", String(isLightning));
+  $("strikeLegend").hidden = !isLightning;
+  $("lightningStatus").hidden = !isLightning;
+  $("lightningTimeline").hidden = !isLightning;
+  $("radarTimeline").hidden = isLightning;
+  $("tlKind").hidden = isLightning;
+  $("rainLegend").hidden = isLightning;
+  if (overlay) overlay.setOpacity(isLightning ? 0 : 0.82);
+  if (isLightning) {
+    tlStop();
+    if (!map.hasLayer(strikeLayer)) strikeLayer.addTo(map);
+    renderStrikes(lightningIdx);
+  } else {
+    stopLightning();
+    if (map.hasLayer(strikeLayer)) map.removeLayer(strikeLayer);
+  }
+  $("emptyMsg").style.display = isLightning ? "none" : ($("emptyMsg").dataset.forecastDisplay || "none");
+  window.setTimeout(() => map.invalidateSize(), 0);
+}
+
+$("forecastTab").addEventListener("click", () => setRadarMode("forecast"));
+$("lightningTab").addEventListener("click", () => setRadarMode("lightning"));
+$("lightningPlay").addEventListener("click", toggleLightning);
+$("lightningRange").addEventListener("input", (event) => {
+  stopLightning(); renderStrikes(+event.target.value);
+});
 
 async function load() {
   const grid = myGrid();
@@ -205,15 +332,23 @@ async function load() {
     [[b.south, b.west], [b.north, b.east]], { opacity: 0.82 }).addTo(map);
 
   /* 우리 집 + 알림 기준 반경 */
-  L.marker(home, { icon: dot("home-dot", 16), title: "우리 집" }).addTo(map);
-  L.circle(home, { radius: 50000, color: "#1e3a8a", weight: 1.2, fill: false, dashArray: "5,6" }).addTo(map);
-  L.circle(home, { radius: 30000, color: "#e74c3c", weight: 1.4, fill: false, dashArray: "5,6" }).addTo(map);
+  rangeLayer.clearLayers();
+  L.marker(home, { icon: dot("home-dot", 16), title: "우리 집" }).addTo(rangeLayer);
+  const circle50 = L.circle(home, { radius: 50000, color: "#007f95", weight: 3, opacity: 1,
+                   fillColor: "#00a4ba", fillOpacity: 0.07 }).addTo(rangeLayer);
+  const circle30 = L.circle(home, { radius: 30000, color: "#df5b1d", weight: 3.5, opacity: 1,
+                   fillColor: "#f27a32", fillOpacity: 0.15 }).addTo(rangeLayer);
+  L.marker([home[0], circle50.getBounds().getEast()], { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[20,10],
+    html:'<div class="range-distance-label range-50">50km</div>'
+  }), interactive:false }).addTo(rangeLayer);
+  L.marker([home[0], circle30.getBounds().getEast()], { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[20,10],
+    html:'<div class="range-distance-label range-30">30km</div>'
+  }), interactive:false }).addTo(rangeLayer);
 
   /* 최근 낙뢰 */
-  strikeLayer.clearLayers();
-  (meta.lightning || []).forEach((s) =>
-    L.marker([s.lat, s.lon], { icon: dot("bolt-dot", 9), title: "최근 관측된 낙뢰" }).addTo(strikeLayer)
-  );
+  renderStrikes(lightningIdx);
 
   const obs = new Date(meta.observed_at);
   const mins = Math.max(0, Math.round((Date.now() - obs.getTime()) / 60000));
@@ -240,6 +375,8 @@ async function load() {
   } else {
     empty.style.display = "none";
   }
+  empty.dataset.forecastDisplay = empty.style.display;
+  setRadarMode(radarMode);
 }
 
 /* ── 통합 타임바 ────────────────────────────────────
@@ -337,11 +474,12 @@ async function loadForecast() {
     lastFcMeta = null;
   }
   buildTimeline(lastObsMeta, lastFcMeta);
+  setRadarMode(radarMode);
 }
 
 (async () => { await load(); await loadForecast(); })();
 setInterval(async () => { await load(); await loadForecast(); }, 5 * 60 * 1000);
 </script>
-<script src="nav.js?v=content-menu-1" defer></script>
+<script src="nav.js?v=adsense-footer-1" defer></script>
 </body>
 </html>

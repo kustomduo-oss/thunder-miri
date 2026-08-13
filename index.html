@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="stylesheet" href="style.css?v=subscription-status-1" />
-  <link rel="stylesheet" href="landing.css?v=mobile-flow-1" />
+  <link rel="stylesheet" href="landing.css?v=walk-weather-3" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -23,12 +23,23 @@
     <div class="purpose-copy">
       <h1>우리 동네로 다가오는<br /><span>천둥번개,</span><br />보호자에게 미리<br /><span>알려드려요.</span></h1>
       <p class="purpose-lead">기상청 낙뢰 관측 정보를 5분마다 확인해,<br />천둥번개 접근을 빠르게 알려드려요.</p>
-      <a class="primary-action" href="#signup">우리 동네 알림 받기</a>
     </div>
 
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map" id="radar">
-      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">지금 비구름을 불러오는 중…</span></div>
+      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">최근 낙뢰 관측 정보를 불러오는 중…</span></div>
+      <div class="radar-view-tabs" role="tablist" aria-label="레이더 정보 선택">
+        <button type="button" id="heroLightningTab" role="tab" aria-selected="true">⚡ 최근 낙뢰</button>
+        <button type="button" id="heroForecastTab" role="tab" aria-selected="false">🌧️ 강수 예측</button>
+        <button type="button" id="heroWalkTab" role="tab" aria-selected="false">🐕 산책 전 확인</button>
+      </div>
+      <section class="walk-weather-panel" id="walkWeatherPanel" hidden aria-live="polite">
+        <span>산책 전 2시간</span>
+        <strong id="walkWeatherTitle">우리 동네 비 예보를 확인하고 있어요.</strong>
+        <p id="walkWeatherDetail">강수예측 자료를 불러오면 산책하기 좋은 시간을 알려드려요.</p>
+        <div class="walk-weather-timeline" id="walkWeatherTimeline"></div>
+        <small>기상청 초단기 강수예측은 실제 날씨와 달라질 수 있어요.</small>
+      </section>
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
         <div class="hero-base" role="group" aria-label="지도 스타일">
@@ -38,31 +49,39 @@
         </div>
       </div>
 
-      <div class="hero-tl">
+      <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시간별 색상">
+        <span><i class="fresh"></i>10분 이내</span>
+        <span><i class="mid"></i>10~20분 전</span>
+        <span><i class="old"></i>20~30분 전</span>
+      </div>
+      <p class="hero-lightning-status" id="heroLightningStatus">최근 30분 낙뢰 관측 정보를 불러오는 중…</p>
+      <div class="hero-tl" id="heroLightningTimeline">
+        <button type="button" id="heroLightningPlay" class="hero-play" aria-label="낙뢰 관측 재생">▶</button>
+        <input type="range" id="heroLightningRange" min="0" max="2" value="2" aria-label="낙뢰 관측 시간 선택" />
+        <span id="heroLightningTime" class="hero-time">최근 10분</span>
+      </div>
+      <div class="hero-tl" id="heroTimeline" hidden>
         <button type="button" id="heroPlay" class="hero-play" aria-label="재생">▶</button>
         <input type="range" id="heroRange" min="0" max="0" value="0" aria-label="시각 선택" />
         <span id="heroTime" class="hero-time">—</span>
       </div>
-      <p id="heroKind" class="hero-kind">기상청 레이더 · 5분마다 갱신</p>
+      <p id="heroKind" class="hero-kind" hidden>기상청 레이더 · 5분마다 갱신</p>
 
       <div class="map-flow">
-        <div><b>50km</b><span>접근 알림</span></div>
-        <i>→</i>
-        <div><b>30km</b><span>임박 알림</span></div>
-        <i>→</i>
-        <div><b>영상</b><span>미리 재생</span></div>
+        <div class="range-watch"><b>50km</b><span>접근 알림</span></div>
+        <div class="range-warning"><b>30km</b><span>임박 알림</span></div>
       </div>
     </div>
 
     <div class="signup-panel" id="signup">
       <div id="formView">
-        <div class="field">
+        <div class="field" id="addressField">
           <label for="addrInput">알림 받을 주소</label>
           <div class="addr-row">
             <input type="text" id="addrInput" placeholder="예: 동탄반석로 또는 반송동" autocomplete="street-address" />
             <button type="button" class="addr-btn" id="addrBtn">검색</button>
           </div>
-          <p class="address-hint">도로명 주소·지번 주소·동네 이름으로 검색할 수 있어요.</p>
+          <p class="address-hint"><span>도로명·지번·동네 이름으로 검색할 수 있어요.</span><small>주소 검색은 OpenStreetMap을 사용합니다.</small></p>
           <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">주소 확인됨</span></div>
         </div>
 
@@ -71,30 +90,16 @@
           <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
         </div>
 
-        <details class="optional-settings">
-          <summary>알림 설정</summary>
-          <div class="field">
-            <label>비 예보 알림 간격</label>
-            <div class="iv-row">
-              <button type="button" class="iv-btn" data-min="10">10분<small>촘촘</small></button>
-              <button type="button" class="iv-btn active" data-min="20">20분<small>기본</small></button>
-              <button type="button" class="iv-btn" data-min="30">30분<small>담백</small></button>
-            </div>
-            <p class="iv-note"><strong>낙뢰 경보는 선택한 간격과 관계없이 즉시 알립니다.</strong></p>
+        <div class="inline-subscription-status" id="inlineSubscriptionStatus" hidden>
+          <div>
+            <strong><span></span> 알림 켜짐</strong>
+            <small id="inlineSubscriptionLocation">현재 기기에서 천둥번개 알림을 받고 있습니다.</small>
           </div>
-          <p class="search-privacy">주소 검색 시 입력한 검색어가 OpenStreetMap Nominatim으로 전송됩니다.</p>
-        </details>
-
-        <div class="notification-required">
-          <strong>아직 알림 설정이 끝나지 않았어요.</strong>
-          <span>기기에서 알림을 허용해야 실제로 천둥번개 알림을 받을 수 있습니다.</span>
+          <button type="button" id="inlineAlertOffButton">알림 끄기</button>
         </div>
+
         <button class="cta" id="ctaBtn" disabled>주소를 먼저 등록해주세요</button>
-
-        <div class="purpose-boundary">
-          <strong>이 알림은 치료나 훈련을 목적으로 하지 않습니다.</strong>
-          <span>반려견의 천둥 공포를 없애는 서비스가 아니라, 갑작스러운 천둥번개 소리에 대비할 시간을 드리기 위한 알림입니다.</span>
-        </div>
+        <p class="cta-note">기기 알림 허용이 필요해요.</p>
       </div>
 
       <div class="success" id="successView">
@@ -103,6 +108,30 @@
         <p>이제 천둥번개가 가까워지면 <strong id="successDog">우리 아이</strong>를 위해 미리 알려드릴게요.</p>
         <a class="secondary-action" href="#radar">우리 동네 레이더 보기 →</a>
       </div>
+
+    </div>
+  </section>
+
+  <section class="content-discovery" aria-labelledby="contentDiscoveryTitle">
+    <div class="content-discovery-heading">
+      <h2 id="contentDiscoveryTitle">더 알아보기</h2>
+      <p>궁금한 내용을 터치해 펼쳐보세요.</p>
+    </div>
+    <div class="content-discovery-grid">
+      <details class="discovery-card story-link">
+        <summary><span>만든 이야기</span><strong>왜 이 알림을 만들었나요?</strong><i aria-hidden="true"></i></summary>
+        <div class="discovery-card-body">
+          <p>천둥을 무서워하는 동탄이와 함께 지내며, 미리 준비할 시간을 주기 위해 만든 과정입니다.</p>
+          <a href="story.html">이야기 읽기 →</a>
+        </div>
+      </details>
+      <details class="discovery-card sound-link">
+        <summary><span>보호자의 개인적인 기록</span><strong>동탄이의 소리 적응 과정</strong><i aria-hidden="true"></i></summary>
+        <div class="discovery-card-body">
+          <p>실제 시도 순서와 중단 기준, 참고한 연구와 공식 자료를 함께 정리했습니다.</p>
+          <a href="guide-training.html">기록과 자료 보기 →</a>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -125,6 +154,7 @@
         <li>같은 주소를 확인한 뒤 <b>알림 허용</b>을 누릅니다.</li>
       </ol>
       <button type="button" class="notify-later" id="iosGuideDone">확인했어요</button>
+      <button type="button" class="notify-guide-switch" id="showDirectGuide">Android·PC 설정 방법 보기</button>
     </div>
 
     <div class="notify-guide" id="directNotifyGuide" hidden>
@@ -134,13 +164,14 @@
         <li>브라우저 확인창에서 <b>허용</b>을 선택합니다.</li>
       </ol>
       <button type="button" class="allow-notify" id="allowNotifyBtn">알림 허용하기</button>
+      <button type="button" class="notify-guide-switch" id="showIosGuide">iPhone 설정 방법 보기</button>
     </div>
   </section>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=notification-flow-1" defer></script>
-<script src="nav.js?v=content-menu-1" defer></script>
+<script src="landing.js?v=weather-tabs-1" defer></script>
+<script src="nav.js?v=adsense-footer-1" defer></script>
 </body>
 </html>

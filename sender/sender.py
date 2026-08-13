@@ -94,12 +94,12 @@ def haversine(lat1, lon1, lat2, lon2):
 # ----------------------------------------------------------------
 # 기상청 조회 (동탄이 봇에서 재활용, 위치 매개변수화)
 # ----------------------------------------------------------------
-def fetch_lightning_data(lat, lon, range_km):
+def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15):
     """기상청 API허브 최근 낙뢰 좌표 목록"""
     url = "https://apihub.kma.go.kr/api/typ01/url/lgt_pnt.php"
     params = {
         "tm": datetime.now().strftime("%Y%m%d%H%M"),
-        "itv": 15, "lon": lon, "lat": lat, "range": range_km,
+        "itv": lookback_minutes, "lon": lon, "lat": lat, "range": range_km,
         "gc": "T", "authKey": KMA_API_KEY,
     }
     try:
