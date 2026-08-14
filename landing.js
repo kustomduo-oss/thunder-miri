@@ -172,7 +172,7 @@ function pinHome(lat, lon, label){
       html:'<div class="hero-location-pin" title="등록 위치"><span></span></div>'
   }), keyboard:false }).addTo(heroLayer);
 
-  heroMap.setView([lat,lon], 8);
+  heroMap.setView([lat,lon], heroRadarMode === "lightning" ? 6 : 8);
   const status = document.getElementById("mapStatus");
   if(status) status.textContent = (label || "우리 동네") + " 낙뢰 감시 중";
 
@@ -214,6 +214,12 @@ function lightningWindow(step){
           { min:10, max:20, label:"10~20분 전" },
           { min:0, max:10, label:"최근 1시간" }][step];
 }
+function focusLightningMap(){
+  if(!heroMap) return;
+  const center = state.lat!=null ? [state.lat,state.lon] : [36.5,127.8];
+  heroMap.setView(center,6,{animate:false});
+  heroLightningViewFitted=true;
+}
 function renderHeroStrikes(step){
   heroLightningIdx = Math.max(0, Math.min(5, step));
   const range = document.getElementById("heroLightningRange");
@@ -229,8 +235,8 @@ function renderHeroStrikes(step){
     const age = strikeAge(s.tm);
     const at = parseStrikeTime(s.tm);
     L.marker([s.lat,s.lon], { icon:L.divIcon({
-      className:"", iconSize:[11,11], iconAnchor:[5,5],
-      html:`<div class="hero-bolt ${strikeAgeClass(age)}"></div>` }),
+      className:"", iconSize:[22,24], iconAnchor:[11,12],
+      html:`<div class="hero-bolt ${strikeAgeClass(age)}" aria-hidden="true">⚡︎</div>` }),
       title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
     }).addTo(strikeLayer);
   });
@@ -289,8 +295,7 @@ function setHeroRadarMode(mode){
     tlStop();
     renderHeroStrikes(heroLightningIdx);
     if(heroMap && (modeChanged || !heroLightningViewFitted)){
-      heroMap.fitBounds([[32.4,123.2],[43.1,132.4]],{padding:[10,10],animate:false});
-      heroLightningViewFitted=true;
+      focusLightningMap();
     }
   }
   else{
@@ -506,8 +511,7 @@ function refreshSavedMap(){
     if(!heroMap) return;
     heroMap.invalidateSize();
     if(heroRadarMode === "lightning"){
-      heroMap.fitBounds([[32.4,123.2],[43.1,132.4]],{padding:[10,10],animate:false});
-      heroLightningViewFitted=true;
+      focusLightningMap();
     }else{
       heroMap.setView([state.lat,state.lon],8,{animate:false});
     }
