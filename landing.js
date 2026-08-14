@@ -9,6 +9,7 @@ const state = { lat:null, lon:null, nx:null, ny:null, dong:null };
 const $ = id => document.getElementById(id);
 const SOUND_CHECK_KEY = "dongtaniSoundCheckPassed";
 const ALERT_PROFILE_KEY = "thunder_alert_profile";
+const SAVED_LOCATION_KEY = "thunder_saved_location";
 
 function readAlertProfile(){
   try{
@@ -31,9 +32,19 @@ function saveLocationProfile(extra={}){
       nx:state.nx,
       ny:state.ny
     };
+    const savedLocation={dong:state.dong,lat:state.lat,lon:state.lon,nx:state.nx,ny:state.ny};
     localStorage.setItem("thunder_grid", `${state.nx}_${state.ny}`);
+    localStorage.setItem(SAVED_LOCATION_KEY, JSON.stringify(savedLocation));
     localStorage.setItem(ALERT_PROFILE_KEY, JSON.stringify(profile));
   }catch(error){ /* 저장이 막혀도 현재 이용은 계속합니다. */ }
+}
+
+function readSavedLocation(){
+  const candidates=[];
+  try{ candidates.push(JSON.parse(localStorage.getItem(SAVED_LOCATION_KEY) || "{}")); }catch(error){}
+  candidates.push(readAlertProfile());
+  return candidates.find(item => item && item.lat != null && item.lon != null && item.lat !== "" && item.lon !== "" &&
+    Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))) || null;
 }
 
 function toast(message){
@@ -460,14 +471,24 @@ function setLocation(lat, lon, dongHint, {persist=true}={}){
 }
 
 function restoreSavedLocation(){
-  const profile=readAlertProfile();
+  const profile=readSavedLocation();
+  if(!profile) return false;
   const lat=Number(profile.lat);
   const lon=Number(profile.lon);
-  if(!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
 
   setLocation(lat, lon, profile.dong || "선택한 주소", {persist:false});
   if($("addrInput") && profile.dong) $("addrInput").value=profile.dong;
+  window.setTimeout(() => heroMap && heroMap.invalidateSize(), 0);
   return true;
+}
+
+function refreshSavedMap(){
+  if(!restoreSavedLocation()) return;
+  window.setTimeout(() => {
+    if(!heroMap) return;
+    heroMap.invalidateSize();
+    heroMap.setView([state.lat,state.lon],8,{animate:false});
+  },120);
 }
 
 function shortLocationLabel(label){
@@ -699,3 +720,15 @@ initHeroMap();
 if(!restoreSavedLocation()) loadRadar("national"); // 저장 위치가 없을 때만 전국 화면을 보여준다.
 setInterval(() => loadRadar(state.nx!=null ? `${state.nx}_${state.ny}` : "national", true), 5*60*1000);
 syncInlineSubscriptionStatus();
+
+// iPhone 홈 화면 웹 앱은 페이지 복귀나 앱 재개 때 기존 화면을 그대로 되살릴 수 있다.
+// 그때 Leaflet의 화면 크기와 저장 위치를 다시 적용해 핀과 반경이 사라지지 않게 한다.
+window.addEventListener("pageshow", event => {
+  if(event.persisted) refreshSavedMap();
+});
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible") refreshSavedMap();
+});
+window.addEventListener("hashchange", () => {
+  if(location.hash === "#radar") refreshSavedMap();
+});
