@@ -172,7 +172,7 @@ function pinHome(lat, lon, label){
       html:'<div class="hero-location-pin" title="등록 위치"><span></span></div>'
   }), keyboard:false }).addTo(heroLayer);
 
-  heroMap.setView([lat,lon], heroRadarMode === "lightning" ? 6 : 8);
+  heroMap.setView([lat,lon], heroRadarMode === "lightning" ? 7 : 8);
   const status = document.getElementById("mapStatus");
   if(status) status.textContent = (label || "우리 동네") + " 낙뢰 감시 중";
 
@@ -217,7 +217,7 @@ function lightningWindow(step){
 function focusLightningMap(){
   if(!heroMap) return;
   const center = state.lat!=null ? [state.lat,state.lon] : [36.5,127.8];
-  heroMap.setView(center,6,{animate:false});
+  heroMap.setView(center,7,{animate:false});
   heroLightningViewFitted=true;
 }
 function renderHeroStrikes(step){
@@ -230,13 +230,13 @@ function renderHeroStrikes(step){
   const visible = heroLightningStrikes.filter(s => {
     const age = strikeAge(s.tm);
     return age >= current.min && age < 60;
-  });
+  }).sort((a,b) => strikeAge(b.tm) - strikeAge(a.tm));
   visible.forEach(s => {
     const age = strikeAge(s.tm);
     const at = parseStrikeTime(s.tm);
     L.marker([s.lat,s.lon], { icon:L.divIcon({
-      className:"", iconSize:[22,24], iconAnchor:[11,12],
-      html:`<div class="hero-bolt ${strikeAgeClass(age)}" aria-hidden="true">⚡︎</div>` }),
+      className:"", iconSize:[30,34], iconAnchor:[15,17],
+      html:`<div class="hero-bolt ${strikeAgeClass(age)}" aria-hidden="true"></div>` }),
       title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
     }).addTo(strikeLayer);
   });
