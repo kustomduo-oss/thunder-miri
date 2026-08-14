@@ -8,6 +8,33 @@ const CONFIG = {
 const state = { lat:null, lon:null, nx:null, ny:null, dong:null };
 const $ = id => document.getElementById(id);
 const SOUND_CHECK_KEY = "dongtaniSoundCheckPassed";
+const ALERT_PROFILE_KEY = "thunder_alert_profile";
+
+function readAlertProfile(){
+  try{
+    const profile=JSON.parse(localStorage.getItem(ALERT_PROFILE_KEY) || "{}");
+    return profile && typeof profile === "object" ? profile : {};
+  }catch(error){
+    return {};
+  }
+}
+
+function saveLocationProfile(extra={}){
+  if(!Number.isFinite(state.lat) || !Number.isFinite(state.lon) || state.nx==null || state.ny==null) return;
+  try{
+    const profile={
+      ...readAlertProfile(),
+      ...extra,
+      dong:state.dong,
+      lat:state.lat,
+      lon:state.lon,
+      nx:state.nx,
+      ny:state.ny
+    };
+    localStorage.setItem("thunder_grid", `${state.nx}_${state.ny}`);
+    localStorage.setItem(ALERT_PROFILE_KEY, JSON.stringify(profile));
+  }catch(error){ /* 저장이 막혀도 현재 이용은 계속합니다. */ }
+}
 
 function toast(message){
   const element = $("toast");
@@ -416,7 +443,7 @@ document.addEventListener("input", e => {
   if(e.target && e.target.id === "heroLightningRange"){ stopHeroLightning(); renderHeroStrikes(+e.target.value); }
 });
 
-function setLocation(lat, lon, dongHint){
+function setLocation(lat, lon, dongHint, {persist=true}={}){
   state.lat=lat;
   state.lon=lon;
   const grid=toGrid(lat,lon);
@@ -429,6 +456,18 @@ function setLocation(lat, lon, dongHint){
   $("ctaBtn").disabled=false;
   $("ctaBtn").textContent="🚨 필수 · 알림 설정 완료하기";
   pinHome(lat, lon, state.dong);
+  if(persist) saveLocationProfile();
+}
+
+function restoreSavedLocation(){
+  const profile=readAlertProfile();
+  const lat=Number(profile.lat);
+  const lon=Number(profile.lon);
+  if(!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+
+  setLocation(lat, lon, profile.dong || "선택한 주소", {persist:false});
+  if($("addrInput") && profile.dong) $("addrInput").value=profile.dong;
+  return true;
 }
 
 function shortLocationLabel(label){
@@ -520,7 +559,7 @@ async function syncInlineSubscriptionStatus(){
     panel.hidden=!subscription;
     if(subscription){
       let profile={};
-      try{ profile=JSON.parse(localStorage.getItem("thunder_alert_profile") || "{}"); }catch(error){}
+      profile=readAlertProfile();
       $("inlineSubscriptionLocation").textContent=(profile.dong ? profile.dong+"에서 " : "현재 기기에서 ")+"천둥번개 알림을 받고 있습니다.";
     }
   }catch(error){
@@ -631,11 +670,8 @@ async function completeSubscription(){
     console.warn("환영 알림 실패:",error);
   }
 
-  // 레이더 화면이 '우리 동네'를 보여줄 수 있게 격자를 기억해둔다
-  try{
-    localStorage.setItem("thunder_grid", state.nx+"_"+state.ny);
-    localStorage.setItem("thunder_alert_profile", JSON.stringify({dong:state.dong}));
-  }catch(e){}
+  // 재접속해도 같은 위치의 핀과 반경을 복원할 수 있게 정확한 좌표를 기억해둔다.
+  saveLocationProfile({dog_name:$("dogName").value.trim() || null});
 
   closeNotificationSheet();
   $("successDog").textContent=$("dogName").value.trim() || "우리 아이";
@@ -660,6 +696,6 @@ function urlBase64ToUint8Array(base64String){
 }
 
 initHeroMap();
-loadRadar("national");                    // 첫 화면엔 전국 비구름
+if(!restoreSavedLocation()) loadRadar("national"); // 저장 위치가 없을 때만 전국 화면을 보여준다.
 setInterval(() => loadRadar(state.nx!=null ? `${state.nx}_${state.ny}` : "national", true), 5*60*1000);
 syncInlineSubscriptionStatus();
