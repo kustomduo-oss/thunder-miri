@@ -177,6 +177,7 @@ function pinHome(lat, lon, label){
   if(status) status.textContent = (label || "우리 동네") + " 낙뢰 감시 중";
 
   // 그 동네 전용 레이더가 있으면 그것으로, 없으면 전국판을 계속 쓴다
+  heroLightningViewFitted=false;
   loadRadar(`${state.nx}_${state.ny}`, true);
 }
 
@@ -185,7 +186,7 @@ const RADAR_BASE = `${CONFIG.SUPABASE_URL}/storage/v1/object/public/radar`;
 let radarOverlay = null, strikeLayer = null;
 let tl = [], tlIdx = 0, tlTimer = null;
 let heroRadarMode = "lightning", heroRadarObs = null, heroForecastData = null, heroRadarKey = "national";
-let heroLightningIdx = 2, heroLightningTimer = null;
+let heroLightningStrikes = [], heroLightningIdx = 5, heroLightningTimer = null, heroLightningViewFitted = false;
 
 function fmtClock(d){ return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 function parseStrikeTime(value){
@@ -198,26 +199,31 @@ function strikeAge(value){
   return at && !Number.isNaN(at.getTime()) ? Math.max(0, Math.floor((Date.now() - at.getTime()) / 60000)) : 0;
 }
 function strikeAgeClass(age){
-  if(age < 10) return "is-fresh";
-  if(age < 20) return "is-mid";
-  return "is-old";
+  if(age < 10) return "age-0";
+  if(age < 20) return "age-1";
+  if(age < 30) return "age-2";
+  if(age < 40) return "age-3";
+  if(age < 50) return "age-4";
+  return "age-5";
 }
 function lightningWindow(step){
-  return [{ min:20, max:30, label:"20~30분 전" },
+  return [{ min:50, max:60, label:"50~60분 전" },
+          { min:40, max:50, label:"40~50분 전" },
+          { min:30, max:40, label:"30~40분 전" },
+          { min:20, max:30, label:"20~30분 전" },
           { min:10, max:20, label:"10~20분 전" },
-          { min:0, max:10, label:"최근 10분" }][step];
+          { min:0, max:10, label:"최근 1시간" }][step];
 }
 function renderHeroStrikes(step){
-  heroLightningIdx = Math.max(0, Math.min(2, step));
+  heroLightningIdx = Math.max(0, Math.min(5, step));
   const range = document.getElementById("heroLightningRange");
   if(range) range.value = heroLightningIdx;
   if(!strikeLayer) strikeLayer = L.layerGroup();
   strikeLayer.clearLayers();
   const current = lightningWindow(heroLightningIdx);
-  const strikes = heroRadarObs?.lightning || [];
-  const visible = strikes.filter(s => {
+  const visible = heroLightningStrikes.filter(s => {
     const age = strikeAge(s.tm);
-    return age >= current.min && age < 30;
+    return age >= current.min && age < 60;
   });
   visible.forEach(s => {
     const age = strikeAge(s.tm);
@@ -228,16 +234,16 @@ function renderHeroStrikes(step){
       title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
     }).addTo(strikeLayer);
   });
-  const inWindow = strikes.filter(s => {
+  const inWindow = heroLightningStrikes.filter(s => {
     const age = strikeAge(s.tm);
     return age >= current.min && age < current.max;
   }).length;
   const time = document.getElementById("heroLightningTime");
   if(time) time.textContent = current.label;
   const status = document.getElementById("heroLightningStatus");
-  if(status) status.textContent = inWindow
-    ? `${current.label} 관측 ${inWindow}건 · 이전 구간부터 누적해 표시합니다.`
-    : `${current.label}에는 관측된 낙뢰가 없습니다.`;
+  if(status) status.textContent = heroLightningIdx === 5
+    ? `최근 1시간 한반도 관측 ${visible.length}건 · 10분 단위 색상으로 표시합니다.`
+    : `${current.label} 관측 ${inWindow}건 · 현재까지 누적 ${visible.length}건`;
 }
 function stopHeroLightning(){
   clearInterval(heroLightningTimer); heroLightningTimer=null;
@@ -248,10 +254,11 @@ function toggleHeroLightning(){
   if(heroLightningTimer) return stopHeroLightning();
   const button=document.getElementById("heroLightningPlay");
   if(button) button.textContent="❚❚";
-  if(heroLightningIdx >= 2) renderHeroStrikes(0);
-  heroLightningTimer=setInterval(() => renderHeroStrikes(heroLightningIdx >= 2 ? 0 : heroLightningIdx+1), 1100);
+  if(heroLightningIdx >= 5) renderHeroStrikes(0);
+  heroLightningTimer=setInterval(() => renderHeroStrikes(heroLightningIdx >= 5 ? 0 : heroLightningIdx+1), 1100);
 }
 function setHeroRadarMode(mode){
+  const modeChanged = heroRadarMode !== mode;
   heroRadarMode = mode;
   const isLightning = mode === "lightning";
   const isWalk = mode === "walk";
@@ -278,9 +285,17 @@ function setHeroRadarMode(mode){
     if(isLightning && !heroMap.hasLayer(strikeLayer)) strikeLayer.addTo(heroMap);
     if(!isLightning && heroMap.hasLayer(strikeLayer)) heroMap.removeLayer(strikeLayer);
   }
-  if(isLightning){ tlStop(); renderHeroStrikes(heroLightningIdx); }
+  if(isLightning){
+    tlStop();
+    renderHeroStrikes(heroLightningIdx);
+    if(heroMap && (modeChanged || !heroLightningViewFitted)){
+      heroMap.fitBounds([[32.4,123.2],[43.1,132.4]],{padding:[10,10],animate:false});
+      heroLightningViewFitted=true;
+    }
+  }
   else{
     stopHeroLightning();
+    if(modeChanged && heroMap && state.lat!=null) heroMap.setView([state.lat,state.lon],8,{animate:false});
     if(isWalk) renderWalkWeather();
   }
   const status = document.getElementById("mapStatus");
@@ -383,16 +398,19 @@ function tlToggle(){
 
 async function loadRadar(key, silentFail){
   try{
-    const [oRes, fRes] = await Promise.all([
+    const [oRes, fRes, nRes] = await Promise.all([
       fetch(`${RADAR_BASE}/${key}.json?t=${Date.now()}`),
-      fetch(`${RADAR_BASE}/${key}_forecast.json?t=${Date.now()}`).catch(() => null)
+      fetch(`${RADAR_BASE}/${key}_forecast.json?t=${Date.now()}`).catch(() => null),
+      key === "national" ? Promise.resolve(null) : fetch(`${RADAR_BASE}/national.json?t=${Date.now()}`).catch(() => null)
     ]);
     if(!oRes.ok) throw new Error(oRes.status);
     const obs = await oRes.json();
     heroRadarObs = obs;
     const fc = fRes && fRes.ok ? await fRes.json() : null;
+    const nationalObs = nRes && nRes.ok ? await nRes.json() : null;
     heroForecastData = fc;
     heroRadarKey = key;
+    heroLightningStrikes = (key === "national" ? obs.lightning : nationalObs?.lightning) || obs.lightning || [];
 
     const items = [];
     (obs.past || []).forEach(p => {
@@ -487,7 +505,12 @@ function refreshSavedMap(){
   window.setTimeout(() => {
     if(!heroMap) return;
     heroMap.invalidateSize();
-    heroMap.setView([state.lat,state.lon],8,{animate:false});
+    if(heroRadarMode === "lightning"){
+      heroMap.fitBounds([[32.4,123.2],[43.1,132.4]],{padding:[10,10],animate:false});
+      heroLightningViewFitted=true;
+    }else{
+      heroMap.setView([state.lat,state.lon],8,{animate:false});
+    }
   },120);
 }
 
