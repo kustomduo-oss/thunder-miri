@@ -681,7 +681,6 @@ async function completeSubscription(){
     nx:state.nx,
     ny:state.ny,
     dong:state.dong,
-    cooldown_min:30,
     subscription:subscription.toJSON ? subscription.toJSON() : subscription
   };
 
