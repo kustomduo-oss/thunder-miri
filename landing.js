@@ -115,6 +115,12 @@ let baseLayer = null, fellBack = false;
 const osmLayer = () => L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   { maxZoom:18, attribution:"© OpenStreetMap 기여자" });
 
+function updateRangeLabelScale(){
+  if(!heroMap) return;
+  const scale = Math.min(1.45, Math.max(.9, 1 + (heroMap.getZoom() - 7) * .15));
+  heroMap.getContainer().style.setProperty("--range-label-scale", scale.toFixed(2));
+}
+
 function setBasemap(type){
   try{ localStorage.setItem("thunder_basemap", type); }catch(e){}
   document.querySelectorAll(".hero-base button").forEach(b =>
@@ -141,6 +147,8 @@ function initHeroMap(){
   heroMap = L.map(el, { zoomControl:true, attributionControl:true })
              .setView([36.5, 127.8], 6);
   heroMap.attributionControl.setPrefix(false);
+  heroMap.on("zoomend", updateRangeLabelScale);
+  updateRangeLabelScale();
   let saved = "Base";
   try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
   setBasemap(saved);

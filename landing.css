@@ -56,8 +56,8 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .hero-base button[aria-pressed="true"]{background:var(--signal);color:#fff}
 .hero-location-pin{position:relative;width:30px;height:30px;border:3px solid #fff;border-radius:50% 50% 50% 0;background:var(--signal);box-shadow:0 4px 10px rgba(6,62,91,.34);transform:rotate(-45deg)}
 .hero-location-pin span{position:absolute;top:7px;left:7px;width:10px;height:10px;border-radius:50%;background:#fff}
-.range-distance-label{padding:3px 6px;border:2px solid #fff;border-radius:8px;color:#fff;font-size:10px;font-weight:900;line-height:1;box-shadow:0 2px 7px rgba(11,52,72,.3);white-space:nowrap}
-.range-distance-label.range-50{background:#007f95}.range-distance-label.range-30{background:#df5b1d}
+.range-distance-label{padding:3px 6px;border:2px solid #fff;border-radius:8px;color:#fff;font-size:10px;font-weight:900;line-height:1;box-shadow:0 2px 7px rgba(11,52,72,.3);white-space:nowrap;transform:scale(var(--range-label-scale,1));transition:transform .16s ease}
+.range-distance-label.range-50{background:#007f95;transform-origin:left bottom}.range-distance-label.range-30{background:#df5b1d;transform-origin:left top}
 .hero-bolt{position:relative;width:30px;height:34px;color:#fff;filter:drop-shadow(0 2px 3px rgba(5,31,43,.75))}
 .hero-bolt::before,.hero-bolt::after{content:"";position:absolute;clip-path:polygon(42% 0,88% 0,64% 36%,91% 36%,28% 100%,42% 59%,10% 59%)}
 .hero-bolt::before{inset:-2px;background:#fff}
