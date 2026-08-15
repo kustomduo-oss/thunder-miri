@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="stylesheet" href="style.css?v=ios-safe-area-1" />
-  <link rel="stylesheet" href="landing.css?v=lightning-copy-1" />
+  <link rel="stylesheet" href="landing.css?v=map-touch-mode-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -42,6 +42,8 @@
       </section>
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
+        <div class="map-drag-hint" id="mapDragHint" hidden>지도를 움직이려면 한 번 터치</div>
+        <button type="button" class="map-drag-done" id="mapDragDone" hidden>이동 종료</button>
         <div class="hero-base" role="group" aria-label="지도 스타일">
           <button type="button" data-base="Base">일반</button>
           <button type="button" data-base="white">밝게</button>
@@ -170,7 +172,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=lightning-copy-1" defer></script>
+<script src="landing.js?v=map-touch-mode-1" defer></script>
 <script src="nav.js?v=adsense-footer-1" defer></script>
 </body>
 </html>

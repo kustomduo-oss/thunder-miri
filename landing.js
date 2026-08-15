@@ -106,7 +106,7 @@ function toGrid(lat, lon){
 /* ── 첫 화면 지도 ────────────────────────────────────
    위치를 입력하면 우리 집에 핑을 찍고 알림 기준 원(50km/30km)을 그린다.
    "내 위치가 잡혔다"를 눈으로 바로 확인시켜 주는 것이 목적.       */
-let heroMap = null, heroLayer = null;
+let heroMap = null, heroLayer = null, heroMapDragLocked = false;
 
 /* 배경지도: 브이월드(국토교통부). 실패 시 OSM으로 자동 전환.
    레이더 페이지와 같은 설정을 쓰고, 선택도 함께 기억한다(thunder_basemap). */
@@ -119,6 +119,29 @@ function updateRangeLabelScale(){
   if(!heroMap) return;
   const scale = Math.min(1.45, Math.max(.9, 1 + (heroMap.getZoom() - 7) * .15));
   heroMap.getContainer().style.setProperty("--range-label-scale", scale.toFixed(2));
+}
+
+function isCoarsePointer(){
+  return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+}
+
+function setHeroMapDragActive(active){
+  if(!heroMap) return;
+  const hint = document.getElementById("mapDragHint");
+  const done = document.getElementById("mapDragDone");
+  if(!isCoarsePointer()){
+    heroMap.dragging.enable();
+    heroMapDragLocked = false;
+    if(hint) hint.hidden = true;
+    if(done) done.hidden = true;
+    return;
+  }
+  heroMapDragLocked = !active;
+  if(active) heroMap.dragging.enable();
+  else heroMap.dragging.disable();
+  if(hint) hint.hidden = active;
+  if(done) done.hidden = !active;
+  heroMap.getContainer().classList.toggle("map-drag-active", active);
 }
 
 function setBasemap(type){
@@ -148,13 +171,24 @@ function initHeroMap(){
              .setView([36.5, 127.8], 6);
   heroMap.attributionControl.setPrefix(false);
   heroMap.on("zoomend", updateRangeLabelScale);
+  heroMap.on("click", () => {
+    if(heroMapDragLocked) setHeroMapDragActive(true);
+  });
   updateRangeLabelScale();
+  setHeroMapDragActive(false);
   let saved = "Base";
   try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
   setBasemap(saved);
   heroLayer = L.layerGroup().addTo(heroMap);
   document.querySelectorAll(".hero-base button").forEach(b =>
     b.addEventListener("click", () => setBasemap(b.dataset.base)));
+  const dragDone = document.getElementById("mapDragDone");
+  if(dragDone) dragDone.addEventListener("click", () => setHeroMapDragActive(false));
+  document.addEventListener("pointerdown", e => {
+    if(!heroMapDragLocked && isCoarsePointer() && !e.target.closest(".hero-map-wrap")){
+      setHeroMapDragActive(false);
+    }
+  }, { passive:true });
 }
 
 function pinHome(lat, lon, label){
