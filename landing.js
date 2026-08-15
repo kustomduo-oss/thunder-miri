@@ -254,7 +254,9 @@ function renderHeroStrikes(step){
   visible.forEach(s => {
     const age = strikeAge(s.tm);
     const at = parseStrikeTime(s.tm);
-    L.marker([s.lat,s.lon], { icon:L.divIcon({
+    L.marker([s.lat,s.lon], {
+      zIndexOffset:100000 - Math.min(age,60) * 1000,
+      icon:L.divIcon({
       className:"", iconSize:[30,34], iconAnchor:[15,17],
       html:`<div class="hero-bolt ${strikeAgeClass(age)}" aria-hidden="true"></div>` }),
       title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
