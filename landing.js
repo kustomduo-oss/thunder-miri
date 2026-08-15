@@ -234,6 +234,19 @@ function lightningWindow(step){
           { min:10, max:20, label:"10~20분 전" },
           { min:0, max:10, label:"최근 1시간" }][step];
 }
+function lightningClockLabel(step){
+  const time = new Date();
+  time.setSeconds(0,0);
+  time.setMinutes(Math.floor(time.getMinutes()/10)*10 - (5-step)*10);
+  return fmtClock(time);
+}
+function updateLightningClock(step){
+  const label = lightningClockLabel(step);
+  const time = document.getElementById("heroLightningTime");
+  const range = document.getElementById("heroLightningRange");
+  if(time) time.textContent = label;
+  if(range) range.setAttribute("aria-valuetext", `${label}까지의 낙뢰 관측`);
+}
 function focusLightningMap(){
   if(!heroMap) return;
   const center = state.lat!=null ? [state.lat,state.lon] : [36.5,127.8];
@@ -266,8 +279,7 @@ function renderHeroStrikes(step){
     const age = strikeAge(s.tm);
     return age >= current.min && age < current.max;
   }).length;
-  const time = document.getElementById("heroLightningTime");
-  if(time) time.textContent = current.label;
+  updateLightningClock(heroLightningIdx);
   const status = document.getElementById("heroLightningStatus");
   if(status) status.textContent = heroLightningIdx === 5
     ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건`
@@ -765,6 +777,7 @@ function urlBase64ToUint8Array(base64String){
 }
 
 initHeroMap();
+updateLightningClock(heroLightningIdx);
 if(!restoreSavedLocation()) loadRadar("national"); // 저장 위치가 없을 때만 전국 화면을 보여준다.
 setInterval(() => loadRadar(state.nx!=null ? `${state.nx}_${state.ny}` : "national", true), 5*60*1000);
 syncInlineSubscriptionStatus();
