@@ -48,9 +48,6 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 #heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#dfe8f0;overflow:hidden}
 #heroMap.leaflet-container{font:inherit}
 #heroMap .leaflet-tile-pane{filter:saturate(.75)}
-.map-drag-hint,.map-drag-done{position:absolute;left:50%;bottom:14px;z-index:650;transform:translateX(-50%);border:1px solid rgba(255,255,255,.82);border-radius:999px;background:rgba(7,43,59,.88);color:#fff;font:inherit;font-size:11px;font-weight:900;white-space:nowrap;box-shadow:0 3px 12px rgba(5,31,43,.3)}
-.map-drag-hint{padding:8px 12px;pointer-events:none}.map-drag-done{min-height:34px;padding:7px 14px;cursor:pointer}.map-drag-hint[hidden],.map-drag-done[hidden]{display:none}
-#heroMap.map-drag-active{outline:2px solid rgba(111,216,234,.72);outline-offset:-2px}
 .hero-base{position:absolute;top:9px;right:9px;z-index:500;display:flex;gap:3px;
   background:rgba(255,255,255,.92);border:1px solid var(--signal-line);border-radius:9px;padding:3px;
   box-shadow:0 2px 8px rgba(0,0,0,.16)}
