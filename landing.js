@@ -159,12 +159,24 @@ function pinHome(lat, lon, label){
                         fillColor:"#00a4ba", fillOpacity:.07 }).addTo(heroLayer);
   const circle30 = L.circle([lat,lon], { radius:30000, color:"#df5b1d", weight:3.5, opacity:1,
                         fillColor:"#f27a32", fillOpacity:.15 }).addTo(heroLayer);
-  L.marker([lat, circle50.getBounds().getEast()], { icon:L.divIcon({
-    className:"", iconSize:[40,20], iconAnchor:[0,10],
+  const bounds50 = circle50.getBounds();
+  const bounds30 = circle30.getBounds();
+  const labelVerticalScale = .5;
+  const labelHorizontalScale = Math.sqrt(3) / 2;
+  const label50 = [
+    lat + (bounds50.getNorth() - lat) * labelVerticalScale,
+    lon + (bounds50.getEast() - lon) * labelHorizontalScale
+  ];
+  const label30 = [
+    lat + (bounds30.getSouth() - lat) * labelVerticalScale,
+    lon + (bounds30.getEast() - lon) * labelHorizontalScale
+  ];
+  L.marker(label50, { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[0,20],
     html:'<div class="range-distance-label range-50">50km</div>'
   }), interactive:false }).addTo(heroLayer);
-  L.marker([lat, circle30.getBounds().getWest()], { icon:L.divIcon({
-    className:"", iconSize:[40,20], iconAnchor:[40,10],
+  L.marker(label30, { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[0,0],
     html:'<div class="range-distance-label range-30">30km</div>'
   }), interactive:false }).addTo(heroLayer);
   L.marker([lat,lon], { icon: L.divIcon({
