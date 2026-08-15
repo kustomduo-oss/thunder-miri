@@ -268,7 +268,7 @@ function renderHeroStrikes(step){
   if(time) time.textContent = current.label;
   const status = document.getElementById("heroLightningStatus");
   if(status) status.textContent = heroLightningIdx === 5
-    ? `최근 1시간 한반도 관측 ${visible.length}건 · 10분 단위 색상으로 표시합니다.`
+    ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건`
     : `${current.label} 관측 ${inWindow}건 · 현재까지 누적 ${visible.length}건`;
 }
 function stopHeroLightning(){

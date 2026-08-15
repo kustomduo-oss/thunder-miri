@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="stylesheet" href="style.css?v=ios-safe-area-1" />
-  <link rel="stylesheet" href="landing.css?v=responsive-range-labels-1" />
+  <link rel="stylesheet" href="landing.css?v=lightning-copy-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -50,14 +50,14 @@
       </div>
 
       <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시간별 색상">
-        <span><i class="age-0"></i>10분 이내</span>
-        <span><i class="age-1"></i>10~20분</span>
-        <span><i class="age-2"></i>20~30분</span>
-        <span><i class="age-3"></i>30~40분</span>
-        <span><i class="age-4"></i>40~50분</span>
-        <span><i class="age-5"></i>50~60분</span>
+        <span><i class="age-0"></i>10분 전</span>
+        <span><i class="age-1"></i>20분 전</span>
+        <span><i class="age-2"></i>30분 전</span>
+        <span><i class="age-3"></i>40분 전</span>
+        <span><i class="age-4"></i>50분 전</span>
+        <span><i class="age-5"></i>60분 전</span>
       </div>
-      <p class="hero-lightning-status" id="heroLightningStatus">최근 1시간 낙뢰 관측 정보를 불러오는 중…</p>
+      <p class="hero-lightning-status" id="heroLightningStatus">최근 1시간 이내 낙뢰 관측 정보 불러오는 중...</p>
       <div class="hero-tl" id="heroLightningTimeline">
         <button type="button" id="heroLightningPlay" class="hero-play" aria-label="낙뢰 관측 재생">▶</button>
         <input type="range" id="heroLightningRange" min="0" max="5" value="5" aria-label="낙뢰 관측 시간 선택" />
@@ -70,10 +70,6 @@
       </div>
       <p id="heroKind" class="hero-kind" hidden>기상청 레이더 · 5분마다 갱신</p>
 
-      <div class="map-flow">
-        <div class="range-watch"><b>50km</b><span>접근 알림</span></div>
-        <div class="range-warning"><b>30km</b><span>임박 알림</span></div>
-      </div>
     </div>
 
     <div class="signup-panel" id="signup">
@@ -174,7 +170,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=responsive-range-labels-1" defer></script>
+<script src="landing.js?v=lightning-copy-1" defer></script>
 <script src="nav.js?v=adsense-footer-1" defer></script>
 </body>
 </html>
