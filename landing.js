@@ -160,11 +160,11 @@ function pinHome(lat, lon, label){
   const circle30 = L.circle([lat,lon], { radius:30000, color:"#df5b1d", weight:3.5, opacity:1,
                         fillColor:"#f27a32", fillOpacity:.15 }).addTo(heroLayer);
   L.marker([lat, circle50.getBounds().getEast()], { icon:L.divIcon({
-    className:"", iconSize:[40,20], iconAnchor:[20,10],
+    className:"", iconSize:[40,20], iconAnchor:[0,10],
     html:'<div class="range-distance-label range-50">50km</div>'
   }), interactive:false }).addTo(heroLayer);
-  L.marker([lat, circle30.getBounds().getEast()], { icon:L.divIcon({
-    className:"", iconSize:[40,20], iconAnchor:[20,10],
+  L.marker([lat, circle30.getBounds().getWest()], { icon:L.divIcon({
+    className:"", iconSize:[40,20], iconAnchor:[40,10],
     html:'<div class="range-distance-label range-30">30km</div>'
   }), interactive:false }).addTo(heroLayer);
   L.marker([lat,lon], { icon: L.divIcon({
