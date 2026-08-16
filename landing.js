@@ -569,6 +569,7 @@ document.addEventListener("input", e => {
 });
 
 function setLocation(lat, lon, dongHint, {persist=true}={}){
+  setGeoStatus("");   // 위치가 정해졌으니 이전 안내(권한 거부 등)는 치운다
   state.lat=lat;
   state.lon=lon;
   const grid=toGrid(lat,lon);
@@ -661,6 +662,87 @@ $("addrInput").addEventListener("keydown", event => {
     $("addrBtn").click();
   }
 });
+
+// ----------------------------------------------------------------
+// 현재 위치로 등록
+// ----------------------------------------------------------------
+// 폰 GPS는 정확하지만 PC는 와이파이·IP 기반이라 수 km씩 틀릴 수 있다.
+// 그래서 잡은 위치를 지도 핀 + 동네 이름으로 보여주고 사용자가 눈으로 확인하게 한다.
+const KOREA_BOUNDS={latMin:33,latMax:39,lonMin:124,lonMax:132};   // DB INSERT 정책과 같은 범위
+
+function setGeoStatus(message,{error=false}={}){
+  const el=$("geoStatus");
+  if(!message){ el.hidden=true; el.textContent=""; el.classList.remove("is-error"); return; }
+  el.hidden=false;
+  el.textContent=message;
+  el.classList.toggle("is-error",error);
+}
+
+async function reverseGeocode(lat,lon){
+  try{
+    const response=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&accept-language=ko&zoom=16&lat=${lat}&lon=${lon}`);
+    if(!response.ok) return null;
+    const json=await response.json();
+    return json.display_name || null;
+  }catch(error){
+    return null;
+  }
+}
+
+function currentPosition(){
+  return new Promise((resolve,reject) => {
+    navigator.geolocation.getCurrentPosition(resolve,reject,{
+      enableHighAccuracy:true,
+      timeout:10000,
+      maximumAge:60000
+    });
+  });
+}
+
+async function useCurrentLocation(){
+  const button=$("geoBtn");
+  if(!navigator.geolocation){
+    setGeoStatus("이 브라우저는 위치 확인을 지원하지 않아요. 아래에서 주소로 찾아주세요.",{error:true});
+    return;
+  }
+
+  button.disabled=true;
+  button.classList.add("is-loading");
+  setGeoStatus("현재 위치를 확인하는 중이에요…");
+
+  try{
+    const position=await currentPosition();
+    const {latitude:lat,longitude:lon,accuracy}=position.coords;
+
+    if(lat<KOREA_BOUNDS.latMin || lat>KOREA_BOUNDS.latMax || lon<KOREA_BOUNDS.lonMin || lon>KOREA_BOUNDS.lonMax){
+      setGeoStatus("한국 밖으로 확인돼요. 아래에서 주소로 찾아주세요.",{error:true});
+      return;
+    }
+
+    const label=await reverseGeocode(lat,lon);
+    setLocation(lat,lon,label);
+
+    // 오차가 크면(주로 PC) 사용자가 지도를 보고 판단하도록 알려준다
+    if(Number.isFinite(accuracy) && accuracy>3000){
+      setGeoStatus(`위치를 잡았지만 오차가 약 ${Math.round(accuracy/1000)}km예요. 지도의 핀이 우리 동네가 맞는지 확인해주세요.`);
+    }else{
+      setGeoStatus("현재 위치를 등록했어요. 지도에서 확인해보세요.");
+    }
+  }catch(error){
+    if(error && error.code===1){
+      setGeoStatus("위치 권한이 거부됐어요. 아래에서 주소로 찾거나, 브라우저 설정에서 위치를 허용해주세요.",{error:true});
+    }else if(error && error.code===3){
+      setGeoStatus("위치 확인이 오래 걸려요. 다시 시도하거나 아래에서 주소로 찾아주세요.",{error:true});
+    }else{
+      setGeoStatus("위치를 확인하지 못했어요. 아래에서 주소로 찾아주세요.",{error:true});
+    }
+  }finally{
+    button.disabled=false;
+    button.classList.remove("is-loading");
+  }
+}
+
+$("geoBtn").addEventListener("click",useCurrentLocation);
 
 async function forwardGeocode(query){
   try{
@@ -791,7 +873,6 @@ async function completeSubscription(){
   }
 
   const payload={
-    dog_name:$("dogName").value.trim() || null,
     lat:state.lat,
     lon:state.lon,
     nx:state.nx,
@@ -824,7 +905,7 @@ async function completeSubscription(){
   try{
     const registration=await navigator.serviceWorker.ready;
     await registration.showNotification("썬더미리 알림 연결 완료",{
-      body:`${$("dogName").value.trim() || "우리 아이"}를 위한 낙뢰 알림을 켰습니다. 천둥이 가까워지면 미리 알려드릴게요.`,
+      body:"우리 아이를 위한 낙뢰 알림을 켰습니다. 천둥이 가까워지면 미리 알려드릴게요.",
       icon:"thundermiri-icon-192.png",
       badge:"thundermiri-icon-192.png",
       tag:"welcome"
@@ -834,10 +915,9 @@ async function completeSubscription(){
   }
 
   // 재접속해도 같은 위치의 핀과 반경을 복원할 수 있게 정확한 좌표를 기억해둔다.
-  saveLocationProfile({dog_name:$("dogName").value.trim() || null});
+  saveLocationProfile();
 
   closeNotificationSheet();
-  $("successDog").textContent=$("dogName").value.trim() || "우리 아이";
   $("formView").style.display="none";
   $("successView").classList.add("show");
   $("signup").scrollIntoView({behavior:"smooth",block:"start"});

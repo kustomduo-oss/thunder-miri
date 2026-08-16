@@ -140,7 +140,7 @@ def sb_headers():
 def get_subscribers():
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     params = {
-        "select": "id,created_at,dog_name,lat,lon,nx,ny,dong,subscription,last_lightning_at,last_lightning_level",
+        "select": "id,created_at,lat,lon,nx,ny,dong,subscription,last_lightning_at,last_lightning_level",
         "active": "eq.true",
         "order": "created_at.asc",   # 오래된 가입자 우선 (격자 상한에 걸릴 때 먼저 지킨다)
     }

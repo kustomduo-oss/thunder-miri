@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="thundermiri-apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="thundermiri-icon-192.png" />
 <link rel="stylesheet" href="style.css?v=brand-thundermiri-1" />
-  <link rel="stylesheet" href="landing.css?v=refresh-emphasis-1" />
+  <link rel="stylesheet" href="landing.css?v=geo-signup-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -80,18 +80,18 @@
     <div class="signup-panel" id="signup">
       <div id="formView">
         <div class="field" id="addressField">
-          <label for="addrInput">알림 받을 주소</label>
+          <label for="geoBtn">알림 받을 위치</label>
+          <button type="button" class="geo-btn" id="geoBtn">
+            <span aria-hidden="true">📍</span> 현재 위치로 등록하기
+          </button>
+          <p class="geo-status" id="geoStatus" hidden role="status" aria-live="polite"></p>
+          <div class="or-divider"><span>또는 주소로 찾기</span></div>
           <div class="addr-row">
             <input type="text" id="addrInput" placeholder="예: 동탄반석로 또는 반송동" autocomplete="street-address" />
             <button type="button" class="addr-btn" id="addrBtn">검색</button>
           </div>
-          <p class="address-hint"><span>도로명·지번·동네 이름으로 검색할 수 있어요.</span><small>주소 검색은 OpenStreetMap을 사용합니다.</small></p>
+          <p class="address-hint"><span>도로명·지번·동네 이름으로 검색할 수 있어요.</span><small>위치·주소 확인은 OpenStreetMap을 사용합니다.</small></p>
           <div class="loc-result" id="locResult"><span class="check-dot">✓</span><span id="locText">주소 확인됨</span></div>
-        </div>
-
-        <div class="field">
-          <label for="dogName">강아지 이름 <span>(선택)</span></label>
-          <input type="text" id="dogName" placeholder="예: 동탄이" autocomplete="off" />
         </div>
 
         <div class="inline-subscription-status" id="inlineSubscriptionStatus" hidden>
@@ -102,14 +102,14 @@
           <button type="button" id="inlineAlertOffButton">알림 끄기</button>
         </div>
 
-        <button class="cta" id="ctaBtn" disabled>주소를 먼저 등록해주세요</button>
+        <button class="cta" id="ctaBtn" disabled>위치를 먼저 등록해주세요</button>
         <p class="cta-note">기기 알림 허용이 필요해요.</p>
       </div>
 
       <div class="success" id="successView">
         <div class="success-symbol">✓</div>
         <h2>알림이 켜졌습니다.</h2>
-        <p>이제 천둥번개가 가까워지면 <strong id="successDog">우리 아이</strong>를 위해 미리 알려드릴게요.</p>
+        <p>이제 천둥번개가 가까워지면 <strong>우리 아이</strong>를 위해 미리 알려드릴게요.</p>
         <a class="secondary-action" href="#radar">우리 동네 레이더 보기 →</a>
       </div>
 
@@ -147,7 +147,7 @@
     <button type="button" class="notify-sheet-close" id="notifySheetClose" aria-label="닫기">×</button>
     <p class="notify-sheet-kicker">🚨 필수 · 알림 설정</p>
     <h2 id="notifySheetTitle">기기 알림을 허용해주세요.</h2>
-    <p>주소 등록만으로는 알림이 오지 않습니다. 아래 단계를 마치면 실제 천둥번개 알림을 받을 수 있어요.</p>
+    <p>위치 등록만으로는 알림이 오지 않습니다. 아래 단계를 마치면 실제 천둥번개 알림을 받을 수 있어요.</p>
 
     <div class="notify-guide" id="iosInstallGuide" hidden>
       <strong>iPhone은 홈 화면에서 한 번 더 열어야 해요.</strong>
@@ -175,7 +175,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=push-lightning-entry-2" defer></script>
+<script src="landing.js?v=geo-signup-1" defer></script>
 <script src="nav.js?v=brand-thundermiri-1" defer></script>
 </body>
 </html>

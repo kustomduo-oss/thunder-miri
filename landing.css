@@ -129,6 +129,13 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .field label span{color:var(--signal-muted);font-weight:500}
 .field input[type=text]{width:100%;padding:14px;border:1px solid #b9ced7;border-radius:9px;background:#fff;color:var(--signal-ink);font:inherit;font-size:16px;outline:none}
 .field input[type=text]:focus{border-color:var(--signal);box-shadow:0 0 0 3px rgba(8,127,186,.1)}
+.geo-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:52px;padding:14px;border:1px solid var(--signal);border-radius:9px;background:#f1f8fd;color:var(--signal);font:inherit;font-size:15px;font-weight:900;cursor:pointer}
+.geo-btn:hover{background:#e4f2fb}
+.geo-btn:disabled,.geo-btn.is-loading{border-color:#b9ced7;background:#f3f6f8;color:#8ba1ab;cursor:wait}
+.geo-status{margin:8px 2px 0!important;color:#527066!important;font-size:12px!important;line-height:1.55!important}
+.geo-status.is-error{color:#a13f32!important}
+.or-divider{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:14px 0 10px;color:#8ba1ab;font-size:11.5px;font-weight:700}
+.or-divider::before,.or-divider::after{content:"";height:1px;background:var(--signal-line)}
 .addr-row{display:grid;grid-template-columns:1fr auto;gap:8px}
 .addr-btn{min-width:72px;border:0;border-radius:9px;background:var(--signal);color:#fff;font:inherit;font-weight:900;cursor:pointer}
 .address-hint{display:grid;gap:1px;margin:7px 2px 0!important;font-size:11.5px!important;line-height:1.5!important}.address-hint small{color:#78909b;font-size:10.5px}.field.has-location .address-hint{display:none}
@@ -200,6 +207,8 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
   .check-card{gap:1px;border-radius:15px}
   .check-instructions,.check-decision,.signup-panel{padding:23px 20px}
   .device-guide>div{grid-template-columns:1fr;gap:3px}
+  .geo-btn{min-height:56px}
+  .or-divider{margin:13px 0 9px}
   .addr-row{grid-template-columns:1fr 68px}
   .process-list{grid-template-columns:1fr}
   .process-list li{padding:20px}
