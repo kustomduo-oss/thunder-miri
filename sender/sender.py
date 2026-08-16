@@ -45,7 +45,7 @@ LIGHTNING_COOLDOWN_MIN = int(os.environ.get("LIGHTNING_COOLDOWN_MIN", "30"))  # 
 LIGHTNING_RANK = {"watch": 1, "warning": 2}
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 # 알림을 탭하면 열리는 화면. 보호자가 실제로 하는 행동(레이더로 상황 확인)에 맞춤.
-ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://kustomduo-oss.github.io/thunder-miri/radar.html")
+ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://kustomduo-oss.github.io/thunder-miri/index.html#radar")
 
 # ----------------------------------------------------------------
 # 로컬 테스트용 .env.secret 읽기 (KEY=VALUE 한 줄씩). 클라우드에선 파일 없으니 무시됨.

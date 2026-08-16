@@ -746,7 +746,7 @@ async function completeSubscription(){
 
   let subscription=null;
   try{
-    const registration=await navigator.serviceWorker.register("sw.js");
+    const registration=await navigator.serviceWorker.register("sw.js?v=push-radar-1");
     await navigator.serviceWorker.ready;
     subscription=await registration.pushManager.getSubscription();
     if(!subscription){
