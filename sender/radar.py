@@ -280,35 +280,10 @@ def upload(path, data, content_type):
     return f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
 
 
-PAST_KEEP = int(os.environ.get("RADAR_PAST_KEEP", "7"))   # 과거 프레임 보관 개수
-
-
-def _keep_recent_frames(key, stamp, url):
-    """방금 만든 프레임을 목록에 넣고, 오래된 파일은 지운다.
-    (Storage에 무한정 쌓이지 않게 하는 것이 목적)"""
-    if not url:
-        return []
-    prev = []
-    try:
-        r = requests.get(f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{key}.json", timeout=20)
-        if r.ok:
-            prev = r.json().get("past") or []
-    except Exception:
-        pass
-
-    frames = [f for f in prev if f.get("stamp") != stamp]
-    frames.append({"stamp": stamp, "image": url})
-    frames.sort(key=lambda f: f["stamp"])
-
-    for old in frames[:-PAST_KEEP]:      # 초과분 삭제
-        try:
-            requests.delete(
-                f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{key}_{old['stamp']}.png",
-                headers={"apikey": SUPABASE_SECRET_KEY,
-                         "Authorization": f"Bearer {SUPABASE_SECRET_KEY}"}, timeout=20)
-        except Exception as e:
-            print(f"[정리 실패] {old['stamp']}: {e}")
-    return frames[-PAST_KEEP:]
+# 과거 관측 프레임({key}_{stamp}.png) 생성은 2026-08-16에 중단됨.
+# 이 프레임을 재생하던 radar.html이 삭제되어 읽는 곳이 없어졌기 때문.
+# (히어로의 낙뢰 재생은 meta의 lightning[]만 쓰므로 영향 없음)
+# 되살리려면: git show d11296a~1:radar.html 의 437행 부근 병합 로직 참고
 
 
 def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=None, key=None):
@@ -330,11 +305,6 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
     key = key or f"{nx_grid}_{ny_grid}"
     img_url = upload(f"{key}.png", png, "image/png")
 
-    # 과거 재생용으로 시각별 사본도 남긴다 (오래된 것은 아래에서 정리)
-    obs_stamp = stamp or datetime.now().strftime("%Y%m%d%H%M")
-    frame_url = upload(f"{key}_{obs_stamp}.png", png, "image/png")
-    past = _keep_recent_frames(key, obs_stamp, frame_url)
-
     obs = datetime.strptime(stamp, "%Y%m%d%H%M") if stamp else datetime.now()
     meta = {
         "grid": [nx_grid, ny_grid],
@@ -352,7 +322,7 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
         "observed_at": obs.isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "lightning": lightning or [],
-        "past": past,   # 과거 재생용 프레임 목록(오래된 순)
+        "past": [],     # 과거 재생 중단(2026-08-16). 옛 JSON을 읽는 코드 호환용으로 빈 배열 유지
     }
     upload(f"{key}.json", json.dumps(meta, ensure_ascii=False).encode("utf-8"), "application/json")
     print(f"[레이더] {dong or key} 생성 완료 · 강수 {rain_cells:,}칸 · 낙뢰 {len(lightning or [])}건 · {stamp}")
