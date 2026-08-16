@@ -23,7 +23,11 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "./index.html#radar";
-  const targetUrl = new URL(url, self.location.origin).href;
+  const target = new URL(url, self.location.origin);
+  // 같은 화면이 이미 열려 있어도 새 탐색이 일어나도록 푸시마다 고유 값을 붙인다.
+  target.searchParams.set("push", String(Date.now()));
+  target.hash = "radar";
+  const targetUrl = target.href;
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const client of list) {

@@ -596,6 +596,31 @@ function restoreSavedLocation(){
   return true;
 }
 
+function openPushLightningView(){
+  const params=new URLSearchParams(location.search);
+  if(!params.has("push")) return false;
+
+  // 푸시로 들어왔을 때만 마지막 탭 상태를 무시하고 가장 최근 낙뢰를 보여준다.
+  stopHeroLightning();
+  heroLightningIdx=5;
+  setHeroRadarMode("lightning");
+
+  window.setTimeout(() => {
+    renderHeroStrikes(5);
+    if(heroMap){
+      heroMap.invalidateSize();
+      focusLightningMap();
+    }
+    document.getElementById("radar")?.scrollIntoView({behavior:"auto",block:"start"});
+  },120);
+
+  // 일반 재접속까지 푸시 진입으로 오인하지 않도록 일회성 표시를 주소에서 지운다.
+  params.delete("push");
+  const query=params.toString();
+  history.replaceState(null,"",`${location.pathname}${query ? `?${query}` : ""}#radar`);
+  return true;
+}
+
 function refreshSavedMap(){
   if(!restoreSavedLocation()) return;
   window.setTimeout(() => {
@@ -746,7 +771,7 @@ async function completeSubscription(){
 
   let subscription=null;
   try{
-    const registration=await navigator.serviceWorker.register("sw.js?v=push-radar-1");
+    const registration=await navigator.serviceWorker.register("sw.js?v=push-radar-2");
     await navigator.serviceWorker.ready;
     subscription=await registration.pushManager.getSubscription();
     if(!subscription){
@@ -836,6 +861,7 @@ function urlBase64ToUint8Array(base64String){
 initHeroMap();
 updateLightningClock(heroLightningIdx);
 if(!restoreSavedLocation()) loadRadar("national"); // 저장 위치가 없을 때만 전국 화면을 보여준다.
+openPushLightningView();
 setInterval(() => loadRadar(state.nx!=null ? `${state.nx}_${state.ny}` : "national", true), 5*60*1000);
 syncInlineSubscriptionStatus();
 
