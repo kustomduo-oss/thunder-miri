@@ -1,4 +1,7 @@
 /* 썬더미리 — 웹푸시 서비스워커 */
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
