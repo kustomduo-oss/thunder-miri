@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="stylesheet" href="style.css?v=ios-safe-area-1" />
-  <link rel="stylesheet" href="landing.css?v=recent-lightning-priority-1" />
+  <link rel="stylesheet" href="landing.css?v=refresh-emphasis-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -27,7 +27,11 @@
 
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map" id="radar">
-      <div class="map-status"><span class="status-dot"></span> <span id="mapStatus">최근 낙뢰 관측 정보를 불러오는 중…</span></div>
+      <div class="map-status">
+        <span class="status-dot"></span>
+        <span id="mapStatus">최근 낙뢰 관측 정보를 불러오는 중…</span>
+        <button type="button" class="weather-refresh" id="weatherRefresh" aria-label="최신 기상정보 새로고침"><span aria-hidden="true">↻</span> 새로고침</button>
+      </div>
       <div class="radar-view-tabs" role="tablist" aria-label="레이더 정보 선택">
         <button type="button" id="heroLightningTab" role="tab" aria-selected="true">⚡ 최근 낙뢰</button>
         <button type="button" id="heroForecastTab" role="tab" aria-selected="false">🌧️ 강수 예측</button>

@@ -516,12 +516,33 @@ async function loadRadar(key, silentFail){
     const status = document.getElementById("mapStatus");
     if(status && key === "national") status.textContent = "지금 전국 비구름 · 위치를 입력하면 우리 동네로";
     setHeroRadarMode(heroRadarMode);
+    return true;
   }catch(e){
     if(!silentFail){
       const status = document.getElementById("mapStatus");
       if(status) status.textContent = "지금은 레이더를 불러올 수 없어요";
     }
+    return false;
   }
+}
+
+async function refreshWeather(){
+  const button=document.getElementById("weatherRefresh");
+  if(!button || button.disabled) return;
+  button.disabled=true;
+  button.classList.add("is-loading");
+  button.setAttribute("aria-busy","true");
+  const status=document.getElementById("mapStatus");
+  if(status) status.textContent="최신 기상정보를 확인하고 있어요…";
+  const key=state.nx!=null ? `${state.nx}_${state.ny}` : "national";
+  const ok=await loadRadar(key);
+  if(ok){
+    if(heroRadarMode==="walk") renderWalkWeather();
+    if(status) status.textContent=`${fmtClock(new Date())} 최신 기상정보로 업데이트`;
+  }
+  button.disabled=false;
+  button.classList.remove("is-loading");
+  button.removeAttribute("aria-busy");
 }
 
 document.addEventListener("click", e => {
@@ -530,6 +551,7 @@ document.addEventListener("click", e => {
   if(e.target && e.target.id === "heroLightningTab") setHeroRadarMode("lightning");
   if(e.target && e.target.id === "heroWalkTab") openWalkWeather();
   if(e.target && e.target.id === "heroLightningPlay") toggleHeroLightning();
+  if(e.target && (e.target.id === "weatherRefresh" || e.target.closest?.("#weatherRefresh"))) refreshWeather();
 });
 
 async function openWalkWeather(){
