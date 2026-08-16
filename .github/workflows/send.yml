@@ -12,6 +12,7 @@ on:
         default: once
 
 # cron-job.org 요청이나 수동 실행이 겹치더라도 발송 엔진은 한 번만 실행합니다.
+# 레이더 이미지 생성은 radar.yml로 분리해 푸시 확인 주기를 방해하지 않습니다.
 concurrency:
   group: thunder-miri-sender
   cancel-in-progress: false
@@ -29,20 +30,6 @@ jobs:
         run: python sender/sender.py --${{ inputs.mode || 'once' }}
         env:
           TZ: Asia/Seoul
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
-          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
-          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
-          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
-
-      # 레이더 화면용 이미지 생성 (실패해도 알림 발송에는 영향 없게 continue-on-error)
-      - name: build radar images
-        if: ${{ inputs.mode != 'test' }}
-        continue-on-error: true
-        run: python sender/radar.py
-        env:
-          TZ: Asia/Seoul   # 발송 서버를 한국시간으로 (UTC면 기상청 예보 시각이 9시간 어긋남)
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           KMA_API_KEY: ${{ secrets.KMA_API_KEY }}

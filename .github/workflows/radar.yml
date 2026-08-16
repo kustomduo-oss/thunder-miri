@@ -1,0 +1,35 @@
+name: thunder-miri-radar
+
+on:
+  # 푸시 발송이 끝나면 레이더 자료는 별도 실행에서 생성합니다.
+  workflow_run:
+    workflows: ["thunder-miri-sender"]
+    types: [completed]
+  workflow_dispatch:
+
+# 새 갱신이 시작되면 오래된 레이더 생성만 교체합니다.
+# sender 워크플로와는 다른 그룹이므로 푸시 발송에는 영향을 주지 않습니다.
+concurrency:
+  group: thunder-miri-radar
+  cancel-in-progress: true
+
+jobs:
+  radar:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r sender/requirements.txt
+      - name: build radar images
+        run: python sender/radar.py
+        env:
+          TZ: Asia/Seoul
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
