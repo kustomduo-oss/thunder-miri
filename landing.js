@@ -148,6 +148,7 @@ function initHeroMap(){
              .setView([36.5, 127.8], 6);
   heroMap.attributionControl.setPrefix(false);
   heroMap.on("zoomend", updateRangeLabelScale);
+  heroMap.on("moveend", updateLightningViewportControl);
   updateRangeLabelScale();
   let saved = "Base";
   try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
@@ -155,6 +156,7 @@ function initHeroMap(){
   heroLayer = L.layerGroup().addTo(heroMap);
   document.querySelectorAll(".hero-base button").forEach(b =>
     b.addEventListener("click", () => setBasemap(b.dataset.base)));
+  document.getElementById("heroLightningViewport")?.addEventListener("click", toggleLightningViewport);
 }
 
 function pinHome(lat, lon, label){
@@ -206,7 +208,7 @@ const RADAR_BASE = `${CONFIG.SUPABASE_URL}/storage/v1/object/public/radar`;
 let radarOverlay = null, strikeLayer = null;
 let tl = [], tlIdx = 0, tlTimer = null;
 let heroRadarMode = "lightning", heroRadarObs = null, heroForecastData = null, heroRadarKey = "national";
-let heroLightningStrikes = [], heroLightningIdx = 5, heroLightningTimer = null, heroLightningViewFitted = false;
+let heroLightningStrikes = [], heroLightningVisible = [], heroLightningIdx = 5, heroLightningTimer = null, heroLightningViewFitted = false, heroLightningShowingAll = false;
 
 function fmtClock(d){ return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 function parseStrikeTime(value){
@@ -249,9 +251,43 @@ function updateLightningClock(step){
 }
 function focusLightningMap(){
   if(!heroMap) return;
+  heroLightningShowingAll=false;
   const center = state.lat!=null ? [state.lat,state.lon] : [36.5,127.8];
   heroMap.setView(center,7,{animate:false});
   heroLightningViewFitted=true;
+}
+function updateLightningViewportControl(){
+  const button = document.getElementById("heroLightningViewport");
+  if(!button || !heroMap || heroRadarMode !== "lightning"){
+    if(button) button.hidden=true;
+    return;
+  }
+  if(heroLightningShowingAll){
+    button.textContent="⌂ 우리 동네 화면으로";
+    button.setAttribute("aria-label","우리 동네 지도 화면으로 돌아가기");
+    button.hidden=false;
+    return;
+  }
+  const bounds=heroMap.getBounds();
+  const outside=heroLightningVisible.filter(s => !bounds.contains([s.lat,s.lon])).length;
+  button.textContent=`⚡ 지도 밖 최근 낙뢰 ${outside}건 · 위치 보기`;
+  button.setAttribute("aria-label",`현재 지도 밖의 최근 낙뢰 ${outside}건 위치 보기`);
+  button.hidden=outside===0;
+}
+function toggleLightningViewport(){
+  if(!heroMap) return;
+  if(heroLightningShowingAll){
+    focusLightningMap();
+    return;
+  }
+  const points=heroLightningVisible
+    .map(s => [Number(s.lat),Number(s.lon)])
+    .filter(([lat,lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+  if(!points.length) return;
+  heroLightningShowingAll=true;
+  if(points.length===1) heroMap.setView(points[0],7,{animate:false});
+  else heroMap.fitBounds(L.latLngBounds(points),{padding:[36,36],maxZoom:7,animate:false});
+  updateLightningViewportControl();
 }
 function renderHeroStrikes(step){
   heroLightningIdx = Math.max(0, Math.min(5, step));
@@ -264,6 +300,7 @@ function renderHeroStrikes(step){
     const age = strikeAge(s.tm);
     return age >= current.min && age < 60;
   }).sort((a,b) => strikeAge(b.tm) - strikeAge(a.tm));
+  heroLightningVisible=visible;
   visible.forEach(s => {
     const age = strikeAge(s.tm);
     const at = parseStrikeTime(s.tm);
@@ -284,6 +321,7 @@ function renderHeroStrikes(step){
   if(status) status.textContent = heroLightningIdx === 5
     ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건`
     : `${current.label} 관측 ${inWindow}건 · 현재까지 누적 ${visible.length}건`;
+  window.requestAnimationFrame(updateLightningViewportControl);
 }
 function stopHeroLightning(){
   clearInterval(heroLightningTimer); heroLightningTimer=null;
@@ -333,6 +371,8 @@ function setHeroRadarMode(mode){
     }
   }
   else{
+    heroLightningShowingAll=false;
+    updateLightningViewportControl();
     stopHeroLightning();
     if(modeChanged && heroMap && state.lat!=null) heroMap.setView([state.lat,state.lon],8,{animate:false});
     if(isWalk) renderWalkWeather();
