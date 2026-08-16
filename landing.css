@@ -201,7 +201,9 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 @media(max-width:900px){
   .section-pad{padding-top:76px;padding-bottom:76px}
   .purpose-hero{grid-template-columns:1fr;grid-template-areas:"copy" "map" "signup";gap:32px;min-height:0;padding-top:48px;padding-bottom:64px}
-  .purpose-map{position:relative;z-index:0;max-width:620px;width:100%}   /* static이면 위 스택 컨텍스트가 풀려 지도가 헤더를 덮는다 */
+  /* static이면 위 스택 컨텍스트가 풀려 지도가 헤더를 덮는다.
+     단 relative에선 기본 규칙의 top:86px가 살아나 지도가 아래로 밀리므로 top:auto 필수 */
+  .purpose-map{position:relative;top:auto;z-index:0;max-width:620px;width:100%}
   .check-card,.boundary-section,.result-section{grid-template-columns:1fr;gap:34px}
   .process-list{grid-template-columns:1fr 1fr}
 }
