@@ -1,4 +1,4 @@
-/* 동탄이네 천둥번개 알림이 — 영상 반응 확인, 위치 설정, 웹푸시 연결 */
+/* 썬더미리 — 위치 설정, 레이더, 웹푸시 연결 */
 const CONFIG = {
   SUPABASE_URL: "https://pdlohzenslwbiyoxwjom.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF",
@@ -203,7 +203,7 @@ function pinHome(lat, lon, label){
   loadRadar(`${state.nx}_${state.ny}`, true);
 }
 
-/* ── 히어로 레이더: 관측(과거~지금) + 예측(미래)을 한 타임바로 ────────── */
+/* ── 히어로 레이더: 현재 관측 + 미래 강수예측 타임바 ────────────────── */
 const RADAR_BASE = `${CONFIG.SUPABASE_URL}/storage/v1/object/public/radar`;
 let radarOverlay = null, strikeLayer = null;
 let tl = [], tlIdx = 0, tlTimer = null;
@@ -457,7 +457,7 @@ function tlShow(i){
 
   const gap = Math.round((f.at.getTime() - Date.now())/60000);
   const t = document.getElementById("heroTime");
-  if(t) t.textContent = `${fmtClock(f.at)} (${fmtGap(gap)})`;
+  if(t) t.textContent = f.kind === "obs" ? `현재 ${fmtClock(f.at)}` : `${fmtClock(f.at)} (${fmtGap(gap)})`;
   const kind = document.getElementById("heroKind");
   if(kind){
     kind.innerHTML = f.kind === "obs"
@@ -491,19 +491,14 @@ async function loadRadar(key, silentFail){
     heroRadarKey = key;
     heroLightningStrikes = (key === "national" ? obs.lightning : nationalObs?.lightning) || obs.lightning || [];
 
-    const items = [];
-    (obs.past || []).forEach(p => {
-      const s = p.stamp;
-      items.push({ kind:"obs", image:p.image, bounds:obs.bounds,
-        at:new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8), +s.slice(8,10), +s.slice(10,12)) });
-    });
-    if(!items.length) items.push({ kind:"obs", image:obs.image, bounds:obs.bounds, at:new Date(obs.observed_at) });
+    // 강수 예측은 과거 재생이 아니라 현재 관측을 출발점으로 미래만 보여준다.
+    const items = [{ kind:"obs", image:obs.image, bounds:obs.bounds, at:new Date(obs.observed_at) }];
     (fc?.frames || []).forEach(f =>
       items.push({ kind:"fcst", image:f.image, bounds:fc.bounds, at:new Date(f.valid_at), rain_px:f.rain_px }));
     items.sort((a,b) => a.at - b.at);
     tl = items;
 
-    const nowIdx = Math.max(0, tl.findIndex(f => f.kind === "fcst") - 1);
+    const nowIdx = 0;
     const range = document.getElementById("heroRange");
     if(range) range.max = Math.max(0, tl.length-1);
     tl.forEach(f => { const im = new Image(); im.src = f.image; });
@@ -803,10 +798,10 @@ async function completeSubscription(){
 
   try{
     const registration=await navigator.serviceWorker.ready;
-    await registration.showNotification("반려견 천둥번개 알림 연결 완료",{
+    await registration.showNotification("썬더미리 알림 연결 완료",{
       body:`${$("dogName").value.trim() || "우리 아이"}를 위한 낙뢰 알림을 켰습니다. 천둥이 가까워지면 미리 알려드릴게요.`,
-      icon:"icon-192.png",
-      badge:"icon-192.png",
+      icon:"thundermiri-icon-192.png",
+      badge:"thundermiri-icon-192.png",
       tag:"welcome"
     });
   }catch(error){

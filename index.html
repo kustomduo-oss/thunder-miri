@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>반려견 천둥번개 알림 — 우리 동네 천둥번개를 미리 알려드려요</title>
+  <title>썬더미리 — 우리 동네 천둥번개를 미리 알려드려요</title>
   <meta name="description" content="기상청 낙뢰 관측 정보를 5분마다 확인해, 우리 동네로 다가오는 천둥번개를 보호자에게 빠르게 알려드립니다." />
   <meta name="theme-color" content="#0c3448" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="천둥번개 알림" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="icon" type="image/png" href="icon-192.png" />
-<link rel="stylesheet" href="style.css?v=ios-safe-area-1" />
+  <meta name="apple-mobile-web-app-title" content="썬더미리" />
+  <link rel="manifest" href="manifest.json?v=brand-thundermiri-1" />
+  <link rel="apple-touch-icon" href="thundermiri-apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="thundermiri-icon-192.png" />
+<link rel="stylesheet" href="style.css?v=brand-thundermiri-1" />
   <link rel="stylesheet" href="landing.css?v=refresh-emphasis-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -71,7 +71,7 @@
       <div class="hero-tl" id="heroTimeline" hidden>
         <button type="button" id="heroPlay" class="hero-play" aria-label="재생">▶</button>
         <input type="range" id="heroRange" min="0" max="0" value="0" aria-label="시각 선택" />
-        <span id="heroTime" class="hero-time">—</span>
+        <span id="heroTime" class="hero-time">현재부터</span>
       </div>
       <p id="heroKind" class="hero-kind" hidden>기상청 레이더 · 5분마다 갱신</p>
 
@@ -175,7 +175,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=offscreen-lightning-1" defer></script>
-<script src="nav.js?v=adsense-footer-1" defer></script>
+<script src="landing.js?v=forecast-now-preview-1" defer></script>
+<script src="nav.js?v=brand-thundermiri-1" defer></script>
 </body>
 </html>

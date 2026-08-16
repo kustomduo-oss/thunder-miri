@@ -1,9 +1,9 @@
-/* 반려견 천둥번개 알림 — 공유 헤더/푸터 (모든 페이지 공통)
+/* 썬더미리 — 공유 헤더/푸터 (모든 페이지 공통)
    메뉴를 바꾸려면 이 파일 한 곳만 수정하면 전체 페이지에 반영된다. */
 (function () {
   var header =
     '<header class="site-header"><div class="inner">' +
-      '<a class="brand" href="index.html"><span class="brand-mark">↯</span><span class="brand-full">반려견 천둥번개 알림</span><span class="brand-short">반려견 천둥번개 알림</span></a>' +
+      '<a class="brand" href="index.html"><span class="brand-mark"><img src="thundermiri-icon-192.png" alt="" /></span><span class="brand-full">동탄이네 썬더미리</span><span class="brand-short">동탄이네 썬더미리</span></a>' +
       '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="siteMenu">메뉴</button>' +
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
         '<a href="index.html#radar">우리 동네 레이더</a>' +
@@ -28,7 +28,7 @@
 
   var footer =
     '<footer class="site-footer"><div class="inner">' +
-      '<div class="footer-brand">반려견 천둥번개 알림</div>' +
+      '<div class="footer-brand">썬더미리</div>' +
       '<nav class="footer-nav">' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
@@ -37,7 +37,7 @@
         '<a href="terms.html">이용약관</a>' +
         '<a href="disclaimer.html">면책 고지</a>' +
       '</nav>' +
-      '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 반려견 천둥번개 알림</div>' +
+      '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 썬더미리</div>' +
     '</div></footer>';
 
   function mount() {
