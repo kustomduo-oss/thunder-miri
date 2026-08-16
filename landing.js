@@ -635,13 +635,31 @@ function refreshSavedMap(){
   },120);
 }
 
+// OpenStreetMap은 좁은 곳 → 넓은 곳 순으로 준다(미국식: 용암동, 상당구, 청주시, 충청북도).
+// 한국식(충청북도 청주시 상당구 용암동)으로 뒤집고, 행정구역 이름만 골라낸다.
+// 접미사로 거르면 아파트단지명("솔빛마을")·별칭("신제주")·도로명 같은 잉여 항목도 같이 떨어진다.
+const SIDO_RE=/(특별자치도|특별자치시|특별시|광역시|도)$/;
+const SIGUNGU_RE=/(시|군|구)$/;
+const DONG_RE=/(동|읍|면|리|가)$/;
+
 function shortLocationLabel(label){
   if(!label) return "";
-  return label.split(",")
+  const parts=label.split(",")
     .map(part => part.trim())
     .filter(part => part && part !== "대한민국" && !/^\d{5}$/.test(part))
-    .slice(0,4)
-    .join(" ");
+    .reverse();                                   // 넓은 곳 → 좁은 곳
+  if(!parts.length) return "";
+
+  const picked=[];
+  const sido=parts.find(part => SIDO_RE.test(part));
+  if(sido) picked.push(sido);
+  // 시·군·구는 "청주시 상당구"처럼 두 단계가 함께 쓰인다
+  picked.push(...parts.filter(part => part!==sido && SIGUNGU_RE.test(part)).slice(0,2));
+  const dong=parts.find(part => !picked.includes(part) && DONG_RE.test(part));
+  if(dong) picked.push(dong);
+
+  // 한국 행정구역이 하나도 안 잡히면(해외 좌표 등) 넓은 쪽부터 그대로 쓴다
+  return (picked.length ? picked : parts.slice(-4)).join(" ");
 }
 
 $("addrBtn").addEventListener("click", async () => {
