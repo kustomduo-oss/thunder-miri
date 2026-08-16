@@ -16,7 +16,9 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  /* Wanted Sans = 가변 폰트(400~1000). 92개 조각으로 나뉘어 있어 실제로 쓰인 글자만 받는다.
+     CDN이 죽어도 아래 시스템 폰트로 자연스럽게 내려간다. */
+  font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;
 }
 a{color:var(--navy);text-decoration:none}
