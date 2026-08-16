@@ -280,6 +280,12 @@ def upload(path, data, content_type):
     return f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
 
 
+# 격자 수 상한 (스팸·공격 대비 안전장치).
+# 레이더는 격자 1곳당 QPF 9프레임 + 낙뢰 1회 = 기상청 ~10회 호출, 업로드 ~12개로 매우 무겁다.
+# 실행이 5분(트리거 주기)을 넘기면 다음 실행에 밀려 취소되므로 발송(300)보다 훨씬 낮게 잡는다.
+MAX_GRIDS = int(os.environ.get("RADAR_MAX_GRIDS", "50"))
+
+
 # 과거 관측 프레임({key}_{stamp}.png) 생성은 2026-08-16에 중단됨.
 # 이 프레임을 재생하던 radar.html이 삭제되어 읽는 곳이 없어졌기 때문.
 # (히어로의 낙뢰 재생은 meta의 lightning[]만 쓰므로 영향 없음)
@@ -355,6 +361,7 @@ if __name__ == "__main__":
     grids = {}
     for s in subs:
         grids.setdefault((s["nx"], s["ny"]), s)
+    grids = sender.cap_grids(grids, MAX_GRIDS, "레이더")
 
     raw, stamp = fetch_radar()
     if raw is None:

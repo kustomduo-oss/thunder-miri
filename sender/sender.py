@@ -37,6 +37,10 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").st
 
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
+
+# 격자 수 상한 (스팸·공격 대비 안전장치). 격자 1곳 = 기상청 낙뢰 조회 1회.
+# 발송은 서비스의 존재 이유라 넉넉하게 둔다. 레이더(radar.py)는 훨씬 무거워 따로 낮게 잡음.
+MAX_GRIDS = int(os.environ.get("MAX_GRIDS", "300"))
 # 거리를 넓게 잡은 이유: 이 서비스의 목적이 '무방비 노출 방지'라 준비 시간이 길수록 좋다.
 # 뇌우 이동속도 20~60km/h 기준 50km면 약 50분~2.5시간, 30km면 약 30분~1.5시간의 여유.
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
@@ -129,13 +133,30 @@ def sb_headers():
 def get_subscribers():
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     params = {
-        "select": "id,dog_name,lat,lon,nx,ny,dong,subscription,last_lightning_at,last_lightning_level",
+        "select": "id,created_at,dog_name,lat,lon,nx,ny,dong,subscription,last_lightning_at,last_lightning_level",
         "active": "eq.true",
+        "order": "created_at.asc",   # 오래된 가입자 우선 (격자 상한에 걸릴 때 먼저 지킨다)
     }
     res = requests.get(url, headers=sb_headers(), params=params, timeout=30)
     res.raise_for_status()
     # 웹푸시 토큰 있는 사람만
     return [s for s in res.json() if s.get("subscription")]
+
+
+def cap_grids(grids, limit, label):
+    """격자 수 상한. 급증(스팸·공격)해도 서비스가 통째로 멈추지 않게 한다.
+
+    격자 하나가 곧 기상청 API 호출이라 격자 수 = 비용이다.
+    자를 때는 가입이 오래된 쪽을 남긴다(get_subscribers가 created_at 오름차순으로 주므로
+    dict 삽입 순서가 곧 가입 순서 — 뒤에 밀어 넣은 행이 먼저 잘린다).
+    """
+    if len(grids) <= limit:
+        return grids
+    dropped = len(grids) - limit
+    print(f"[경고] {label} 격자 {len(grids)}곳 — 상한 {limit} 초과. "
+          f"오래된 순으로 {limit}곳만 처리하고 {dropped}곳 건너뜀.")
+    print(f"[경고] 정상 증가인지 스팸 가입인지 subscribers 테이블을 확인할 것.")
+    return dict(list(grids.items())[:limit])
 
 
 def mark_lightning(sub_id, level):
@@ -236,6 +257,8 @@ def run_once():
         key = (s["nx"], s["ny"])
         g = grids.setdefault(key, {"lat": s["lat"], "lon": s["lon"], "dong": s.get("dong"), "subs": []})
         g["subs"].append(s)
+
+    grids = cap_grids(grids, MAX_GRIDS, "발송")
 
     print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 격자 {len(grids)}곳 확인")
 

@@ -36,6 +36,35 @@ create policy "anyone can subscribe"
   to public
   with check (true);
 
+
+-- ----------------------------------------------------------------
+-- 2026-08-16 추가: 한반도 밖 좌표 저장 거부
+-- ----------------------------------------------------------------
+-- 왜: publishable 키가 JS에 공개돼 있어 누구나 행을 넣을 수 있다.
+--     발송·레이더 엔진은 '격자(nx,ny) 단위'로 일하므로, 격자를 넓게 흩뿌리면
+--     기상청 API 호출과 이미지 생성이 격자 수에 비례해 폭증한다.
+--     좌표를 한반도로 묶으면 뿌릴 수 있는 범위가 크게 줄어든다.
+--
+-- 범위 근거: 마라도 33.06N / 백령도 37.9N·124.6E / 독도 131.87E 를 모두 포함
+-- 기존 행은 재검사되지 않으므로 영향 없음 (with check 는 INSERT에만 적용)
+--
+-- ⚠️ drop 과 create 사이에 가입이 막히는 틈이 생기므로 반드시 한 트랜잭션으로 실행할 것.
+-- ⚠️ 적용 후 사이트에서 실제로 가입이 되는지 반드시 테스트할 것.
+
+begin;
+
+drop policy if exists "anyone can subscribe" on subscribers;
+
+create policy "anyone can subscribe"
+  on subscribers for insert
+  to public
+  with check (
+    lat between 33 and 39
+    and lon between 124 and 132
+  );
+
+commit;
+
 grant insert on subscribers to anon, authenticated;
 
 -- 주의: 브라우저에서 저장할 때 'Prefer: return=representation'(되읽기) 헤더를 쓰면
