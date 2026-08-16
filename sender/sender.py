@@ -20,6 +20,9 @@ import requests
 from pywebpush import webpush, WebPushException
 
 
+KST = timezone(timedelta(hours=9))
+
+
 # ==========================================
 # 설정 (클라우드에선 환경변수/Secrets, 로컬 테스트는 .env.secret 로드)
 # ==========================================
@@ -93,7 +96,7 @@ def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15):
     """기상청 API허브 최근 낙뢰 좌표 목록"""
     url = "https://apihub.kma.go.kr/api/typ01/url/lgt_pnt.php"
     params = {
-        "tm": datetime.now().strftime("%Y%m%d%H%M"),
+        "tm": datetime.now(KST).strftime("%Y%m%d%H%M"),
         "itv": lookback_minutes, "lon": lon, "lat": lat, "range": range_km,
         "gc": "T", "authKey": KMA_API_KEY,
     }
