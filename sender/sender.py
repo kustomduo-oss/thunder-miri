@@ -43,16 +43,22 @@ WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이
 # 발송은 구독자 수만큼 반복되므로 사람이 늘수록 차이가 커진다.
 PUSH_SESSION = requests.Session()   # FCM/Apple 푸시 서버용
 SB_SESSION = requests.Session()     # Supabase REST용
-KMA_SESSION = requests.Session()    # 기상청 API용 (격자 수만큼 호출됨)
+KMA_SESSION = requests.Session()    # 기상청 API용 (주기당 1회)
 
-# 격자 수 상한 (스팸·공격 대비 안전장치). 격자 1곳 = 기상청 낙뢰 조회 1회.
-# 발송은 서비스의 존재 이유라 넉넉하게 둔다. 레이더(radar.py)는 훨씬 무거워 따로 낮게 잡음.
-MAX_GRIDS = int(os.environ.get("MAX_GRIDS", "300"))
+# 전국 낙뢰를 한 번에 받는 조회 조건.
+# 예전에는 격자마다 따로 조회해서 가입자가 흩어질수록 호출이 늘었다
+# (격자 300곳 = 하루 86,400건 → 기상청 일반회원 한도 20,000건의 4배).
+# 반경을 넓혀도 요청은 1회이고 응답도 가볍다 —
+# 실측(2026-08-16): 500km·낙뢰 24건 = 1.6KB·100ms, 2000km로 넓혀도 결과 동일.
+NATIONAL_LAT = float(os.environ.get("NATIONAL_LAT", "36.5"))
+NATIONAL_LON = float(os.environ.get("NATIONAL_LON", "127.8"))
+NATIONAL_RANGE_KM = float(os.environ.get("NATIONAL_RANGE_KM", "500"))
+LOOKBACK_MINUTES = int(os.environ.get("LOOKBACK_MINUTES", "15"))
 # 거리를 넓게 잡은 이유: 이 서비스의 목적이 '무방비 노출 방지'라 준비 시간이 길수록 좋다.
 # 뇌우 이동속도 20~60km/h 기준 50km면 약 50분~2.5시간, 30km면 약 30분~1.5시간의 여유.
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 # 알림을 탭하면 열리는 화면. 보호자가 실제로 하는 행동(레이더로 상황 확인)에 맞춤.
-ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://kustomduo-oss.github.io/thunder-miri/index.html#radar")
+ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://thundermiri.com/#radar")
 
 # ----------------------------------------------------------------
 # 로컬 테스트용 .env.secret 읽기 (KEY=VALUE 한 줄씩). 클라우드에선 파일 없으니 무시됨.
@@ -126,6 +132,40 @@ def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15):
         return []
 
 
+def fetch_lightning_nationwide():
+    """한반도 전역의 최근 낙뢰를 한 번에 가져온다. 가입자가 몇 명이든 주기당 1회."""
+    return fetch_lightning_data(NATIONAL_LAT, NATIONAL_LON, NATIONAL_RANGE_KM,
+                                lookback_minutes=LOOKBACK_MINUTES)
+
+
+def parse_strikes(items):
+    """조회 결과를 (위도, 경도) 숫자 목록으로. 좌표가 깨진 건은 버린다."""
+    strikes = []
+    for it in items:
+        try:
+            strikes.append((float(it["lat"]), float(it["lon"])))
+        except (TypeError, ValueError):
+            continue
+    return strikes
+
+
+# 사각형으로 먼저 걸러 haversine 호출을 줄인다. 경도 1도는 위도 36°에서 약 90km라
+# 반경/80 이면 두 축 모두 안전하게 감싼다(걸러낸 뒤 실제 거리로 다시 판정하므로 오차 없음).
+NEAR_DEG = WATCH_RADIUS_KM / 80.0
+
+
+def nearest_strike_km(lat, lon, strikes):
+    """이 좌표에서 가장 가까운 낙뢰까지 거리(km). 관측 범위 안에 없으면 None."""
+    nearest = None
+    for s_lat, s_lon in strikes:
+        if abs(s_lat - lat) > NEAR_DEG or abs(s_lon - lon) > NEAR_DEG:
+            continue
+        d = haversine(lat, lon, s_lat, s_lon)
+        if nearest is None or d < nearest:
+            nearest = d
+    return nearest
+
+
 # ----------------------------------------------------------------
 # Supabase (secret 키로 RLS 우회해 전체 읽기/수정)
 # ----------------------------------------------------------------
@@ -153,7 +193,9 @@ def get_subscribers():
 def cap_grids(grids, limit, label):
     """격자 수 상한. 급증(스팸·공격)해도 서비스가 통째로 멈추지 않게 한다.
 
-    격자 하나가 곧 기상청 API 호출이라 격자 수 = 비용이다.
+    발송(sender)은 전국을 1회만 조회하도록 바뀌어 이 상한이 필요 없어졌고,
+    지금은 레이더 생성(radar.py)만 쓴다 — 격자 하나마다 기상청 호출 ~10회와
+    이미지 업로드 12개가 발생해 여전히 격자 수 = 비용이기 때문이다.
     자를 때는 가입이 오래된 쪽을 남긴다(get_subscribers가 created_at 오름차순으로 주므로
     dict 삽입 순서가 곧 가입 순서 — 뒤에 밀어 넣은 행이 먼저 잘린다).
     """
@@ -280,16 +322,11 @@ def run_once():
         print(f"[{datetime.now():%H:%M:%S}] 구독자 없음(또는 푸시토큰 없음). 종료.")
         return
 
-    # 같은 격자끼리 묶기 (대표 좌표 1개로 기상청 1번만 호출)
-    grids = {}
-    for s in subs:
-        key = (s["nx"], s["ny"])
-        g = grids.setdefault(key, {"lat": s["lat"], "lon": s["lon"], "dong": s.get("dong"), "subs": []})
-        g["subs"].append(s)
+    # 전국 낙뢰를 한 번만 받아온다. 이후 거리 계산은 각자의 좌표로 우리가 직접 한다.
+    # (격자로 묶어 조회하던 방식은 가입자가 흩어질수록 기상청 호출이 늘어 한도에 걸렸다)
+    strikes = parse_strikes(fetch_lightning_nationwide())
 
-    grids = cap_grids(grids, MAX_GRIDS, "발송")
-
-    print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 격자 {len(grids)}곳 확인")
+    print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 전국 낙뢰 {len(strikes)}건")
 
     # DB 갱신은 모아서 마지막에 한 번에 보낸다(1명당 왕복 170ms 제거).
     # 도중에 죽으면 갱신이 안 되어 다음 주기에 같은 알림이 한 번 더 갈 수 있다.
@@ -298,7 +335,7 @@ def run_once():
     pending_resets = []   # [id]          낙뢰 사라짐 → 단계 리셋
 
     try:
-        _run_grids(grids, pending_marks, pending_resets)
+        _run_subscribers(subs, strikes, pending_marks, pending_resets)
     finally:
         mark_lightning_bulk(pending_marks)
         reset_lightning_bulk(pending_resets)
@@ -306,18 +343,21 @@ def run_once():
             print(f"[DB] 단계기록 {len(pending_marks)}명 · 리셋 {len(pending_resets)}명 일괄 반영")
 
 
-def _run_grids(grids, pending_marks, pending_resets):
-    """격자별로 낙뢰를 판단하고 발송한다. DB 갱신은 pending 목록에 모아만 둔다."""
-    for (nx, ny), g in grids.items():
+def _run_subscribers(subs, strikes, pending_marks, pending_resets):
+    """가입자 각자의 좌표로 낙뢰 거리를 재고 단계가 바뀐 사람에게만 발송한다.
+    DB 갱신은 pending 목록에 모아만 둔다.
+
+    격자 대표 좌표가 아니라 본인 좌표로 계산하므로 같은 동네라도 거리가 각각 나온다
+    (예전 방식은 격자 5km 안을 전부 같은 거리로 취급해 최대 3~4km 오차가 있었다)."""
+    sent = watching = 0
+    for s in subs:
+        try:
+            lat, lon = float(s["lat"]), float(s["lon"])
+        except (TypeError, ValueError):
+            continue
+
         # 1) 낙뢰 거리 → 단계(none/watch/warning) — 예보가 아니라 '실측' 기반
-        nearest = None
-        for it in fetch_lightning_data(g["lat"], g["lon"], WATCH_RADIUS_KM):
-            try:
-                d = haversine(g["lat"], g["lon"], float(it["lat"]), float(it["lon"]))
-            except (TypeError, ValueError):
-                continue
-            if nearest is None or d < nearest:
-                nearest = d
+        nearest = nearest_strike_km(lat, lon, strikes)
         lightning_level = None
         if nearest is not None:
             if nearest <= WARNING_RADIUS_KM:
@@ -326,24 +366,28 @@ def _run_grids(grids, pending_marks, pending_resets):
                 lightning_level = "watch"      # 50km 이내: 접근
 
         if lightning_level is None:
-            print(f"  격자({nx},{ny}) {g.get('dong') or ''}: 낙뢰 없음")
             # 낙뢰가 사라졌으니 단계 리셋 → 다음 천둥 때 다시 즉시 알림
-            pending_resets.extend(s["id"] for s in g["subs"] if s.get("last_lightning_level"))
+            if s.get("last_lightning_level"):
+                pending_resets.append(s["id"])
             continue
 
-        print(f"  격자({nx},{ny}) {g.get('dong') or ''}: "
-              f"낙뢰={lightning_level} → {len(g['subs'])}명 처리")
+        watching += 1
+        # --- ⚡ 최초 관측 또는 50km/30km 거리 단계가 바뀔 때만 발송 ---
+        transition = lightning_transition(s.get("last_lightning_level"), lightning_level)
+        if not transition:
+            continue
 
-        for s in g["subs"]:
-            # --- ⚡ 최초 관측 또는 50km/30km 거리 단계가 바뀔 때만 발송 ---
-            transition = lightning_transition(s.get("last_lightning_level"), lightning_level)
-            if transition:
-                title, body = build_message(transition, dist=nearest)
-                ok, status = send_web_push(s["subscription"], title, body)
-                if ok:
-                    pending_marks.append((s["id"], lightning_level))
-                elif status in (404, 410):
-                    deactivate(s["id"])
+        title, body = build_message(transition, dist=nearest)
+        ok, status = send_web_push(s["subscription"], title, body)
+        if ok:
+            pending_marks.append((s["id"], lightning_level))
+            sent += 1
+            print(f"  {s.get('dong') or s['id'][:8]}: {lightning_level} "
+                  f"({nearest:.0f}km, {transition}) → 발송")
+        elif status in (404, 410):
+            deactivate(s["id"])
+
+    print(f"[결과] 관측범위 안 {watching}명 / 발송 {sent}명")
 
 
 # ----------------------------------------------------------------
