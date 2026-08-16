@@ -1,4 +1,4 @@
--- 동탄이네 천둥번개 알림이 — 구독자 테이블 (thunder-miri 프로젝트에 적용 완료)
+-- 썬더미리 — 구독자 테이블 (thunder-miri 프로젝트에 적용 완료)
 -- Supabase 대시보드 > SQL Editor 에 붙여넣고 RUN
 
 create table if not exists subscribers (
@@ -13,9 +13,9 @@ create table if not exists subscribers (
   subscription     jsonb,                     -- 웹푸시 구독 객체 (3단계에서 채워짐)
   active           boolean not null default true,
   last_notified_at timestamptz,               -- 강수예보 중복 방지용
-  cooldown_min     integer not null default 30, -- 가입자가 고른 강수예보 간격(분). 10/20/30
+  cooldown_min     integer not null default 30, -- 이전 알림 정책 호환용(현재 낙뢰 발송에서는 사용하지 않음)
   last_lightning_at    timestamptz,             -- 낙뢰 경보 시각(강수와 별도 추적)
-  last_lightning_level text                     -- 마지막 낙뢰 단계: watch(30km)/warning(10km)
+  last_lightning_level text                     -- 마지막 낙뢰 단계: watch(30~50km)/warning(30km 이내)
 );
 
 -- 이미 테이블이 있는 경우 칸만 추가 (운영 DB에 적용 완료)

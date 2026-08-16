@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-동탄이네 천둥번개 알림이 — 발송 엔진
+썬더미리 — 발송 엔진
 GitHub Actions에서 5분마다 실행(cron-job.org가 트리거). 동작 순서:
   1) Supabase에서 구독자(동네·격자·웹푸시토큰) 읽기
   2) 같은 격자끼리 묶어 기상청 낙뢰 관측 정보 조회 (API 절약)
   3) 천둥 감지된 격자의 구독자에게 웹푸시 발송
-  4) 같은 단계의 낙뢰 알림은 30분 간격으로 발송
+  4) 최초 관측과 거리 단계 변화가 있을 때만 알림 발송
 
 기상청 조회 로직은 '동탄이 봇'(lightning_alert.py)에서 가져와 위치를 매개변수화함.
 """
@@ -39,10 +39,6 @@ WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
 # 거리를 넓게 잡은 이유: 이 서비스의 목적이 '무방비 노출 방지'라 준비 시간이 길수록 좋다.
 # 뇌우 이동속도 20~60km/h 기준 50km면 약 50분~2.5시간, 30km면 약 30분~1.5시간의 여유.
-LIGHTNING_COOLDOWN_MIN = int(os.environ.get("LIGHTNING_COOLDOWN_MIN", "30"))  # 낙뢰: 같은 단계 유지 시 간격(분). 단계 상승은 즉시
-
-# 낙뢰 단계 순위 (높을수록 위급). 단계가 올라가면 쿨다운 무시하고 즉시 발송
-LIGHTNING_RANK = {"watch": 1, "warning": 2}
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 # 알림을 탭하면 열리는 화면. 보호자가 실제로 하는 행동(레이더로 상황 확인)에 맞춤.
 ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://kustomduo-oss.github.io/thunder-miri/index.html#radar")
@@ -174,21 +170,15 @@ def deactivate(sub_id):
         print(f"[비활성화 실패] {e}")
 
 
-def lightning_should_send(sub, cur_level):
-    """낙뢰 경보 발송 여부 (가입자 간격과 독립).
-    단계가 올라가면(접근→임박, 또는 처음 감지) 즉시,
-    같은 단계가 이어지면 LIGHTNING_COOLDOWN_MIN(기본 30분) 간격."""
-    prev_level = sub.get("last_lightning_level")
-    if LIGHTNING_RANK[cur_level] > LIGHTNING_RANK.get(prev_level, 0):
-        return True  # 단계 상승(또는 처음) → 즉시
-    ts = sub.get("last_lightning_at")
-    if not ts:
-        return True
-    try:
-        last = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-        return (datetime.now(timezone.utc) - last) > timedelta(minutes=LIGHTNING_COOLDOWN_MIN)
-    except Exception:
-        return True
+def lightning_transition(prev_level, cur_level):
+    """최초 관측과 의미 있는 거리 단계 변화만 알림 유형으로 변환한다."""
+    if prev_level not in ("watch", "warning"):
+        return "initial_warning" if cur_level == "warning" else "initial_watch"
+    if prev_level == "watch" and cur_level == "warning":
+        return "closer"
+    if prev_level == "warning" and cur_level == "watch":
+        return "farther"
+    return None
 
 
 # ----------------------------------------------------------------
@@ -213,16 +203,21 @@ def send_web_push(subscription, title, body, url=ALERT_CLICK_URL):
 # ----------------------------------------------------------------
 # 메시지 문구
 # ----------------------------------------------------------------
-def build_message(alert_type, dog, dist=None):
-    """알림은 '준비를 시작하라는 신호'.
-    훈련·적응·치료를 지시하지 않는다(보호자가 평소 정해둔 대응을 하도록)."""
+def build_message(alert_type, dist=None):
+    """거리 기반 낙뢰 관측 사실과 단계 변화만 전달한다."""
     km = round(dist) if dist is not None else None
-    if alert_type == "warning":
-        return (f"🐾⚡ 천둥 임박 (약 {km}km)",
-                f"약 {km}km 거리에서 낙뢰가 관측됐어요. 지금 {dog} 곁에서 평소 준비한 대응을 시작하세요.")
-    if alert_type == "watch":
-        return (f"🐾 천둥 접근 (약 {km}km)",
-                f"약 {km}km 거리에서 낙뢰가 관측됐어요. {dog}를 위한 준비를 시작할 시간입니다.")
+    if alert_type == "initial_watch":
+        return ("⚡ 썬더미리 · 50km 이내 낙뢰 관측",
+                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 최근 낙뢰 위치를 확인해 주세요.")
+    if alert_type == "initial_warning":
+        return ("🚨 썬더미리 · 30km 이내 낙뢰 관측",
+                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
+    if alert_type == "closer":
+        return ("🚨 낙뢰 관측 지점이 가까워졌어요",
+                "가장 가까운 최근 낙뢰가 등록한 위치 30km 이내에서 관측됐어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
+    if alert_type == "farther":
+        return ("↗️ 가장 가까운 낙뢰가 멀어졌어요",
+                "가장 가까운 최근 낙뢰가 등록한 위치 30km 밖에서 관측됐어요. 썬더미리에서 주변 낙뢰 상황을 확인해 주세요.")
     raise ValueError(f"지원하지 않는 알림 유형: {alert_type}")
 
 
@@ -273,11 +268,10 @@ def run_once():
               f"낙뢰={lightning_level} → {len(g['subs'])}명 처리")
 
         for s in g["subs"]:
-            dog = s.get("dog_name") or "강아지"
-
-            # --- ⚡ 낙뢰 경보: 같은 단계는 쿨다운, 단계 상승은 즉시 ---
-            if lightning_should_send(s, lightning_level):
-                title, body = build_message(lightning_level, dog, dist=nearest)
+            # --- ⚡ 최초 관측 또는 50km/30km 거리 단계가 바뀔 때만 발송 ---
+            transition = lightning_transition(s.get("last_lightning_level"), lightning_level)
+            if transition:
+                title, body = build_message(transition, dist=nearest)
                 ok, status = send_web_push(s["subscription"], title, body)
                 if ok:
                     mark_lightning(s["id"], lightning_level)
@@ -292,11 +286,10 @@ def run_test():
     subs = get_subscribers()
     print(f"구독자 {len(subs)}명에게 테스트 푸시")
     for s in subs:
-        dog = s.get("dog_name") or "강아지"
         ok, status = send_web_push(
             s["subscription"],
-            "🐾 반려견 천둥번개 알림 테스트",
-            f"{dog} 알림 연결 성공! 천둥이 오면 이렇게 미리 알려드릴게요.",
+            "⚡ 썬더미리 테스트",
+            "알림 연결이 정상입니다. 실제 낙뢰가 관측되면 등록한 위치를 기준으로 알려드립니다.",
         )
         print(f"  {s.get('dong') or s['id'][:8]}: {'성공' if ok else f'실패({status})'}")
         if status in (404, 410):
@@ -324,7 +317,7 @@ if __name__ == "__main__":
     KMA_API_KEY = os.environ.get("KMA_API_KEY", KMA_API_KEY).strip()
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", VAPID_PRIVATE_KEY).strip()
 
-    parser = argparse.ArgumentParser(description="반려견 천둥번개 알림 발송 엔진")
+    parser = argparse.ArgumentParser(description="썬더미리 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
     args = parser.parse_args()
