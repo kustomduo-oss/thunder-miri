@@ -38,6 +38,13 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").st
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
 
+# HTTP 연결 재사용 세션.
+# 매 요청마다 TLS 손잡이를 새로 하면 느리다(실측: 푸시 330ms→146ms, Supabase 170ms→42ms).
+# 발송은 구독자 수만큼 반복되므로 사람이 늘수록 차이가 커진다.
+PUSH_SESSION = requests.Session()   # FCM/Apple 푸시 서버용
+SB_SESSION = requests.Session()     # Supabase REST용
+KMA_SESSION = requests.Session()    # 기상청 API용 (격자 수만큼 호출됨)
+
 # 격자 수 상한 (스팸·공격 대비 안전장치). 격자 1곳 = 기상청 낙뢰 조회 1회.
 # 발송은 서비스의 존재 이유라 넉넉하게 둔다. 레이더(radar.py)는 훨씬 무거워 따로 낮게 잡음.
 MAX_GRIDS = int(os.environ.get("MAX_GRIDS", "300"))
@@ -70,7 +77,7 @@ def http_get(url, params, tries=3, timeout=30):
     last_err = None
     for attempt in range(1, tries + 1):
         try:
-            res = requests.get(url, params=params, timeout=timeout)
+            res = KMA_SESSION.get(url, params=params, timeout=timeout)
             res.raise_for_status()
             return res
         except requests.exceptions.RequestException as e:
@@ -137,7 +144,7 @@ def get_subscribers():
         "active": "eq.true",
         "order": "created_at.asc",   # 오래된 가입자 우선 (격자 상한에 걸릴 때 먼저 지킨다)
     }
-    res = requests.get(url, headers=sb_headers(), params=params, timeout=30)
+    res = SB_SESSION.get(url, headers=sb_headers(), params=params, timeout=30)
     res.raise_for_status()
     # 웹푸시 토큰 있는 사람만
     return [s for s in res.json() if s.get("subscription")]
@@ -159,33 +166,54 @@ def cap_grids(grids, limit, label):
     return dict(list(grids.items())[:limit])
 
 
-def mark_lightning(sub_id, level):
-    """낙뢰 경보 시각·단계 갱신"""
+PATCH_CHUNK = 200   # 한 번의 PATCH에 담을 최대 인원 (URL 길이 한계 고려)
+
+
+def _patch_many(ids, body, label):
+    """여러 명을 한 번의 PATCH로 갱신한다.
+
+    한 명씩 보내면 1명당 왕복 170ms가 붙어 인원수만큼 느려진다.
+    (1000명이면 그것만 170초) 같은 값으로 바뀌는 사람끼리 묶어 한 번에 보낸다.
+    """
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
+    for i in range(0, len(ids), PATCH_CHUNK):
+        chunk = ids[i:i + PATCH_CHUNK]
+        try:
+            res = SB_SESSION.patch(url, headers=sb_headers(),
+                                   params={"id": f"in.({','.join(chunk)})"},
+                                   json=body, timeout=30)
+            if not res.ok:
+                print(f"[{label} 실패] {res.status_code} {res.text[:150]}")
+        except Exception as e:
+            print(f"[{label} 실패] {e}")
+
+
+def mark_lightning_bulk(pairs):
+    """[(구독자id, 단계), ...] → 단계별로 묶어 일괄 갱신"""
+    if not pairs:
+        return
+    by_level = {}
+    for sub_id, level in pairs:
+        by_level.setdefault(level, []).append(sub_id)
     now = datetime.now(timezone.utc).isoformat()
-    try:
-        requests.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
-                       json={"last_lightning_at": now, "last_lightning_level": level}, timeout=15)
-    except Exception as e:
-        print(f"[last_lightning 갱신 실패] {e}")
+    for level, ids in by_level.items():
+        _patch_many(ids, {"last_lightning_at": now, "last_lightning_level": level},
+                    "last_lightning 갱신")
 
 
-def reset_lightning(sub_id):
-    """낙뢰가 사라지면 단계 리셋 → 다음 천둥 때 다시 즉시 알림"""
-    url = f"{SUPABASE_URL}/rest/v1/subscribers"
-    try:
-        requests.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
-                       json={"last_lightning_level": None}, timeout=15)
-    except Exception as e:
-        print(f"[last_lightning 리셋 실패] {e}")
+def reset_lightning_bulk(ids):
+    """낙뢰가 사라진 사람들의 단계 리셋 → 다음 천둥 때 다시 즉시 알림"""
+    if not ids:
+        return
+    _patch_many(ids, {"last_lightning_level": None}, "last_lightning 리셋")
 
 
 def deactivate(sub_id):
     """만료된(410/404) 구독은 비활성화"""
     url = f"{SUPABASE_URL}/rest/v1/subscribers"
     try:
-        requests.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
-                       json={"active": False}, timeout=15)
+        SB_SESSION.patch(url, headers=sb_headers(), params={"id": f"eq.{sub_id}"},
+                         json={"active": False}, timeout=15)
         print(f"  → 만료 구독 비활성화 ({sub_id})")
     except Exception as e:
         print(f"[비활성화 실패] {e}")
@@ -213,6 +241,7 @@ def send_web_push(subscription, title, body, url=ALERT_CLICK_URL):
             data=payload,
             vapid_private_key=VAPID_PRIVATE_KEY,
             vapid_claims={"sub": VAPID_SUBJECT},
+            requests_session=PUSH_SESSION,   # 연결 재사용 (한 명씩 순차라 누적 효과가 큼)
         )
         return True, None
     except WebPushException as e:
@@ -262,6 +291,23 @@ def run_once():
 
     print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 격자 {len(grids)}곳 확인")
 
+    # DB 갱신은 모아서 마지막에 한 번에 보낸다(1명당 왕복 170ms 제거).
+    # 도중에 죽으면 갱신이 안 되어 다음 주기에 같은 알림이 한 번 더 갈 수 있다.
+    # (알림이 빠지는 것보다 한 번 더 가는 쪽이 안전하므로 이 방향을 택함)
+    pending_marks = []    # [(id, level)] 발송 성공 → 단계 기록
+    pending_resets = []   # [id]          낙뢰 사라짐 → 단계 리셋
+
+    try:
+        _run_grids(grids, pending_marks, pending_resets)
+    finally:
+        mark_lightning_bulk(pending_marks)
+        reset_lightning_bulk(pending_resets)
+        if pending_marks or pending_resets:
+            print(f"[DB] 단계기록 {len(pending_marks)}명 · 리셋 {len(pending_resets)}명 일괄 반영")
+
+
+def _run_grids(grids, pending_marks, pending_resets):
+    """격자별로 낙뢰를 판단하고 발송한다. DB 갱신은 pending 목록에 모아만 둔다."""
     for (nx, ny), g in grids.items():
         # 1) 낙뢰 거리 → 단계(none/watch/warning) — 예보가 아니라 '실측' 기반
         nearest = None
@@ -282,9 +328,7 @@ def run_once():
         if lightning_level is None:
             print(f"  격자({nx},{ny}) {g.get('dong') or ''}: 낙뢰 없음")
             # 낙뢰가 사라졌으니 단계 리셋 → 다음 천둥 때 다시 즉시 알림
-            for s in g["subs"]:
-                if s.get("last_lightning_level"):
-                    reset_lightning(s["id"])
+            pending_resets.extend(s["id"] for s in g["subs"] if s.get("last_lightning_level"))
             continue
 
         print(f"  격자({nx},{ny}) {g.get('dong') or ''}: "
@@ -297,7 +341,7 @@ def run_once():
                 title, body = build_message(transition, dist=nearest)
                 ok, status = send_web_push(s["subscription"], title, body)
                 if ok:
-                    mark_lightning(s["id"], lightning_level)
+                    pending_marks.append((s["id"], lightning_level))
                 elif status in (404, 410):
                     deactivate(s["id"])
 
