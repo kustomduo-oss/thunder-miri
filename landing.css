@@ -163,18 +163,13 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 .result-contrast{display:grid;gap:10px}.result-contrast>div{padding:22px;border:1px solid var(--signal-line);border-radius:13px;background:var(--signal-bg)}.result-contrast span{display:block;margin-bottom:6px;color:var(--signal);font-size:11px;font-weight:900}.result-contrast strong{display:block;margin-bottom:6px;font-size:18px}.result-contrast p{margin:0;font-size:13px;line-height:1.65}
 .more-section{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#edf5f7}.more-section a{display:grid;gap:8px;padding:28px;border:1px solid var(--signal-line);border-radius:14px;background:#fff;color:var(--signal-ink)}.more-section a:hover{text-decoration:none;border-color:#8fbccc}.more-section span{color:var(--signal);font-size:12px;font-weight:900}.more-section b{font-size:18px;line-height:1.5}
 .content-discovery{padding:54px max(22px,calc((100vw - 1120px)/2));background:#edf5f7;border-top:1px solid var(--signal-line)}
-.content-discovery-heading{display:flex;align-items:baseline;gap:12px;margin-bottom:17px}.content-discovery-heading h2{margin:0;font-size:24px;line-height:1.3;letter-spacing:-.035em}.content-discovery-heading p{margin:0!important;font-size:12px!important}
+.content-discovery-heading{margin-bottom:17px}.content-discovery-heading h2{margin:0;font-size:24px;line-height:1.3;letter-spacing:-.035em}
 .content-discovery-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .discovery-card{display:grid;gap:11px;padding:22px 20px;border:1px solid var(--signal-line);border-radius:14px;background:#fff;color:var(--signal-ink);box-shadow:0 8px 22px rgba(25,70,91,.06)}.discovery-card.sound-link{border-top:3px solid var(--signal-yellow)}
 .discovery-kicker{margin:0!important;color:var(--signal);font-size:11px!important;font-weight:900}
 .discovery-card h3{margin:0;font-size:17px;line-height:1.45;letter-spacing:-.02em}
 .discovery-card p{margin:0!important;font-size:13px!important;line-height:1.7!important}
 .discovery-card blockquote{margin:0;padding:12px 14px;border-left:3px solid var(--signal);border-radius:0 8px 8px 0;background:#f1f8fd;color:var(--signal-ink);font-size:13.5px;font-weight:800;line-height:1.6}
-.discovery-steps{display:grid;gap:7px;margin:0;padding:0;list-style:none;counter-reset:discovery-step}
-.discovery-steps li{display:grid;grid-template-columns:22px 1fr;gap:9px;align-items:baseline;counter-increment:discovery-step}
-.discovery-steps li::before{content:counter(discovery-step);display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#eef4f7;color:var(--signal);font-size:11px;font-weight:900}
-/* ::before도 그리드 항목이라, 글자 두 줄은 2번째 칸으로 명시해야 22px 칸으로 밀리지 않는다 */
-.discovery-steps strong{grid-column:2;font-size:13.5px}.discovery-steps span{grid-column:2;display:block;color:var(--signal-muted);font-size:12px;line-height:1.55}
 .discovery-note{padding:12px 14px;border-radius:9px;background:#fdf6e6;color:#6b5518!important;font-size:12px!important;line-height:1.65!important}.discovery-note strong{color:#8a6a12}
 .discovery-card>a{font-size:13px;font-weight:900}
 .landing-body .site-footer{margin-top:0}
