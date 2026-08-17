@@ -147,6 +147,50 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .how-list{margin-bottom:22px}
 .step-kicker{display:inline-block;margin-bottom:7px;color:var(--navy);font-size:12px;font-weight:800;letter-spacing:.08em}
 
+/* ── 광고 배너 (여러 페이지 공용) ─────────────────────────────
+   스티커를 파스텔 배경에 얹는다. 커스텀듀오(파스텔 앞치마) 브랜드 색감과 맞춤.
+   테두리 친 박스는 쓰지 않는다 — 강아지 사진 + 이름표 조합이 실종 전단지처럼 읽혀서. */
+.maker-note{display:flex;align-items:flex-end;justify-content:center;gap:20px;
+  background:linear-gradient(180deg,#FDF1F3 0%,#F6EEF7 55%,#EDF3F9 100%);
+  border-top:1px solid #F0DDE4;border-bottom:1px solid #E2E9F1}
+/* 본문 폭이 좁은 콘텐츠 페이지용 — 화면을 가로지르지 않고 글 폭에 맞춰 앉는다 */
+.maker-note.inset{margin:34px 0 0;padding:0 20px;border:1px solid #F0DDE4;border-radius:16px}
+
+/* 스티커 3장을 겹쳐두고 번갈아 보여준다(GIF 대신 CSS). 높이는 첫 장이 정하고
+   나머지는 그 위에 절대배치 — 장마다 폭이 달라도 흔들리지 않는다. */
+.maker-sticker{position:relative;flex:0 0 auto;width:132px;align-self:flex-end;line-height:0}
+.maker-sticker picture{display:block}
+.maker-sticker picture:not(:first-child){position:absolute;left:0;bottom:0;width:100%}
+.maker-sticker img{display:block;width:100%;height:auto;margin-bottom:-1px}
+.maker-sticker picture{opacity:0;animation:sticker-cycle 3s infinite}
+.maker-sticker picture:nth-child(1){animation-delay:0s}
+.maker-sticker picture:nth-child(2){animation-delay:1s}
+.maker-sticker picture:nth-child(3){animation-delay:2s}
+/* 3초를 3장이 1초씩 나눠 쓴다. 지연이 정확히 1초(33.3%)라 앞 장의 페이드아웃과
+   뒷 장의 페이드인이 겹쳐, 아무것도 안 보이는 구간이 생기지 않는다. */
+@keyframes sticker-cycle{
+  0%{opacity:0} 3%{opacity:1} 33%{opacity:1} 36%{opacity:0} 100%{opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .maker-sticker picture{animation:none}
+  .maker-sticker picture:nth-child(1){opacity:1}
+}
+.maker-copy{display:grid;gap:3px;padding:22px 0 26px;min-width:0}
+.maker-line{margin:0!important;color:#5A3A46!important;
+  font-size:17px!important;font-weight:900!important;line-height:1.35!important;letter-spacing:-.025em}
+.maker-sub{margin:0!important;color:#8A6C78!important;font-size:13.5px!important;line-height:1.6!important}
+.maker-note a{justify-self:start;margin-top:7px;color:#A24E6B;font-size:13px;font-weight:900}
+.maker-note a:hover{color:#7F3A52}
+
+@media(max-width:620px){
+  .maker-note{gap:12px;align-items:flex-end}
+  .maker-note.inset{margin-top:26px;padding:0 14px;border-radius:14px}
+  .maker-sticker{width:96px}
+  .maker-copy{padding:18px 0 20px;gap:2px}
+  .maker-line{font-size:15.5px!important}
+  .maker-sub{font-size:12.5px!important}
+}
+
 /* 동탄이의 소리 적응 기록 + 참고자료 통합 페이지 */
 .sound-story-card section{padding:12px 0 30px;margin-bottom:28px;border-bottom:1px solid var(--line)}
 .sound-story-card section:last-child{margin-bottom:0;padding-bottom:4px;border-bottom:0}

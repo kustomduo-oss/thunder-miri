@@ -172,6 +172,14 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 .discovery-card blockquote{margin:0;padding:12px 14px;border-left:3px solid var(--signal);border-radius:0 8px 8px 0;background:#f1f8fd;color:var(--signal-ink);font-size:13.5px;font-weight:800;line-height:1.6}
 .discovery-note{padding:12px 14px;border-radius:9px;background:#fdf6e6;color:#6b5518!important;font-size:12px!important;line-height:1.65!important}.discovery-note strong{color:#8a6a12}
 .discovery-card>a{font-size:13px;font-weight:900}
+
+/* 광고 배너(.maker-note)는 여러 페이지가 함께 쓰므로 style.css에 있다.
+   여기서는 첫 화면 폭(1120px)에 맞춘 전체 너비 띠로만 조정한다. */
+.landing-body .maker-note{padding-left:max(22px,calc((100vw - 1120px)/2));
+  padding-right:max(22px,calc((100vw - 1120px)/2))}
+@media(max-width:620px){
+  .landing-body .maker-note{padding-left:18px;padding-right:18px}
+}
 .landing-body .site-footer{margin-top:0}
 .landing-body .site-header .inner{max-width:1120px}
 
