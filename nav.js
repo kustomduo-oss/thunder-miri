@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.18';
+  var SITE_VERSION = '2026.08.19';
   var header =
     '<header class="site-header"><div class="inner">' +
       '<a class="brand" href="index.html"><span class="brand-mark"><img src="thundermiri-icon-192.png" alt="" /></span><span class="brand-full">동탄이네 썬더미리</span><span class="brand-short">동탄이네 썬더미리</span></a>' +
@@ -201,9 +201,53 @@
     }
   }
 
+  /* ---------------- 방문 분석 (GA4 · Microsoft Clarity) ----------------
+     여기 한 곳에 두면 nav.js를 부르는 전 페이지에 한 번에 적용된다.
+     ID는 브라우저에 노출되는 값이라 공개돼도 문제없다.
+     ⚠️ 개인정보처리방침·쿠키 고지에 두 도구가 명시돼 있어야 한다(privacy.html, cookies.html). */
+  var GA4_ID = 'G-MN7NNJ3B7H';
+  var CLARITY_ID = 'y4jh2weiie';   // Clarity 프로젝트 ID (비어 있으면 로드 안 함)
+
+  /* 실제 서비스 주소에서만 수집한다.
+     로컬(file://·localhost)에서 테스트한 것까지 통계에 섞이면 숫자를 믿을 수 없게 된다. */
+  var LIVE_HOSTS = ['thundermiri.com', 'www.thundermiri.com', 'kustomduo-oss.github.io'];
+
+  function isLive() {
+    return LIVE_HOSTS.indexOf(location.hostname) !== -1;
+  }
+
+  function loadGA4() {
+    if (!GA4_ID) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', GA4_ID);
+  }
+
+  function loadClarity() {
+    if (!CLARITY_ID) return;
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+      t = l.createElement(r); t.async = 1;
+      t.src = 'https://www.clarity.ms/tag/' + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, 'clarity', 'script', CLARITY_ID);
+  }
+
+  function loadAnalytics() {
+    if (!isLive()) return;
+    loadGA4();
+    loadClarity();
+  }
+
   function boot() {
     mount();
     mountMakerNote();
+    loadAnalytics();
   }
 
   if (document.readyState === 'loading') {
