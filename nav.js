@@ -32,10 +32,10 @@
       '<nav class="footer-nav">' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
-        '<a href="privacy.html">개인정보처리방침</a>' +
-        '<a href="cookies.html">쿠키 고지</a>' +
-        '<a href="terms.html">이용약관</a>' +
-        '<a href="disclaimer.html">면책 고지</a>' +
+        '<a href="privacy.html">개인정보<span class="fn-long">처리방침</span></a>' +
+        '<a href="cookies.html">쿠키<span class="fn-long"> 고지</span></a>' +
+        '<a href="terms.html"><span class="fn-long">이용</span>약관</a>' +
+        '<a href="disclaimer.html">면책<span class="fn-long"> 고지</span></a>' +
       '</nav>' +
       '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 썬더미리</div>' +
     '</div></footer>';

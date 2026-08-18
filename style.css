@@ -20,7 +20,16 @@ body{
      CDN이 죽어도 아래 시스템 폰트로 자연스럽게 내려간다. */
   font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;
+  /* 한글은 기본값이면 단어 중간에서도 줄이 바뀐다("적응훈련" → "적응훈/련").
+     keep-all로 단어를 지키고, 끊을 곳 없는 긴 영문·URL만 예외로 쪼갠다.
+     (index.html은 landing.css에 같은 규칙이 있다) */
+  word-break:keep-all;overflow-wrap:break-word;
 }
+
+/* 제목은 줄 길이를 고르게 나눠 마지막 줄에 한 단어만 남지 않게 한다.
+   지원하지 않는 브라우저는 무시하므로 그대로 둬도 안전하다. */
+h1,h2,h3,.page-title{text-wrap:balance}
+p,li{text-wrap:pretty}
 a{color:var(--navy);text-decoration:none}
 a:hover{text-decoration:underline}
 
@@ -93,6 +102,13 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .site-footer{background:#fff;border-top:1px solid var(--line);margin-top:30px}
 .site-footer .inner{max-width:var(--wrap);margin:0 auto;padding:26px 18px 34px;text-align:center}
 .footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;margin-bottom:14px}
+/* 좁은 화면에서 6개가 5+1로 감겨 "면책 고지"만 혼자 떨어졌다.
+   라벨 뒷부분(.fn-long)을 접으면 6개가 한 줄에 들어간다 — 글자 크기는 그대로.
+   정식 명칭은 데스크톱과 각 페이지 제목에 그대로 남는다. */
+@media(max-width:620px){
+  .footer-nav{flex-wrap:nowrap;gap:0 14px;justify-content:center}
+  .footer-nav .fn-long{display:none}
+}
 .footer-nav a{color:var(--ink-soft);font-size:13.5px;font-weight:600}
 .footer-brand{font-weight:800;color:var(--navy);margin-bottom:4px}
 .footer-copy{color:var(--ink-soft);font-size:12.5px;line-height:1.7}

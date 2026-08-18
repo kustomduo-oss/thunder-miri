@@ -80,8 +80,10 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 @keyframes recent-bolt-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.55}}
 @media(prefers-reduced-motion:reduce){.hero-bolt.age-0{animation:none}}
 .lightning-age-legend{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:11px;color:#c6dce5;font-size:11.5px}
-.lightning-age-legend span{display:inline-flex;align-items:center;gap:5px}
-.lightning-age-legend i{position:relative;display:inline-block;width:13px;height:17px}
+.lightning-age-legend>span{display:inline-flex;align-items:center}
+/* 간격은 아이콘에만 준다. 항목 전체에 gap을 주면 숫자와 단위 사이도 벌어져
+   "60 분 전"처럼 보인다 */
+.lightning-age-legend i{position:relative;display:inline-block;width:13px;height:17px;margin-right:5px}
 .lightning-age-legend i::before,.lightning-age-legend i::after{content:"";position:absolute;clip-path:polygon(42% 0,88% 0,64% 36%,91% 36%,28% 100%,42% 59%,10% 59%)}
 .lightning-age-legend i::before{inset:-1px;background:#fff}
 .lightning-age-legend i::after{inset:1px;background:currentColor}
@@ -220,6 +222,10 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
   .purpose-hero{gap:18px;padding:24px 18px 54px}
   .purpose-copy h1{font-size:30px;line-height:1.1;margin-bottom:10px}
   .purpose-lead{font-size:14.5px;line-height:1.65;margin-bottom:8px}
+  /* 범례는 한 줄로. 폭을 먹던 원인은 글자 크기가 아니라 "분 전"의 6번 반복이라,
+     단위는 마지막 항목에만 남긴다 → 11.5px 그대로 한 줄에 들어간다 */
+  .lightning-age-legend{display:flex;flex-wrap:nowrap;gap:0 6px;justify-content:space-between}
+  .lightning-age-legend>span:not(:last-child) .lg-unit{display:none}
   .purpose-boundary{padding:14px}
   .purpose-map{padding:16px;border-radius:17px}
   .map-radar{height:260px}.ring-a{width:120px;height:120px}.ring-b{width:230px;height:230px}

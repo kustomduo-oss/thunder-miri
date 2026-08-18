@@ -24,8 +24,8 @@
   <link rel="icon" type="image/png" href="thundermiri-icon-192.png" />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
-<link rel="stylesheet" href="style.css?v=sticky-ad-1" />
-  <link rel="stylesheet" href="landing.css?v=mobile-order-1" />
+<link rel="stylesheet" href="style.css?v=wrap-1" />
+  <link rel="stylesheet" href="landing.css?v=wrap-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -67,12 +67,12 @@
       </div>
 
       <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시간별 색상">
-        <span><i class="age-0"></i>10분 전</span>
-        <span><i class="age-1"></i>20분 전</span>
-        <span><i class="age-2"></i>30분 전</span>
-        <span><i class="age-3"></i>40분 전</span>
-        <span><i class="age-4"></i>50분 전</span>
-        <span><i class="age-5"></i>60분 전</span>
+        <span><i class="age-0"></i>10<span class="lg-unit">분 전</span></span>
+        <span><i class="age-1"></i>20<span class="lg-unit">분 전</span></span>
+        <span><i class="age-2"></i>30<span class="lg-unit">분 전</span></span>
+        <span><i class="age-3"></i>40<span class="lg-unit">분 전</span></span>
+        <span><i class="age-4"></i>50<span class="lg-unit">분 전</span></span>
+        <span><i class="age-5"></i>60<span class="lg-unit">분 전</span></span>
       </div>
       <p class="hero-lightning-status" id="heroLightningStatus">최근 1시간 이내 낙뢰 관측 정보 불러오는 중...</p>
       <div class="hero-tl" id="heroLightningTimeline">
@@ -205,6 +205,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="landing.js?v=mobile-order-1" defer></script>
-<script src="nav.js?v=mobile-order-1" defer></script>
+<script src="nav.js?v=wrap-1" defer></script>
 </body>
 </html>
