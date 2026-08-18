@@ -14,8 +14,8 @@
   <link rel="icon" type="image/png" href="thundermiri-icon-192.png" />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
-<link rel="stylesheet" href="style.css?v=banner-link-1" />
-  <link rel="stylesheet" href="landing.css?v=banner-link-1" />
+<link rel="stylesheet" href="style.css?v=sticky-ad-1" />
+  <link rel="stylesheet" href="landing.css?v=sticky-ad-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -118,21 +118,24 @@
     </div>
   </section>
 
-  <a class="maker-note" href="https://smartstore.naver.com/kustomduo/products/6140003102" target="_blank" rel="noopener noreferrer">
-    <div class="maker-sticker">
-      <picture><source srcset="sticker-hi.webp" type="image/webp" />
-        <img src="sticker-hi.png" alt="'동탄이' 인식표를 달고 손을 흔드는 동탄이" width="380" height="420" /></picture>
-      <picture><source srcset="sticker-fighting.webp" type="image/webp" />
-        <img src="sticker-fighting.png" alt="" aria-hidden="true" width="355" height="420" /></picture>
-      <picture><source srcset="sticker-thanks.webp" type="image/webp" />
-        <img src="sticker-thanks.png" alt="" aria-hidden="true" width="389" height="420" /></picture>
-    </div>
-    <div class="maker-copy">
-      <p class="maker-line">도움이 되셨다면</p>
-      <p class="maker-sub">동탄이네 인식표 한 개만 사줍쇼 꾸벅</p>
-      <span class="maker-cta">인식표 보러 가기 →</span>
-    </div>
-  </a>
+  <div class="maker-note" id="makerNote" hidden>
+    <a class="maker-note-link" href="https://smartstore.naver.com/kustomduo/products/6140003102" target="_blank" rel="noopener noreferrer">
+      <div class="maker-sticker">
+        <picture><source srcset="sticker-hi.webp" type="image/webp" />
+          <img src="sticker-hi.png" alt="'동탄이' 인식표를 달고 손을 흔드는 동탄이" width="380" height="420" /></picture>
+        <picture><source srcset="sticker-fighting.webp" type="image/webp" />
+          <img src="sticker-fighting.png" alt="" aria-hidden="true" width="355" height="420" loading="lazy" /></picture>
+        <picture><source srcset="sticker-thanks.webp" type="image/webp" />
+          <img src="sticker-thanks.png" alt="" aria-hidden="true" width="389" height="420" loading="lazy" /></picture>
+      </div>
+      <div class="maker-copy">
+        <p class="maker-line">도움이 되셨다면</p>
+        <p class="maker-sub">동탄이네 인식표 한 개만 사줍쇼 꾸벅</p>
+        <span class="maker-cta">인식표 보러 가기 →</span>
+      </div>
+    </a>
+    <button type="button" class="maker-close" id="makerNoteClose" aria-label="광고 닫기">×</button>
+  </div>
 
   <section class="content-discovery" aria-labelledby="contentDiscoveryTitle">
     <div class="content-discovery-heading">
@@ -192,6 +195,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="landing.js?v=addr-order-1" defer></script>
-<script src="nav.js?v=brand-thundermiri-1" defer></script>
+<script src="nav.js?v=sticky-ad-1" defer></script>
 </body>
 </html>

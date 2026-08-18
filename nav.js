@@ -149,9 +149,62 @@
     refreshSubscriptionStatus();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mount);
-  } else {
+  // ── 하단 고정 광고 배너 ──────────────────────────────────
+  // 레이더를 보러 온 사람을 가리지 않도록, 글 영역에 닿았을 때만 올라온다.
+  // 닫으면 그 탭을 닫을 때까지 다시 뜨지 않는다(sessionStorage).
+  function mountMakerNote() {
+    var note = document.getElementById('makerNote');
+    if (!note) return;
+
+    var DISMISS_KEY = 'thunder_maker_note_dismissed';
+    try {
+      if (sessionStorage.getItem(DISMISS_KEY)) { note.remove(); return; }
+    } catch (e) { /* 프라이빗 모드 등 — 무시하고 계속 */ }
+
+    // 이 요소가 화면에 들어오면 "읽기 시작했다"고 본다.
+    // index=콘텐츠 섹션, 하위 페이지=본문 카드 (문서 순서상 먼저 오는 것이 잡힘)
+    var trigger = document.querySelector('.content-discovery, .story-card, .sound-story-card');
+    if (!trigger) return;
+
+    note.hidden = false;
+
+    function show() {
+      note.classList.add('is-shown');
+      // 고정 배너가 푸터를 가리지 않도록 문서 아래에 자리를 만든다
+      document.body.style.paddingBottom = note.offsetHeight + 'px';
+    }
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (en) { return en.isIntersecting; })) {
+          show();
+          io.disconnect();
+        }
+      }, { rootMargin: '0px 0px -15% 0px' });
+      io.observe(trigger);
+    } else {
+      show();   // 구형 브라우저는 그냥 보여준다
+    }
+
+    var closeBtn = document.getElementById('makerNoteClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        note.classList.remove('is-shown');
+        document.body.style.paddingBottom = '';
+        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) {}
+        window.setTimeout(function () { note.remove(); }, 320);   // 사라지는 동작이 끝난 뒤 제거
+      });
+    }
+  }
+
+  function boot() {
     mount();
+    mountMakerNote();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
   }
 })();
