@@ -6,6 +6,16 @@
   <title>썬더미리 — 우리 동네 천둥번개를 미리 알려드려요</title>
   <meta name="description" content="기상청 낙뢰 관측 정보를 5분마다 확인해, 우리 동네로 다가오는 천둥번개를 보호자에게 빠르게 알려드립니다." />
   <meta name="theme-color" content="#0c3448" />
+  <script>
+    /* 가입을 끝낸 기기에는 레이더를 먼저 보여준다.
+       화면이 그려지기 전에 정해져야 순서가 바뀌며 깜빡이지 않으므로 head에서 동기로 실행한다. */
+    try {
+      if (localStorage.getItem('thunder_returning')) {
+        document.documentElement.classList.add('has-radar-first');
+      }
+    } catch (e) { /* 저장이 막힌 환경 — 첫 방문 화면 그대로 둔다 */ }
+  </script>
+
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="썬더미리" />
@@ -15,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=sticky-ad-1" />
-  <link rel="stylesheet" href="landing.css?v=sticky-ad-1" />
+  <link rel="stylesheet" href="landing.css?v=mobile-order-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="landing-body">
@@ -194,7 +204,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=addr-order-1" defer></script>
-<script src="nav.js?v=sticky-ad-1" defer></script>
+<script src="landing.js?v=mobile-order-1" defer></script>
+<script src="nav.js?v=mobile-order-1" defer></script>
 </body>
 </html>

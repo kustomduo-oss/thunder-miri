@@ -935,6 +935,9 @@ async function completeSubscription(){
   // 재접속해도 같은 위치의 핀과 반경을 복원할 수 있게 정확한 좌표를 기억해둔다.
   saveLocationProfile();
 
+  // 다음 방문부터는 소개 문구 대신 레이더를 먼저 보여준다(가입을 끝낸 기기 표시).
+  try{ localStorage.setItem("thunder_returning","1"); }catch(error){}
+
   closeNotificationSheet();
   $("formView").style.display="none";
   $("successView").classList.add("show");

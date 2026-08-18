@@ -203,7 +203,11 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 
 @media(max-width:900px){
   .section-pad{padding-top:76px;padding-bottom:76px}
-  .purpose-hero{grid-template-columns:1fr;grid-template-areas:"copy" "map" "signup";gap:32px;min-height:0;padding-top:48px;padding-bottom:64px}
+  .purpose-hero{grid-template-columns:1fr;grid-template-areas:"copy" "signup" "map";gap:32px;min-height:0;padding-top:48px;padding-bottom:64px}
+  /* 가입을 끝낸 기기(head 인라인 스크립트가 붙임)는 레이더를 먼저 본다.
+     소개 문구는 이미 아는 내용이라 접는다 — 검색엔진·첫 방문자에겐 그대로 보인다. */
+  html.has-radar-first .purpose-hero{grid-template-areas:"map" "signup"}
+  html.has-radar-first .purpose-copy{display:none}
   /* static이면 위 스택 컨텍스트가 풀려 지도가 헤더를 덮는다.
      단 relative에선 기본 규칙의 top:86px가 살아나 지도가 아래로 밀리므로 top:auto 필수 */
   .purpose-map{position:relative;top:auto;z-index:0;max-width:620px;width:100%}
@@ -213,9 +217,9 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 
 @media(max-width:620px){
   .section-pad{padding:64px 18px}
-  .purpose-hero{gap:26px;padding:38px 18px 54px}
-  .purpose-copy h1{font-size:36px;line-height:1.15}
-  .purpose-lead{font-size:15px;line-height:1.7}
+  .purpose-hero{gap:18px;padding:24px 18px 54px}
+  .purpose-copy h1{font-size:30px;line-height:1.1;margin-bottom:10px}
+  .purpose-lead{font-size:14.5px;line-height:1.65;margin-bottom:8px}
   .purpose-boundary{padding:14px}
   .purpose-map{padding:16px;border-radius:17px}
   .map-radar{height:260px}.ring-a{width:120px;height:120px}.ring-b{width:230px;height:230px}

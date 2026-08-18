@@ -131,6 +131,7 @@
         try {
           localStorage.removeItem('thunder_grid');
           localStorage.removeItem('thunder_alert_profile');
+          localStorage.removeItem('thunder_returning');   // 다시 첫 방문 화면으로
         } catch (error) {}
         closeManage();
         statusBar.hidden = true;
