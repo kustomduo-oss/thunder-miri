@@ -42,6 +42,9 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 # 이 시간 넘게 성공 기록이 없으면 "그동안 발송이 멈춰 있었다"고 판단한다(정상 주기 5분).
 STALE_MINUTES = int(os.environ.get("STALE_MINUTES", "15"))
+# 기상청 조회가 연속 몇 회 실패하면 경보를 보낼지. 순간적인 끊김으로 경보가
+# 남발되면 정작 진짜 장애 때 무시하게 된다.
+FAIL_ALERT_STREAK = int(os.environ.get("FAIL_ALERT_STREAK", "2"))
 
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
@@ -222,8 +225,10 @@ def _heartbeat_url(public=False):
 
 
 def read_heartbeat():
+    # 공개 URL은 CDN 캐시 때문에 방금 쓴 값이 바로 안 보인다(?cb=로도 확실하지 않음).
+    # 연속 실패 횟수를 세려면 직전에 쓴 값을 정확히 읽어야 하므로 인증 경로로 읽는다.
     try:
-        res = SB_SESSION.get(f"{_heartbeat_url(public=True)}?cb={int(time.time())}", timeout=15)
+        res = SB_SESSION.get(_heartbeat_url(), headers=sb_headers(), timeout=15)
         if res.status_code == 200:
             return res.json()
     except Exception as e:
@@ -231,12 +236,8 @@ def read_heartbeat():
     return None
 
 
-def write_heartbeat(sent_count, strike_count):
-    body = json.dumps({
-        "last_success": datetime.now(KST).isoformat(timespec="seconds"),
-        "sent": sent_count,
-        "strikes": strike_count,
-    }, ensure_ascii=False).encode()
+def _put_heartbeat(data):
+    body = json.dumps(data, ensure_ascii=False).encode()
     headers = sb_headers()
     headers["x-upsert"] = "true"
     try:
@@ -245,6 +246,34 @@ def write_heartbeat(sent_count, strike_count):
             print(f"[심장박동 기록 실패] {res.status_code} {res.text[:120]}")
     except Exception as e:
         print(f"[심장박동 기록 실패] {e}")
+
+
+def write_heartbeat(sent_count, strike_count):
+    _put_heartbeat({
+        "last_success": datetime.now(KST).isoformat(timespec="seconds"),
+        "sent": sent_count,
+        "strikes": strike_count,
+        "fail_streak": 0,          # 성공했으니 연속 실패 기록을 지운다
+    })
+
+
+def record_failure(reason):
+    """조회 실패를 기록하고, 연속 몇 번째인지 돌려준다.
+
+    기상청은 정각 부하 등으로 가끔 순간적으로 끊긴다. 한 번 튈 때마다 경보를
+    보내면 금세 무시하게 되므로(경보 시스템이 죽는 가장 흔한 이유), 몇 번째
+    연속 실패인지를 남겨 호출부가 판단하게 한다.
+    last_success는 건드리지 않는다 — 공백 감지의 기준이기 때문이다.
+    """
+    hb = read_heartbeat() or {}
+    streak = int(hb.get("fail_streak", 0)) + 1
+    hb.update({
+        "fail_streak": streak,
+        "last_fail": datetime.now(KST).isoformat(timespec="seconds"),
+        "last_fail_reason": str(reason)[:200],
+    })
+    _put_heartbeat(hb)
+    return streak
 
 
 def check_missed_runs():
@@ -431,8 +460,15 @@ def run_once():
         strikes = parse_strikes(fetch_lightning_nationwide())
     except Exception as e:
         # 여기서 조용히 빈 목록으로 넘어가면 '낙뢰 없음'과 구별되지 않는다.
-        # 천둥이 치는 중에도 알림이 안 가므로 즉시 알리고 실패로 끝낸다.
-        notify_admin(f"⚠️ 기상청 낙뢰 조회 실패 — 이번 주기 알림을 보내지 못했습니다.\n"
+        # 다만 기상청은 가끔 순간적으로 끊기므로, 한 번 튄 것까지 경보를 보내면
+        # 곧 무시하게 된다. 연속 2회(=10분간 깜깜)부터 알리고 실패로 끝낸다.
+        streak = record_failure(f"{type(e).__name__}: {e}")
+        print(f"[낙뢰 조회 실패] 연속 {streak}회")
+        if streak < FAIL_ALERT_STREAK:
+            print(f"[경보 보류] {FAIL_ALERT_STREAK}회 연속부터 알립니다. 이번 주기는 건너뜁니다.")
+            return
+        notify_admin(f"⚠️ 기상청 낙뢰 조회가 연속 {streak}회 실패했습니다 "
+                     f"(약 {streak * 5}분간 낙뢰를 확인하지 못함).\n"
                      f"{type(e).__name__}: {str(e)[:200]}")
         raise
 
