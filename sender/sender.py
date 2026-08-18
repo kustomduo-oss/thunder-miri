@@ -35,6 +35,14 @@ VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:kustomduo@gmail.com").strip()
 
+# 관리자 경보용 텔레그램(동탄이 봇 재사용). 사용자에게 가는 알림과는 무관하며,
+# 발송이 조용히 멈추는 상황을 운영자가 알기 위한 채널이다.
+# 값이 없으면 경보만 건너뛰고 발송은 정상 진행한다.
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+# 이 시간 넘게 성공 기록이 없으면 "그동안 발송이 멈춰 있었다"고 판단한다(정상 주기 5분).
+STALE_MINUTES = int(os.environ.get("STALE_MINUTES", "15"))
+
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
 
@@ -77,6 +85,28 @@ def load_local_env():
 
 
 # ----------------------------------------------------------------
+# 관리자 경보 (텔레그램)
+# ----------------------------------------------------------------
+def notify_admin(message):
+    """운영자에게만 보내는 경보. 실패해도 발송 본체를 막지 않는다."""
+    if not (TELEGRAM_TOKEN and TELEGRAM_CHAT_ID):
+        print(f"[경보-미설정] {message}")
+        return False
+    try:
+        res = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            json={"chat_id": TELEGRAM_CHAT_ID, "text": f"[썬더미리] {message}"},
+            timeout=15,
+        )
+        res.raise_for_status()
+        print(f"[경보 발송] {message}")
+        return True
+    except Exception as e:
+        print(f"[경보 실패] {e} / 원래 메시지: {message}")
+        return False
+
+
+# ----------------------------------------------------------------
 # 공통 HTTP (일시적 지연 대비 재시도)
 # ----------------------------------------------------------------
 def http_get(url, params, tries=3, timeout=30):
@@ -105,8 +135,15 @@ def haversine(lat1, lon1, lat2, lon2):
 # ----------------------------------------------------------------
 # 기상청 조회 (동탄이 봇에서 재활용, 위치 매개변수화)
 # ----------------------------------------------------------------
-def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15):
-    """기상청 API허브 최근 낙뢰 좌표 목록"""
+def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15, strict=False):
+    """기상청 API허브 최근 낙뢰 좌표 목록.
+
+    strict=False면 실패해도 빈 목록을 돌려준다(레이더 생성용 — 그림이 한 주기
+    낡을 뿐이라 치명적이지 않다).
+    strict=True면 예외를 그대로 올린다. 발송 경로에서는 '조회 실패'와
+    '낙뢰 없음'을 반드시 구분해야 하기 때문이다 — 둘을 섞으면 기상청이 죽은
+    날에도 워크플로우는 초록불이고 천둥이 쳐도 알림이 안 간다.
+    """
     url = "https://apihub.kma.go.kr/api/typ01/url/lgt_pnt.php"
     params = {
         "tm": datetime.now(KST).strftime("%Y%m%d%H%M"),
@@ -129,13 +166,15 @@ def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15):
         return items
     except Exception as e:
         print(f"[낙뢰 조회 실패] {e}")
+        if strict:
+            raise
         return []
 
 
 def fetch_lightning_nationwide():
     """한반도 전역의 최근 낙뢰를 한 번에 가져온다. 가입자가 몇 명이든 주기당 1회."""
     return fetch_lightning_data(NATIONAL_LAT, NATIONAL_LON, NATIONAL_RANGE_KM,
-                                lookback_minutes=LOOKBACK_MINUTES)
+                                lookback_minutes=LOOKBACK_MINUTES, strict=True)
 
 
 def parse_strikes(items):
@@ -164,6 +203,67 @@ def nearest_strike_km(lat, lon, strikes):
         if nearest is None or d < nearest:
             nearest = d
     return nearest
+
+
+# ----------------------------------------------------------------
+# 심장박동 — "돌긴 돌았는가"를 기록한다
+#
+# 워크플로우가 아예 실행되지 않으면(cron-job.org 중단, Actions 장애) 실패 기록조차
+# 남지 않아 눈치채기 어렵다. 성공할 때마다 시각을 남겨두면, 다음에 살아난 실행이
+# "그동안 몇 번 걸렀는지"를 역산해 알릴 수 있다.
+# 기존 radar 버킷에 파일 하나로 두어 DB 스키마 변경이 필요 없다.
+# ----------------------------------------------------------------
+HEARTBEAT_FILE = "heartbeat.json"
+
+
+def _heartbeat_url(public=False):
+    kind = "object/public" if public else "object"
+    return f"{SUPABASE_URL}/storage/v1/{kind}/radar/{HEARTBEAT_FILE}"
+
+
+def read_heartbeat():
+    try:
+        res = SB_SESSION.get(f"{_heartbeat_url(public=True)}?cb={int(time.time())}", timeout=15)
+        if res.status_code == 200:
+            return res.json()
+    except Exception as e:
+        print(f"[심장박동 읽기 실패] {e}")
+    return None
+
+
+def write_heartbeat(sent_count, strike_count):
+    body = json.dumps({
+        "last_success": datetime.now(KST).isoformat(timespec="seconds"),
+        "sent": sent_count,
+        "strikes": strike_count,
+    }, ensure_ascii=False).encode()
+    headers = sb_headers()
+    headers["x-upsert"] = "true"
+    try:
+        res = SB_SESSION.post(_heartbeat_url(), headers=headers, data=body, timeout=20)
+        if res.status_code >= 400:
+            print(f"[심장박동 기록 실패] {res.status_code} {res.text[:120]}")
+    except Exception as e:
+        print(f"[심장박동 기록 실패] {e}")
+
+
+def check_missed_runs():
+    """직전 성공 이후 얼마나 비었는지 확인하고, 오래 비었으면 경보를 보낸다."""
+    hb = read_heartbeat()
+    if not hb or not hb.get("last_success"):
+        return
+    try:
+        last = datetime.fromisoformat(hb["last_success"])
+    except ValueError:
+        return
+    gap_min = (datetime.now(KST) - last).total_seconds() / 60
+    if gap_min >= STALE_MINUTES:
+        missed = int(gap_min // 5) - 1     # 정상 주기 5분 기준
+        notify_admin(
+            f"발송이 {gap_min:.0f}분간 멈춰 있었습니다 (약 {missed}회 거름).\n"
+            f"마지막 성공: {hb['last_success']}\n"
+            f"지금은 복구되어 정상 실행 중입니다."
+        )
 
 
 # ----------------------------------------------------------------
@@ -317,6 +417,9 @@ def build_message(alert_type, dist=None):
 # 한 번 확인 (클라우드에서 5분마다 호출)
 # ----------------------------------------------------------------
 def run_once():
+    # 지난 주기들이 통째로 비어 있었는지 먼저 확인한다(복구 시점에 알리기 위함)
+    check_missed_runs()
+
     subs = get_subscribers()
     if not subs:
         print(f"[{datetime.now():%H:%M:%S}] 구독자 없음(또는 푸시토큰 없음). 종료.")
@@ -324,7 +427,14 @@ def run_once():
 
     # 전국 낙뢰를 한 번만 받아온다. 이후 거리 계산은 각자의 좌표로 우리가 직접 한다.
     # (격자로 묶어 조회하던 방식은 가입자가 흩어질수록 기상청 호출이 늘어 한도에 걸렸다)
-    strikes = parse_strikes(fetch_lightning_nationwide())
+    try:
+        strikes = parse_strikes(fetch_lightning_nationwide())
+    except Exception as e:
+        # 여기서 조용히 빈 목록으로 넘어가면 '낙뢰 없음'과 구별되지 않는다.
+        # 천둥이 치는 중에도 알림이 안 가므로 즉시 알리고 실패로 끝낸다.
+        notify_admin(f"⚠️ 기상청 낙뢰 조회 실패 — 이번 주기 알림을 보내지 못했습니다.\n"
+                     f"{type(e).__name__}: {str(e)[:200]}")
+        raise
 
     print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 전국 낙뢰 {len(strikes)}건")
 
@@ -341,6 +451,9 @@ def run_once():
         reset_lightning_bulk(pending_resets)
         if pending_marks or pending_resets:
             print(f"[DB] 단계기록 {len(pending_marks)}명 · 리셋 {len(pending_resets)}명 일괄 반영")
+
+    # 여기까지 왔으면 이번 주기는 정상이다. 다음 실행이 공백을 판단할 근거를 남긴다.
+    write_heartbeat(len(pending_marks), len(strikes))
 
 
 def _run_subscribers(subs, strikes, pending_marks, pending_resets):

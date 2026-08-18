@@ -36,3 +36,22 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # 발송 스텝이 죽으면(파이썬이 경보를 보내기 전에 죽은 경우 포함) 여기서 알린다.
+      # 관리자에게만 가는 텔레그램이며, 사용자 알림과는 무관하다.
+      - name: 실패 알림
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TELEGRAM_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "텔레그램 미설정 — 경보 건너뜀"; exit 0
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=[썬더미리] 🚨 발송 워크플로우 실패. 천둥이 쳐도 알림이 안 갈 수 있습니다.
+          로그: ${RUN_URL}" > /dev/null
