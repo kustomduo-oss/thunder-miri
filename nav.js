@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.19c';
+  var SITE_VERSION = '2026.08.19d';
   var header =
     '<header class="site-header"><div class="inner">' +
       '<a class="brand" href="index.html"><span class="brand-mark"><img src="thundermiri-icon-192.png" alt="" /></span><span class="brand-full">동탄이네 썬더미리</span><span class="brand-short">동탄이네 썬더미리</span></a>' +
@@ -11,9 +11,8 @@
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
         '<a href="index.html#radar">우리 동네 레이더</a>' +
         '<a href="index.html#signup">알림 받기</a>' +
-        '<a href="story.html">만든 이야기</a>' +
-        '<a href="guide-training.html">동탄이의 소리 적응</a>' +
         '<a href="how.html">작동 방식</a>' +
+        '<a href="blog.html">동탄이네 이야기</a>' +
       '</nav>' +
     '</div></header>' +
     '<div class="alert-status-bar" id="alertStatusBar" hidden>' +
@@ -34,7 +33,6 @@
     '<footer class="site-footer"><div class="inner">' +
       '<div class="footer-brand">썬더미리</div>' +
       '<nav class="footer-nav">' +
-        '<a href="blog.html">글 모음</a>' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
         '<a href="privacy.html">개인정보<span class="fn-long">처리방침</span></a>' +
