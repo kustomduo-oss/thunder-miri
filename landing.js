@@ -378,7 +378,7 @@ function setHeroRadarMode(mode){
     if(isWalk) renderWalkWeather();
   }
   const status = document.getElementById("mapStatus");
-  if(status) status.textContent = isLightning ? "10분 단위로 확인하는 최근 낙뢰 관측" : (isWalk ? "산책 전 우리 동네 2시간 비 예보" : "앞으로 예상되는 강수 영역");
+  if(status) status.textContent = isLightning ? "5분마다 확인하는 최근 낙뢰 관측" : (isWalk ? "산책 전 우리 동네 2시간 비 예보" : "앞으로 예상되는 강수 영역");
   window.setTimeout(() => heroMap && heroMap.invalidateSize(), 0);
 }
 
