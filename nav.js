@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.19';
+  var SITE_VERSION = '2026.08.19b';
   var header =
     '<header class="site-header"><div class="inner">' +
       '<a class="brand" href="index.html"><span class="brand-mark"><img src="thundermiri-icon-192.png" alt="" /></span><span class="brand-full">동탄이네 썬더미리</span><span class="brand-short">동탄이네 썬더미리</span></a>' +
@@ -13,6 +13,7 @@
         '<a href="index.html#signup">알림 받기</a>' +
         '<a href="story.html">만든 이야기</a>' +
         '<a href="guide-training.html">동탄이의 소리 적응</a>' +
+        '<a href="how.html">작동 방식</a>' +
       '</nav>' +
     '</div></header>' +
     '<div class="alert-status-bar" id="alertStatusBar" hidden>' +
@@ -40,7 +41,7 @@
         '<a href="terms.html"><span class="fn-long">이용</span>약관</a>' +
         '<a href="disclaimer.html">면책<span class="fn-long"> 고지</span></a>' +
       '</nav>' +
-      '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 썬더미리 · <span class="footer-version">v' + SITE_VERSION + '</span></div>' +
+      '<div class="footer-copy">기상청 관측 정보를 바탕으로 제공하는 참고용 천둥번개 알림<br/>문의: <a href="https://ig.me/m/dongtan2ne" target="_blank" rel="noopener">인스타그램 DM</a> · <a href="mailto:kustomduo@gmail.com">kustomduo@gmail.com</a><br/>© 2026 썬더미리 · <span class="footer-version">v' + SITE_VERSION + '</span></div>' +
     '</div></footer>';
 
   function mount() {
