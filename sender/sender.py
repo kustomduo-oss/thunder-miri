@@ -48,6 +48,10 @@ FAIL_ALERT_STREAK = int(os.environ.get("FAIL_ALERT_STREAK", "2"))
 
 WARNING_RADIUS_KM = float(os.environ.get("WARNING_RADIUS_KM", "30"))  # 30km 이내: 임박
 WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이내: 접근
+# 반경 안에 낙뢰가 몇 건 이상이어야 "뇌우가 왔다"고 볼지.
+# 1로 두면 뇌우와 무관한 외딴 한 발에도 알림이 나간다(2026-08-21 오경보).
+# 진짜 뇌우는 한 주기에 수십~수백 건이라 3으로 올려도 지연은 거의 없다.
+MIN_STRIKES = int(os.environ.get("MIN_STRIKES", "3"))
 
 # HTTP 연결 재사용 세션.
 # 매 요청마다 TLS 손잡이를 새로 하면 느리다(실측: 푸시 330ms→146ms, Supabase 170ms→42ms).
@@ -207,14 +211,30 @@ NEAR_DEG = WATCH_RADIUS_KM / 80.0
 
 def nearest_strike_km(lat, lon, strikes):
     """이 좌표에서 가장 가까운 낙뢰까지 거리(km). 관측 범위 안에 없으면 None."""
+    nearest, _, _ = strike_summary(lat, lon, strikes)
+    return nearest
+
+
+def strike_summary(lat, lon, strikes):
+    """(최근접 거리, 50km 이내 개수, 30km 이내 개수)를 한 번에 센다.
+
+    개수가 필요한 이유: 뇌우와 멀리 떨어진 곳에 한 발만 튀는 낙뢰가 실제로 있다.
+    2026-08-21에 서해 뇌우(197건)와 무관하게 내륙에 딱 1건이 찍혀
+    45km 알림이 나갔는데, 다가오는 뇌우가 아니라 준비할 것이 없는 상황이었다.
+    """
     nearest = None
+    watch_n = warn_n = 0
     for s_lat, s_lon in strikes:
         if abs(s_lat - lat) > NEAR_DEG or abs(s_lon - lon) > NEAR_DEG:
             continue
         d = haversine(lat, lon, s_lat, s_lon)
+        if d <= WATCH_RADIUS_KM:
+            watch_n += 1
+            if d <= WARNING_RADIUS_KM:
+                warn_n += 1
         if nearest is None or d < nearest:
             nearest = d
-    return nearest
+    return nearest, watch_n, warn_n
 
 
 # ----------------------------------------------------------------
@@ -515,13 +535,17 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
             continue
 
         # 1) 낙뢰 거리 → 단계(none/watch/warning) — 예보가 아니라 '실측' 기반
-        nearest = nearest_strike_km(lat, lon, strikes)
+        #    거리만 보지 않고 개수도 본다. 외딴 한 발은 뇌우 접근이 아니다.
+        nearest, watch_n, warn_n = strike_summary(lat, lon, strikes)
         lightning_level = None
         if nearest is not None:
-            if nearest <= WARNING_RADIUS_KM:
+            if nearest <= WARNING_RADIUS_KM and warn_n >= MIN_STRIKES:
                 lightning_level = "warning"   # 30km 이내: 임박
-            elif nearest <= WATCH_RADIUS_KM:
+            elif nearest <= WATCH_RADIUS_KM and watch_n >= MIN_STRIKES:
                 lightning_level = "watch"      # 50km 이내: 접근
+            elif watch_n:
+                print(f"  {s.get('dong') or ''}: {nearest:.0f}km에 낙뢰 {watch_n}건 "
+                      f"— {MIN_STRIKES}건 미만이라 보류")
 
         if lightning_level is None:
             # 낙뢰가 사라졌으니 단계 리셋 → 다음 천둥 때 다시 즉시 알림
