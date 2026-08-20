@@ -18,6 +18,7 @@ import io
 import json
 import os
 import struct
+import time
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -59,7 +60,25 @@ NO_ECHO = -25000     # 관측영역 안이지만 비 없음
 OUT_OF_RANGE = -30000  # 관측영역 밖
 
 
-def fetch_radar(tm=None, tries=4):
+# 이 스크립트는 5분마다 실행된다. 한 번이 5분을 넘기면 다음 실행에 취소돼
+# 그 주기의 레이더가 통째로 사라진다(실측: 12회 중 4회 취소, 5~7.5분 소요).
+# 알림을 받고 레이더를 보러 온 사람에게 낡은 화면을 보여주게 되므로,
+# "느리면 포기하고 다음 주기에 다시" 하는 편이 낫다.
+RADAR_TIMEOUT = int(os.environ.get("RADAR_TIMEOUT", "60"))       # 1회 수신 상한(초)
+QPF_TIMEOUT = int(os.environ.get("QPF_TIMEOUT", "45"))           # 예측 1장 상한(초)
+DEADLINE_SEC = int(os.environ.get("RADAR_DEADLINE_SEC", "210"))  # 전체 마감(3분 30초)
+_started = time.monotonic()
+
+
+def over_deadline(what=""):
+    """마감을 넘겼으면 True. 남은 작업을 건너뛰고 이미 만든 것만 남긴다."""
+    if time.monotonic() - _started > DEADLINE_SEC:
+        print(f"[마감] {DEADLINE_SEC}초 초과 — {what} 건너뜀 (다음 주기에 다시 만듭니다)")
+        return True
+    return False
+
+
+def fetch_radar(tm=None, tries=3):
     """레이더 합성자료(binary) 수신. 최신 파일이 아직 없을 수 있어 시각을 거슬러 재시도."""
     now = datetime.now()
     for k in range(tries):
@@ -69,7 +88,7 @@ def fetch_radar(tm=None, tries=4):
             res = requests.get(RADAR_URL, params={
                 "tm": stamp, "cmp": "HSR", "qcd": "KMA", "obs": "ECHO",
                 "map": "HB", "disp": "B", "authKey": KMA_API_KEY,
-            }, timeout=180)
+            }, timeout=RADAR_TIMEOUT)
             # 정상 응답은 수 MB. 짧으면 "자료가 없습니다" 같은 안내문.
             if len(res.content) > 100000:
                 return res.content, stamp
@@ -169,6 +188,10 @@ def build_forecast(lat, lon, key):
 
     frames, bounds = [], None
     for ef in QPF_STEPS:
+        # 예측은 관측보다 뒤에 만든다. 늦어지면 여기서 끊어도
+        # 낙뢰가 든 관측 JSON은 이미 올라가 있다.
+        if over_deadline(f"예측 +{ef}분 이후"):
+            break
         out = _qpf_overlay(base, ef, lat, lon)
         if not out or not out[0]:
             continue
@@ -257,7 +280,7 @@ def _qpf_image(base, ef, map_code="HR"):
             "eva": 2, "tm": base.strftime("%Y%m%d%H%M"), "qpf": "B", "ef": ef,
             "map": map_code, "grid": 2, "legend": 0 if map_code == "HB" else 1, "size": 600,
             "zoom_level": 0, "zoom_x": 0, "zoom_y": 0, "authKey": KMA_API_KEY,
-        }, timeout=90)
+        }, timeout=QPF_TIMEOUT)
         # 정상은 PNG. 내용이 거의 없는 빈 프레임(수백 바이트)은 버린다.
         if res.content[:4] == b"\x89PNG" and len(res.content) > 3000:
             return res.content
@@ -393,6 +416,8 @@ if __name__ == "__main__":
         raise SystemExit(0)
 
     for (gx, gy), s in grids.items():
+        if over_deadline(f"동네 {gx}_{gy} 이후"):
+            break
         try:
             build_forecast(s["lat"], s["lon"], f"{gx}_{gy}")
         except Exception as e:

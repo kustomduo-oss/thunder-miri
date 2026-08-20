@@ -17,6 +17,9 @@ jobs:
   radar:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    # 5분마다 트리거되므로 그 안에 끝나야 한다. 넘기면 다음 실행에 취소돼
+    # 그 주기의 레이더가 통째로 사라진다. 매달려 있느니 빨리 실패하는 게 낫다.
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
