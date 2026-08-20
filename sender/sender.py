@@ -147,6 +147,15 @@ def fetch_lightning_data(lat, lon, range_km, lookback_minutes=15, strict=False):
     '낙뢰 없음'을 반드시 구분해야 하기 때문이다 — 둘을 섞으면 기상청이 죽은
     날에도 워크플로우는 초록불이고 천둥이 쳐도 알림이 안 간다.
     """
+    # ⚠️ itv가 60 이상이면 기상청이 '최근' 자료를 주지 않는다 (2026-08-21 실측).
+    #    itv<60  → [지금-itv, 지금]        정상
+    #    itv=60  → 데이터 0건
+    #    itv>60  → [지금-itv, 지금-65]     최근 65분이 통째로 빠짐
+    #    호출부가 실수로 60을 넣어도 화면이 비지 않도록 여기서 막는다.
+    if lookback_minutes >= 60:
+        print(f"[낙뢰 조회] itv={lookback_minutes}는 최근 자료가 안 옵니다. 59로 낮춥니다.")
+        lookback_minutes = 59
+
     url = "https://apihub.kma.go.kr/api/typ01/url/lgt_pnt.php"
     params = {
         "tm": datetime.now(KST).strftime("%Y%m%d%H%M"),

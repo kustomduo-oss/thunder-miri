@@ -210,7 +210,8 @@ HB_X_KM, HB_Y_KM = 2305 * GRID_KM, 2881 * GRID_KM     # 1152.5 x 1440.5 km
 def fetch_lightning_national():
     """한반도와 주변 해역의 최근 1시간 낙뢰. sender의 조회 로직을 넓은 반경으로 재사용."""
     import sender as _s
-    return _s.fetch_lightning_data(36.5, 127.8, 500, lookback_minutes=60)
+    # 60을 넣으면 기상청이 최근 자료를 안 준다(0건). 59가 실질 상한이다.
+    return _s.fetch_lightning_data(36.5, 127.8, 500, lookback_minutes=59)
 
 
 def _qpf_overlay(base, ef, lat, lon):
