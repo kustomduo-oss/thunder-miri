@@ -10,6 +10,7 @@ const $ = id => document.getElementById(id);
 const SOUND_CHECK_KEY = "dongtaniSoundCheckPassed";
 const ALERT_PROFILE_KEY = "thunder_alert_profile";
 const SAVED_LOCATION_KEY = "thunder_saved_location";
+const SMALL_LIGHTNING_PREVIEW = new URLSearchParams(location.search).get("preview") === "small-lightning";
 
 function readAlertProfile(){
   try{
@@ -304,11 +305,13 @@ function renderHeroStrikes(step){
   visible.forEach(s => {
     const age = strikeAge(s.tm);
     const at = parseStrikeTime(s.tm);
+    const boltW = SMALL_LIGHTNING_PREVIEW ? (age < 10 ? 24 : 19) : 30;
+    const boltH = SMALL_LIGHTNING_PREVIEW ? (age < 10 ? 27 : 22) : 34;
     L.marker([s.lat,s.lon], {
       zIndexOffset:100000 - Math.min(age,60) * 1000,
       icon:L.divIcon({
-      className:"", iconSize:[30,34], iconAnchor:[15,17],
-      html:`<div class="hero-bolt ${strikeAgeClass(age)}" aria-hidden="true"></div>` }),
+      className:"", iconSize:[boltW,boltH], iconAnchor:[boltW/2,boltH/2],
+      html:`<div class="hero-bolt ${strikeAgeClass(age)}${SMALL_LIGHTNING_PREVIEW ? " preview-compact" : ""}" style="--bolt-w:${boltW}px;--bolt-h:${boltH}px" aria-hidden="true"></div>` }),
       title:`${at ? fmtClock(at) + " · " : ""}${age < 1 ? "방금" : age + "분 전"} 관측된 낙뢰`
     }).addTo(strikeLayer);
   });
