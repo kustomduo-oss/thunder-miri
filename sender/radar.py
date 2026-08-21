@@ -119,10 +119,26 @@ def view_bounds(lat, lon):
             "west": float(np.min(lons)), "east": float(np.max(lons))}
 
 
+def _merc_y(lat_deg):
+    """위도 → 웹 메르카토르 y (Leaflet이 쓰는 좌표계)"""
+    return np.log(np.tan(np.pi / 4 + np.radians(lat_deg) / 2))
+
+
+def _merc_lat(y):
+    """웹 메르카토르 y → 위도"""
+    return np.degrees(2 * np.arctan(np.exp(y)) - np.pi / 2)
+
+
 def latlon_sample_grid(bounds, px):
-    """출력 이미지(위경도 정사각 격자)의 각 픽셀에 대응하는 LCC 좌표를 만든다.
-    이렇게 재투영해야 넓은 범위에서도 한반도가 비뚤어지지 않는다."""
-    lat = np.linspace(bounds["north"], bounds["south"], px)
+    """출력 이미지의 각 픽셀에 대응하는 LCC 좌표를 만든다.
+    이렇게 재투영해야 넓은 범위에서도 한반도가 비뚤어지지 않는다.
+
+    ⚠️ 세로는 '위도 균등'이 아니라 '메르카토르 y 균등'으로 잡는다.
+    Leaflet은 웹 메르카토르 지도라 imageOverlay를 메르카토르 좌표에
+    균등하게 늘린다. 위도 균등으로 그리면 지도가 늘리는 방식과 어긋나
+    화면 가운데가 최대 16km 북쪽으로 밀린다(±520km 범위 실측 계산).
+    2026-08-21에 "강수 위치가 기상청 공식 레이더와 다르다"는 제보로 발견."""
+    lat = _merc_lat(np.linspace(_merc_y(bounds["north"]), _merc_y(bounds["south"]), px))
     lon = np.linspace(bounds["west"], bounds["east"], px)
     lon2, lat2 = np.meshgrid(lon, lat)
     x, y = _fwd.transform(lon2.ravel(), lat2.ravel())
