@@ -236,14 +236,30 @@ def build_forecast(lat, lon, key):
     return meta
 
 
-ments_note = """QPF 이미지 좌표 (실측으로 확정, 2026-08-11)
+qpf_coords_note = """QPF 이미지 좌표 (해안선 6,205점으로 실측, 2026-08-21)
   map=HB, legend=0, size=600 → 600 x 770 PNG
-  20행·769행이 지도 테두리선 → 지도영역 = rows 20..769(750px) x cols 0..599(600px)
-  이 영역이 레이더 HB 격자(2305x2881 x 0.5km = 1152.5 x 1440.5km)와 동일.
-  검증: 서울·부산·울릉도는 해안선 위, 서해/동해 먼바다는 빈 곳으로 정확히 떨어짐."""
+  제목 아래 지도영역 = rows 20..769(750px) x cols 0..599(600px)
+
+  주의: QPF PNG의 HB 영역은 관측 레이더 원시격자(2305x2881)의 중심·범위와
+  같지 않다. 관측 격자 크기를 그대로 압축하면 서울·부산·제주 등이 원본
+  해안선보다 50~70px 남쪽에 찍히고, 지도에서는 강수대가 북쪽으로 밀린다.
+
+  Natural Earth 10m 해안선 전체를 원본 PNG의 검은 해안선에 자동 정합해
+  아래 전용 픽셀 변환을 구했다. 서울·청주·부산·제주·울릉도·대마도로
+  다시 확인했으며 서로 다른 QPF 시각에서도 지도 배경은 동일하다."""
 
 QPF_TOP, QPF_MAPH, QPF_W = 20, 750, 600
-HB_X_KM, HB_Y_KM = 2305 * GRID_KM, 2881 * GRID_KM     # 1152.5 x 1440.5 km
+QPF_X_SCALE = 0.543134810       # col / LCC x(km)
+QPF_X_ORIGIN = 292.551440       # LCC x=0의 원본 PNG col
+QPF_Y_SCALE = -0.530700562      # row / LCC y(km), 남쪽으로 갈수록 row 증가
+QPF_Y_ORIGIN = 330.226337       # LCC y=0의 원본 PNG row(제목 20px 포함)
+
+
+def qpf_pixel_indices(gx, gy):
+    """LCC km 좌표를 제목을 자른 QPF 지도영역의 픽셀 인덱스로 바꾼다."""
+    cc = np.rint(gx * QPF_X_SCALE + QPF_X_ORIGIN).astype(int)
+    rr = np.rint(gy * QPF_Y_SCALE + QPF_Y_ORIGIN - QPF_TOP).astype(int)
+    return cc, rr
 
 
 def fetch_lightning_national():
@@ -268,8 +284,7 @@ def _qpf_overlay(base, ef, lat, lon):
     # 관측과 똑같은 위경도 격자로 재투영 → 두 오버레이가 정확히 겹친다
     bounds = view_bounds(lat, lon)
     gx, gy = latlon_sample_grid(bounds, OUT_PX)
-    cc = np.rint((gx + HB_X_KM / 2) / HB_X_KM * QPF_W).astype(int)
-    rr = np.rint((HB_Y_KM / 2 - gy) / HB_Y_KM * QPF_MAPH).astype(int)
+    cc, rr = qpf_pixel_indices(gx, gy)
     inside = (cc >= 0) & (cc < QPF_W) & (rr >= 0) & (rr < QPF_MAPH)
 
     px = np.zeros((OUT_PX, OUT_PX, 3), dtype=int)
