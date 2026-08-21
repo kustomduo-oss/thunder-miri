@@ -351,7 +351,31 @@ def get_subscribers():
     res = SB_SESSION.get(url, headers=sb_headers(), params=params, timeout=30)
     res.raise_for_status()
     # 웹푸시 토큰 있는 사람만
-    return [s for s in res.json() if s.get("subscription")]
+    rows = [s for s in res.json() if s.get("subscription")]
+    return dedupe_by_endpoint(rows)
+
+
+def dedupe_by_endpoint(rows):
+    """같은 기기(엔드포인트)가 여러 번 등록됐으면 가장 최근 것만 남긴다.
+
+    홈화면에 다시 추가하거나 알림을 재설정하면 새 구독이 발급되는데,
+    가입 시 기존 행을 확인하지 않아 행이 쌓인다. 그대로 두면 한 기기에
+    알림이 두 번, 세 번 간다(2026-08-21 제보).
+    created_at 오름차순으로 들어오므로 뒤에 오는 것이 최신이다.
+    """
+    latest, losers = {}, []
+    for r in rows:
+        sub = r.get("subscription") or {}
+        ep = sub.get("endpoint") if isinstance(sub, dict) else None
+        key = ep or r["id"]
+        if key in latest:
+            losers.append(latest[key])     # 앞의 것이 더 오래된 행
+        latest[key] = r                    # 나중 것(최신)이 남는다
+    if losers:
+        print(f"[중복 구독] {len(rows)}건 중 {len(losers)}건은 같은 기기 — 옛 행을 비활성화합니다")
+        for r in losers:
+            deactivate(r["id"])            # 다음 주기부터는 아예 조회되지 않는다
+    return list(latest.values())
 
 
 def cap_grids(grids, limit, label):
