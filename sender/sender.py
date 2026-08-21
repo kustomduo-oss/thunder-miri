@@ -53,6 +53,12 @@ WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이
 # 진짜 뇌우는 한 주기에 수십~수백 건이라 3으로 올려도 지연은 거의 없다.
 MIN_STRIKES = int(os.environ.get("MIN_STRIKES", "3"))
 
+# 낙뢰가 가까워질 때마다 알리기 위한 거리 구간(km, 바깥→안쪽).
+# 예전에는 50km(접근)/30km(임박) 두 단계뿐이라, 30km 안에 들어오고 나면
+# 25km→15km→8km로 다가와도 알림이 한 번도 안 갔다(2026-08-21 지적).
+# 한 구간 더 안쪽으로 들어올 때마다 한 번씩 알린다.
+ALERT_BANDS = [int(x) for x in os.environ.get("ALERT_BANDS", "50,40,30,20,10").split(",")]
+
 # HTTP 연결 재사용 세션.
 # 매 요청마다 TLS 손잡이를 새로 하면 느리다(실측: 푸시 330ms→146ms, Supabase 170ms→42ms).
 # 발송은 구독자 수만큼 반복되므로 사람이 늘수록 차이가 커진다.
@@ -419,13 +425,46 @@ def deactivate(sub_id):
         print(f"[비활성화 실패] {e}")
 
 
+def band_of(km):
+    """이 거리가 속한 구간(km). 가장 바깥 구간보다 멀면 None."""
+    if km is None:
+        return None
+    inner = None
+    for b in sorted(ALERT_BANDS):
+        if km <= b:
+            inner = b
+            break
+    return inner
+
+
+def _as_band(level):
+    """DB에 저장된 값을 구간 숫자로. 옛 표기(watch/warning)도 받아준다."""
+    if level in (None, "", "none"):
+        return None
+    if level == "watch":
+        return 50
+    if level == "warning":
+        return 30
+    try:
+        return int(level)
+    except (TypeError, ValueError):
+        return None
+
+
 def lightning_transition(prev_level, cur_level):
-    """최초 관측과 의미 있는 거리 단계 변화만 알림 유형으로 변환한다."""
-    if prev_level not in ("watch", "warning"):
-        return "initial_warning" if cur_level == "warning" else "initial_watch"
-    if prev_level == "watch" and cur_level == "warning":
-        return "closer"
-    if prev_level == "warning" and cur_level == "watch":
+    """구간이 안쪽으로 바뀔 때마다 알린다.
+
+    바깥으로 물러나면 한 번만 알리고 기준을 갱신한다. 그래야 다시
+    다가올 때 또 알릴 수 있다. 같은 구간에 머무르면 보내지 않는다.
+    """
+    prev, cur = _as_band(prev_level), _as_band(cur_level)
+    if cur is None:
+        return None
+    if prev is None:
+        return "initial"          # 이번 뇌우의 첫 알림
+    if cur < prev:
+        return "closer"           # 한 구간 더 가까워짐
+    if cur > prev:
         return "farther"
     return None
 
@@ -454,20 +493,19 @@ def send_web_push(subscription, title, body, url=ALERT_CLICK_URL):
 # 메시지 문구
 # ----------------------------------------------------------------
 def build_message(alert_type, dist=None):
-    """거리 기반 낙뢰 관측 사실과 단계 변화만 전달한다."""
+    """실제 거리를 그대로 알려준다. 구간 이름보다 숫자가 훨씬 잘 와닿는다."""
     km = round(dist) if dist is not None else None
-    if alert_type == "initial_watch":
-        return ("⚡ 썬더미리 · 50km 이내 낙뢰 관측",
-                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 최근 낙뢰 위치를 확인해 주세요.")
-    if alert_type == "initial_warning":
-        return ("🚨 썬더미리 · 30km 이내 낙뢰 관측",
-                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
+    if alert_type == "initial":
+        head = "🚨" if (km is not None and km <= 30) else "⚡"
+        return (f"{head} 썬더미리 · 약 {km}km 앞 낙뢰",
+                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 낙뢰 위치를 확인해 주세요.")
     if alert_type == "closer":
-        return ("🚨 낙뢰 관측 지점이 가까워졌어요",
-                "가장 가까운 최근 낙뢰가 등록한 위치 30km 이내에서 관측됐어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
+        head = "🚨" if (km is not None and km <= 30) else "⚡"
+        return (f"{head} 낙뢰가 가까워졌어요 · 약 {km}km",
+                f"가장 가까운 낙뢰가 약 {km}km까지 왔어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
     if alert_type == "farther":
-        return ("↗️ 가장 가까운 낙뢰가 멀어졌어요",
-                "가장 가까운 최근 낙뢰가 등록한 위치 30km 밖에서 관측됐어요. 썬더미리에서 주변 낙뢰 상황을 확인해 주세요.")
+        return ("↗️ 낙뢰가 멀어졌어요 · 약 %dkm" % km if km is not None else "↗️ 낙뢰가 멀어졌어요",
+                f"가장 가까운 낙뢰가 약 {km}km로 물러났어요. 썬더미리에서 주변 상황을 확인해 주세요.")
     raise ValueError(f"지원하지 않는 알림 유형: {alert_type}")
 
 
