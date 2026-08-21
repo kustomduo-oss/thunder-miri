@@ -46,6 +46,12 @@ _fwd = Transformer.from_crs("EPSG:4326", RADAR_CRS, always_xy=True)   # 위경�
 _inv = Transformer.from_crs(RADAR_CRS, "EPSG:4326", always_xy=True)   # 격자평면 → 위경도
 GRID_KM = 0.5
 
+# 기상청 HSR 500m 합성자료의 투영원점(38N, 126E) 대응 격자점.
+# 전체 배열의 정중앙(nx/2, ny/2)이 아니다. 공식 포맷 문서의 기준격자는
+# (1121, 1681)이며, 정중앙을 쓰면 강수대가 약 120km 북쪽으로 표시된다.
+RADAR_ORIGIN_X = 1121.0
+RADAR_ORIGIN_Y = 1681.0
+
 # 강수 강도(dBZ)별 색 — 기상청 레이더와 비슷한 계열
 COLOR_STEPS = [
     (0,  (142, 209, 252)),   # 아주 약한 비
@@ -101,9 +107,9 @@ def fetch_radar(tm=None, tries=3):
 
 
 def to_grid_index(lat, lon, nx, ny):
-    """위경도 → 격자 인덱스 (격자 중심이 투영 원점)"""
+    """위경도 → 기상청 HSR 격자 인덱스."""
     x, y = _fwd.transform(lon, lat)
-    return x / GRID_KM + nx / 2, y / GRID_KM + ny / 2
+    return x / GRID_KM + RADAR_ORIGIN_X, y / GRID_KM + RADAR_ORIGIN_Y
 
 
 def view_bounds(lat, lon):
@@ -152,8 +158,8 @@ def render(raw, lat, lon):
 
     bounds = view_bounds(lat, lon)
     gx, gy = latlon_sample_grid(bounds, OUT_PX)
-    ii = np.rint(gx / GRID_KM + nx / 2).astype(int)
-    jj = np.rint(gy / GRID_KM + ny / 2).astype(int)
+    ii = np.rint(gx / GRID_KM + RADAR_ORIGIN_X).astype(int)
+    jj = np.rint(gy / GRID_KM + RADAR_ORIGIN_Y).astype(int)
     inside = (ii >= 0) & (ii < nx) & (jj >= 0) & (jj < ny)
     vals = np.full((OUT_PX, OUT_PX), OUT_OF_RANGE, dtype=np.int32)
     vals[inside] = grid[jj[inside], ii[inside]]
