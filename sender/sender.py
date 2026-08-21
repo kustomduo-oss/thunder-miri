@@ -493,19 +493,27 @@ def send_web_push(subscription, title, body, url=ALERT_CLICK_URL):
 # 메시지 문구
 # ----------------------------------------------------------------
 def build_message(alert_type, dist=None):
-    """실제 거리를 그대로 알려준다. 구간 이름보다 숫자가 훨씬 잘 와닿는다."""
+    """실제 거리를 그대로 알려주고, 레이더를 열어볼 이유를 붙인다.
+
+    제목에 서비스명을 다시 넣지 않는다 — 알림에는 이미 앱 이름이 뜨므로
+    자리만 먹는다. 대신 거리를 앞세워 잠금화면에서 바로 읽히게 한다.
+    본문 끝의 안내는 유형마다 다르게 준다. 셋 다 "확인해 주세요"로 끝나면
+    금세 읽지 않게 되고, 알림만 보고 끝나면 서비스가 거기서 끝난다.
+    """
     km = round(dist) if dist is not None else None
     if alert_type == "initial":
         head = "🚨" if (km is not None and km <= 30) else "⚡"
-        return (f"{head} 썬더미리 · 약 {km}km 앞 낙뢰",
-                f"등록한 위치에서 약 {km}km 떨어진 곳에 낙뢰가 관측됐어요. 썬더미리에서 낙뢰 위치를 확인해 주세요.")
+        return (f"{head} 약 {km}km 앞에 낙뢰",
+                f"우리 동네에서 약 {km}km 떨어진 곳에 번개가 쳤어요. "
+                f"어디까지 왔는지 썬더미리 레이더에서 확인해 보세요.")
     if alert_type == "closer":
         head = "🚨" if (km is not None and km <= 30) else "⚡"
-        return (f"{head} 낙뢰가 가까워졌어요 · 약 {km}km",
-                f"가장 가까운 낙뢰가 약 {km}km까지 왔어요. 썬더미리에서 낙뢰 레이더를 확인해 주세요.")
+        return (f"{head} 낙뢰가 {km}km까지 왔어요",
+                f"조금 전보다 가까워졌어요. 지금 어디쯤인지, 우리 쪽으로 오는지 "
+                f"썬더미리에서 보고 준비하세요.")
     if alert_type == "farther":
-        return ("↗️ 낙뢰가 멀어졌어요 · 약 %dkm" % km if km is not None else "↗️ 낙뢰가 멀어졌어요",
-                f"가장 가까운 낙뢰가 약 {km}km로 물러났어요. 썬더미리에서 주변 상황을 확인해 주세요.")
+        return (f"↗️ 낙뢰가 {km}km로 멀어졌어요" if km is not None else "↗️ 낙뢰가 멀어졌어요",
+                f"지나가는 중입니다. 다시 가까워지는지 썬더미리 레이더에서 확인해 보세요.")
     raise ValueError(f"지원하지 않는 알림 유형: {alert_type}")
 
 
