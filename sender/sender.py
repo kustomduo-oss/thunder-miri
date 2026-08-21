@@ -580,15 +580,17 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
         except (TypeError, ValueError):
             continue
 
-        # 1) 낙뢰 거리 → 단계(none/watch/warning) — 예보가 아니라 '실측' 기반
+        # 1) 낙뢰 거리 → 구간(ALERT_BANDS) — 예보가 아니라 '실측' 기반
         #    거리만 보지 않고 개수도 본다. 외딴 한 발은 뇌우 접근이 아니다.
+        #    단계 값에는 구간 숫자를 넣는다. 가까워질 때마다 알리려면
+        #    watch/warning 두 값으로는 30km 안쪽의 변화를 표현할 수 없다.
         nearest, watch_n, warn_n = strike_summary(lat, lon, strikes)
         lightning_level = None
         if nearest is not None:
-            if nearest <= WARNING_RADIUS_KM and warn_n >= MIN_STRIKES:
-                lightning_level = "warning"   # 30km 이내: 임박
-            elif nearest <= WATCH_RADIUS_KM and watch_n >= MIN_STRIKES:
-                lightning_level = "watch"      # 50km 이내: 접근
+            band = band_of(nearest)
+            enough = warn_n >= MIN_STRIKES if nearest <= WARNING_RADIUS_KM else watch_n >= MIN_STRIKES
+            if band is not None and enough:
+                lightning_level = str(band)
             elif watch_n:
                 print(f"  {s.get('dong') or ''}: {nearest:.0f}km에 낙뢰 {watch_n}건 "
                       f"— {MIN_STRIKES}건 미만이라 보류")
