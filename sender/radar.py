@@ -255,6 +255,9 @@ qpf_coords_note = """QPF 이미지 좌표 (해안선 6,205점으로 실측, 2026
   다시 확인했으며 서로 다른 QPF 시각에서도 지도 배경은 동일하다."""
 
 QPF_TOP, QPF_MAPH, QPF_W = 20, 750, 600
+
+# 전국판 meta에 담을 낙뢰 최대 건수. 화면이 이 수만큼 마커를 찍으므로 무작정 늘리면 폰이 느려진다.
+NAT_STRIKE_LIMIT = 600
 QPF_X_SCALE = 0.543134810       # col / LCC x(km)
 QPF_X_ORIGIN = 292.551440       # LCC x=0의 원본 PNG col
 QPF_Y_SCALE = -0.530700562      # row / LCC y(km), 남쪽으로 갈수록 row 증가
@@ -442,8 +445,16 @@ if __name__ == "__main__":
                 })
             except (TypeError, ValueError):
                 continue
+        # ⚠️ 기상청은 오래된 순서로 준다. 앞에서 잘라내면 '방금 친 낙뢰'가 통째로 빠진다.
+        # 2026-08-22 실측: 996건 중 앞 600건만 저장돼 최근 25분치가 화면에서 사라졌다.
+        # 뇌우가 셀 때(1시간 600건 초과)만 나타나서 오래 못 알아챘다 — 하필 제일 중요한 순간이다.
+        nat_strikes.sort(key=lambda s: str(s.get("tm") or ""))
+        total = len(nat_strikes)
+        nat_strikes = nat_strikes[-NAT_STRIKE_LIMIT:]
+        if total > len(nat_strikes):
+            print(f"[레이더] 낙뢰 {total}건 중 최신 {len(nat_strikes)}건만 저장 (상한 {NAT_STRIKE_LIMIT})")
         build_for(None, None, NAT_LAT, NAT_LON, "전국",
-                  lightning=nat_strikes[:600], raw=raw, stamp=stamp, key="national")
+                  lightning=nat_strikes, raw=raw, stamp=stamp, key="national")
         build_forecast(NAT_LAT, NAT_LON, "national")
     except Exception as e:
         print(f"[전국] 생성 실패(무시하고 계속): {e}")
