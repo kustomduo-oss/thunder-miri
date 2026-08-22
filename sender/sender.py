@@ -52,6 +52,13 @@ WATCH_RADIUS_KM = float(os.environ.get("WATCH_RADIUS_KM", "50"))      # 50km 이
 # 1로 두면 뇌우와 무관한 외딴 한 발에도 알림이 나간다(2026-08-21 오경보).
 # 진짜 뇌우는 한 주기에 수십~수백 건이라 3으로 올려도 지연은 거의 없다.
 MIN_STRIKES = int(os.environ.get("MIN_STRIKES", "3"))
+# 다만 코앞은 다르다. 5km에 한 발만 떨어져도 준비할 이유가 되므로,
+# 이 거리 안쪽은 개수를 따지지 않고 감지 즉시 알린다(2026-08-22 사용자 결정).
+NEAR_RADIUS_KM = float(os.environ.get("NEAR_RADIUS_KM", "10"))
+
+# 같은 사람에게 이 간격 안에 두 번 보내지 않는다.
+# 구간 경계(예: 10km↔20km)를 오가면 '가까워짐/멀어짐'이 번갈아 나가 도배가 된다.
+MIN_ALERT_GAP_MINUTES = int(os.environ.get("MIN_ALERT_GAP_MINUTES", "10"))
 
 # 낙뢰가 가까워질 때마다 알리기 위한 거리 구간(km, 바깥→안쪽).
 # 예전에는 50km(접근)/30km(임박) 두 단계뿐이라, 30km 안에 들어오고 나면
@@ -649,7 +656,12 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
         lightning_level = None
         if nearest is not None:
             band = band_of(nearest)
-            enough = warn_n >= MIN_STRIKES if nearest <= WARNING_RADIUS_KM else watch_n >= MIN_STRIKES
+            if nearest <= NEAR_RADIUS_KM:
+                enough = True                      # 코앞은 한 발이라도 알린다
+            elif nearest <= WARNING_RADIUS_KM:
+                enough = warn_n >= MIN_STRIKES
+            else:
+                enough = watch_n >= MIN_STRIKES
             if band is not None and enough:
                 lightning_level = str(band)
             elif watch_n:
@@ -672,6 +684,14 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
                 previous_level, lightning_level, s.get("last_lightning_at"))):
             transition = "nearby_still"
         if not transition:
+            continue
+
+        # 구간을 오갈 때 5분마다 울리지 않도록 최소 간격을 둔다.
+        # 건너뛰어도 단계를 갱신하지 않으므로, 간격이 지나면 그때 발송된다.
+        since = _minutes_since(s.get("last_lightning_at"))
+        if since is not None and since < MIN_ALERT_GAP_MINUTES:
+            print(f"  {s.get('dong') or ''}: {transition} 이지만 "
+                  f"{since:.0f}분 전에 보냈음 — {MIN_ALERT_GAP_MINUTES}분 간격 유지")
             continue
 
         title, body = build_message(transition, dist=nearest)
