@@ -40,15 +40,12 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 /* z-index:0 = 지도 카드에 자기 스택 컨텍스트를 만든다. 없으면 Leaflet 내부 패널의
    z-index:400이 그대로 최상위로 올라가 헤더(z-index:100) 위를 덮는다. */
 .purpose-map{grid-area:map;position:sticky;top:86px;z-index:0;scroll-margin-top:74px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
-.map-status{display:flex;align-items:center;gap:8px;margin-bottom:18px;color:#cae0e9;font-size:13px;font-weight:800}
-.map-status #mapStatus{flex:1;min-width:0}
-.weather-refresh{flex:0 0 auto;min-height:44px;padding:6px 11px;border:1px solid #78e5f4;border-radius:9px;background:#0b9fc0;color:#fff;font:inherit;font-size:12px;font-weight:900;box-shadow:0 4px 13px rgba(2,156,190,.3);cursor:pointer}
+.weather-refresh{position:absolute;top:9px;right:9px;z-index:500;flex:0 0 auto;min-height:44px;padding:6px 11px;border:1px solid #78e5f4;border-radius:9px;background:#0b9fc0;color:#fff;font:inherit;font-size:12px;font-weight:900;box-shadow:0 4px 13px rgba(2,156,190,.3);cursor:pointer}
 .weather-refresh:hover{background:#0bafd1}
 .weather-refresh span{display:inline-block;margin-right:2px;font-size:17px;line-height:0;vertical-align:-2px}
 .weather-refresh:disabled{cursor:wait;opacity:.72}
 .weather-refresh.is-loading span{animation:weather-refresh-spin .8s linear infinite}
 @keyframes weather-refresh-spin{to{transform:rotate(360deg)}}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#56d6b0;box-shadow:0 0 0 5px rgba(86,214,176,.12)}
 .radar-view-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px;padding:4px;border:1px solid rgba(198,220,229,.2);border-radius:11px;background:rgba(4,35,49,.45)}
 .radar-view-tabs button{min-height:44px;border:0;border-radius:8px;background:transparent;color:#bcd4de;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
 .radar-view-tabs button[aria-selected="true"]{background:#fff;color:var(--signal-deep);box-shadow:0 3px 10px rgba(0,0,0,.18)}
@@ -57,15 +54,10 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .hero-map-wrap{position:relative}
 #heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#dfe8f0;overflow:hidden}
 #heroMap.leaflet-container{font:inherit}
-#heroMap .leaflet-tile-pane{filter:saturate(.75)}
-.hero-base{position:absolute;top:9px;right:9px;z-index:500;display:flex;gap:3px;
-  background:rgba(255,255,255,.92);border:1px solid var(--signal-line);border-radius:9px;padding:3px;
-  box-shadow:0 2px 8px rgba(0,0,0,.16)}
-.hero-base button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:800;
-  color:var(--signal-muted);padding:8px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
-.hero-base button{position:relative;min-width:44px}
-.hero-base button::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-.hero-base button[aria-pressed="true"]{background:var(--signal);color:#fff}
+/* 배경지도 색을 빼서 강수·낙뢰가 앞으로 나오게 한다. 예전엔 사용자가 배경지도를
+   직접 바꾸게 했지만(밝게/어둡게 버튼), 그건 판독 문제를 사용자에게 떠넘기는 방식이라
+   기본 상태 하나에서 잘 보이도록 맞췄다. */
+#heroMap .leaflet-tile-pane{filter:saturate(.25) brightness(1.07)}
 .hero-lightning-viewport{position:absolute;left:50%;bottom:10px;z-index:500;max-width:calc(100% - 24px);min-height:38px;padding:8px 13px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(7,54,73,.94);color:#fff;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 3px 12px rgba(2,28,40,.32);transform:translateX(-50%);cursor:pointer}
 .hero-lightning-viewport[hidden]{display:none}
 .hero-lightning-viewport:active{transform:translateX(-50%) translateY(1px)}
@@ -84,9 +76,9 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 @keyframes recent-bolt-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.55}}
 @media(prefers-reduced-motion:reduce){.hero-bolt.age-0{animation:none}}
 /* 낙뢰 색상 범례 — 기상청 레이더처럼 지도 위 세로 막대.
-   자리: 지도 스타일 버튼(top:9, 높이 37) 아래로 내려 겹치지 않게 top:54.
-   흰 패널로 감싸는 이유: 배경지도가 밝게/어둡게로 바뀌어도 시각을 읽을 수 있어야 한다. */
-.lightning-age-legend{position:absolute;top:54px;right:9px;z-index:500;
+   자리: 새로고침 버튼(top:9, 높이 44 → 바닥 53) 아래로 13px 띄워 top:66.
+   흰 패널로 감싸는 이유: 배경 위에서도 시각을 읽을 수 있어야 한다. */
+.lightning-age-legend{position:absolute;top:66px;right:9px;z-index:500;
   display:flex;align-items:stretch;gap:5px;height:168px;padding:5px;
   border:1px solid rgba(255,255,255,.5);border-radius:9px;background:rgba(255,255,255,.5);
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
@@ -114,8 +106,8 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
    위 여백(86) + 지도 외 부속(276) + 안전여유(16) = 378px를 뺀 만큼이 지도 몫이다.
    svh를 쓰는 이유: 주소창이 보일 때 기준이라 스크롤 중 주소창이 숨었다 나타나도
    높이가 안 흔들린다(dvh면 그때마다 지도가 리사이즈되며 타일이 다시 로드된다). */
-@media(max-width:620px){ #heroMap{height:clamp(250px,calc(100vh - 346px),550px)} .hero-time{min-width:88px;font-size:12px} }
-@supports (height:100svh){ @media(max-width:620px){ #heroMap{height:clamp(250px,calc(100svh - 346px),550px)} } }
+@media(max-width:620px){ #heroMap{height:clamp(250px,calc(100vh - 283px),550px)} .hero-time{min-width:88px;font-size:12px} }
+@supports (height:100svh){ @media(max-width:620px){ #heroMap{height:clamp(250px,calc(100svh - 283px),550px)} } }
 
 /* 갤럭시(360px)에서 "🐕 산책 전 확인"이 두 줄로 쪼개져 탭 높이가 늘었다.
    칸 하나가 91px뿐이라 13px로는 안 들어간다 → 좁은 화면에서만 글자를 살짝 줄인다.
@@ -241,7 +233,15 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
   html.has-radar-first .purpose-copy{display:none}
   /* static이면 위 스택 컨텍스트가 풀려 지도가 헤더를 덮는다.
      단 relative에선 기본 규칙의 top:86px가 살아나 지도가 아래로 밀리므로 top:auto 필수 */
-  .purpose-map{position:relative;top:auto;z-index:0;max-width:620px;width:100%}
+  .purpose-map{position:relative;top:auto;z-index:0;max-width:620px;width:100%;
+    display:flex;flex-direction:column}
+  /* 조작부를 지도 아래로 모은다: 보고(지도) → 고르고(탭) → 돌려보고(재생) → 설명(상태줄).
+     폰은 아래쪽이 엄지로 누르기 쉽고, 지도가 카드 맨 위로 올라와 첫인상이 강해진다. */
+  .hero-map-wrap,.walk-weather-panel{order:1}
+  .radar-view-tabs{order:2;margin:12px 0 0}
+  .hero-lightning-status{order:3}
+  .hero-tl{order:4}
+  .hero-kind{order:5}
   .check-card,.boundary-section,.result-section{grid-template-columns:1fr;gap:34px}
   .process-list{grid-template-columns:1fr 1fr}
 }

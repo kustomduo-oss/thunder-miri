@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=touch-1" />
-  <link rel="stylesheet" href="landing.css?v=legend-bar-1" />
+  <link rel="stylesheet" href="landing.css?v=map-focus-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="canonical" href="https://thundermiri.com/" />
   <meta property="og:type" content="website" />
@@ -51,11 +51,6 @@
 
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map" id="radar">
-      <div class="map-status">
-        <span class="status-dot"></span>
-        <span id="mapStatus">최근 낙뢰 관측 정보를 불러오는 중…</span>
-        <button type="button" class="weather-refresh" id="weatherRefresh" aria-label="최신 기상정보 새로고침"><span aria-hidden="true">↻</span> 새로고침</button>
-      </div>
       <div class="radar-view-tabs" role="tablist" aria-label="레이더 정보 선택">
         <button type="button" id="heroLightningTab" role="tab" aria-selected="true">⚡ 최근 낙뢰</button>
         <button type="button" id="heroForecastTab" role="tab" aria-selected="false">🌧️ 강수 예측</button>
@@ -70,11 +65,7 @@
       </section>
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
-        <div class="hero-base" role="group" aria-label="지도 스타일">
-          <button type="button" data-base="Base">일반</button>
-          <button type="button" data-base="white">밝게</button>
-          <button type="button" data-base="midnight">어둡게</button>
-        </div>
+        <button type="button" class="weather-refresh" id="weatherRefresh" aria-label="최신 기상정보 새로고침"><span aria-hidden="true">↻</span> 새로고침</button>
         <button type="button" class="hero-lightning-viewport" id="heroLightningViewport" hidden></button>
         <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시각별 색상">
           <div class="lg-ticks">
@@ -220,7 +211,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=legend-bar-1" defer></script>
-<script src="nav.js?v=legend-bar-1" defer></script>
+<script src="landing.js?v=map-focus-1" defer></script>
+<script src="nav.js?v=map-focus-1" defer></script>
 </body>
 </html>

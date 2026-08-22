@@ -122,9 +122,8 @@ function updateRangeLabelScale(){
 }
 
 function setBasemap(type){
-  try{ localStorage.setItem("thunder_basemap", type); }catch(e){}
-  document.querySelectorAll(".hero-base button").forEach(b =>
-    b.setAttribute("aria-pressed", String(b.dataset.base === type)));
+  // 배경지도 전환 버튼은 제거했다(2026-08-22). 대신 배경 채도를 낮춰 강수·낙뢰가
+  // 도드라지게 맞췄으므로, 예전에 저장된 선택(thunder_basemap)은 따르지 않고 항상 같은 지도를 쓴다.
   if(!heroMap || fellBack) return;
   if(baseLayer) heroMap.removeLayer(baseLayer);
   baseLayer = L.tileLayer(
@@ -150,12 +149,8 @@ function initHeroMap(){
   heroMap.on("zoomend", updateRangeLabelScale);
   heroMap.on("moveend", updateLightningViewportControl);
   updateRangeLabelScale();
-  let saved = "Base";
-  try{ saved = localStorage.getItem("thunder_basemap") || "Base"; }catch(e){}
-  setBasemap(saved);
+  setBasemap("Base");
   heroLayer = L.layerGroup().addTo(heroMap);
-  document.querySelectorAll(".hero-base button").forEach(b =>
-    b.addEventListener("click", () => setBasemap(b.dataset.base)));
   document.getElementById("heroLightningViewport")?.addEventListener("click", toggleLightningViewport);
 }
 
@@ -329,8 +324,10 @@ function renderHeroStrikes(step){
   updateLightningClock(heroLightningIdx);
   updateLegendTicks();
   const status = document.getElementById("heroLightningStatus");
+  // 상태줄을 없앴으므로(2026-08-22) 조회 주기는 여기에 남긴다.
+  // "실시간"이 아니라 5분마다 확인이라는 건 서비스 정체성상 반드시 드러나야 한다.
   if(status) status.textContent = heroLightningIdx === 5
-    ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건`
+    ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건 · 5분마다 확인`
     : `${current.label} 관측 ${inWindow}건 · 현재까지 누적 ${visible.length}건`;
   window.requestAnimationFrame(updateLightningViewportControl);
 }
