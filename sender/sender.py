@@ -133,17 +133,42 @@ def notify_admin(message):
 # ----------------------------------------------------------------
 # 공통 HTTP (일시적 지연 대비 재시도)
 # ----------------------------------------------------------------
-def http_get(url, params, tries=3, timeout=30):
+# 기상청 접속 재시도 정책 (2026-08-22 강화).
+# 전국에 뇌우가 칠 때 GitHub 러너(미국)→기상청 연결이 자주 끊긴다.
+# 같은 시각 국내 PC에서는 0.2초에 성공하므로 기상청이 죽은 게 아니라 경로 문제다.
+# 예전엔 30초×3회=90초에 포기해서 한 주기를 통째로 날렸다(2026-08-22 6회 중 3회 실패).
+# 연결 실패는 빨리 드러나므로 접속 대기를 10초로 줄이고 횟수를 늘린다.
+HTTP_CONNECT_TIMEOUT = float(os.environ.get("HTTP_CONNECT_TIMEOUT", "10"))
+HTTP_READ_TIMEOUT = float(os.environ.get("HTTP_READ_TIMEOUT", "30"))
+HTTP_TRIES = int(os.environ.get("HTTP_TRIES", "6"))
+HTTP_BACKOFF = [3, 6, 10, 15, 20]          # 재시도 간격(초)
+# 5분 주기를 넘기면 다음 실행과 겹친다. 이 시간을 넘기면 더 시도하지 않는다.
+HTTP_DEADLINE_SEC = float(os.environ.get("HTTP_DEADLINE_SEC", "150"))
+
+
+def http_get(url, params, tries=None, timeout=None):
+    tries = tries or HTTP_TRIES
+    timeout = timeout or (HTTP_CONNECT_TIMEOUT, HTTP_READ_TIMEOUT)
+    started = time.monotonic()
     last_err = None
     for attempt in range(1, tries + 1):
         try:
             res = KMA_SESSION.get(url, params=params, timeout=timeout)
             res.raise_for_status()
+            if attempt > 1:
+                print(f"[기상청 재시도 성공] {attempt}번째 시도 "
+                      f"({time.monotonic() - started:.0f}초 걸림)")
             return res
         except requests.exceptions.RequestException as e:
             last_err = e
-            if attempt < tries:
-                time.sleep(2)
+            if attempt >= tries:
+                break
+            wait = HTTP_BACKOFF[min(attempt - 1, len(HTTP_BACKOFF) - 1)]
+            if time.monotonic() - started + wait + HTTP_CONNECT_TIMEOUT > HTTP_DEADLINE_SEC:
+                print(f"[기상청] {HTTP_DEADLINE_SEC:.0f}초 넘겨 재시도 중단 — 다음 주기에 맡긴다")
+                break
+            print(f"[기상청 재시도] {attempt}/{tries} 실패({type(e).__name__}) — {wait}초 뒤 다시")
+            time.sleep(wait)
     raise last_err
 
 
