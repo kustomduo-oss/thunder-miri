@@ -242,6 +242,14 @@ function lightningClockLabel(step){
   time.setMinutes(Math.floor(time.getMinutes()/10)*10 - (5-step)*10);
   return fmtClock(time);
 }
+function updateLegendTicks(){
+  // 색 구간은 "지금부터 N분 전" 기준이라 눈금도 현재 시각에서 거꾸로 센다.
+  const now = Date.now();
+  document.querySelectorAll("#heroLightningLegend .lg-ticks span").forEach(el => {
+    const ago = +el.getAttribute("data-ago") || 0;
+    el.textContent = fmtClock(new Date(now - ago * 60000));
+  });
+}
 function updateLightningClock(step){
   const label = lightningClockLabel(step);
   const time = document.getElementById("heroLightningTime");
@@ -319,6 +327,7 @@ function renderHeroStrikes(step){
     return age >= current.min && age < current.max;
   }).length;
   updateLightningClock(heroLightningIdx);
+  updateLegendTicks();
   const status = document.getElementById("heroLightningStatus");
   if(status) status.textContent = heroLightningIdx === 5
     ? `최근 1시간 이내 낙뢰 관측 ${visible.length}건`

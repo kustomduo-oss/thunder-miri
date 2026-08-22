@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=touch-1" />
-  <link rel="stylesheet" href="landing.css?v=map-tall-1" />
+  <link rel="stylesheet" href="landing.css?v=legend-bar-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="canonical" href="https://thundermiri.com/" />
   <meta property="og:type" content="website" />
@@ -76,15 +76,19 @@
           <button type="button" data-base="midnight">어둡게</button>
         </div>
         <button type="button" class="hero-lightning-viewport" id="heroLightningViewport" hidden></button>
-      </div>
-
-      <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시간별 색상">
-        <span><i class="age-0"></i>10<span class="lg-unit">분 전</span></span>
-        <span><i class="age-1"></i>20<span class="lg-unit">분 전</span></span>
-        <span><i class="age-2"></i>30<span class="lg-unit">분 전</span></span>
-        <span><i class="age-3"></i>40<span class="lg-unit">분 전</span></span>
-        <span><i class="age-4"></i>50<span class="lg-unit">분 전</span></span>
-        <span><i class="age-5"></i>60<span class="lg-unit">분 전</span></span>
+        <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시각별 색상">
+          <div class="lg-ticks">
+            <span data-ago="10">--:--</span>
+            <span data-ago="20">--:--</span>
+            <span data-ago="30">--:--</span>
+            <span data-ago="40">--:--</span>
+            <span data-ago="50">--:--</span>
+            <span data-ago="60">--:--</span>
+          </div>
+          <div class="lg-bar" aria-hidden="true">
+            <i class="age-0"></i><i class="age-1"></i><i class="age-2"></i><i class="age-3"></i><i class="age-4"></i><i class="age-5"></i>
+          </div>
+        </div>
       </div>
       <p class="hero-lightning-status" id="heroLightningStatus">최근 1시간 이내 낙뢰 관측 정보 불러오는 중...</p>
       <div class="hero-tl" id="heroLightningTimeline">
@@ -216,7 +220,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=poll-5min-1" defer></script>
-<script src="nav.js?v=map-tall-1" defer></script>
+<script src="landing.js?v=legend-bar-1" defer></script>
+<script src="nav.js?v=legend-bar-1" defer></script>
 </body>
 </html>

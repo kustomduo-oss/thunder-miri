@@ -83,14 +83,21 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .hero-bolt.age-1{color:#ff7a1a}.hero-bolt.age-2{color:#ffd23f}.hero-bolt.age-3{color:#35b56a}.hero-bolt.age-4{color:#238ae6}.hero-bolt.age-5{color:#7757c8}
 @keyframes recent-bolt-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.55}}
 @media(prefers-reduced-motion:reduce){.hero-bolt.age-0{animation:none}}
-.lightning-age-legend{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:11px;color:#c6dce5;font-size:12px}
-.lightning-age-legend>span{display:inline-flex;align-items:center}
-/* 간격은 아이콘에만 준다. 항목 전체에 gap을 주면 숫자와 단위 사이도 벌어져
-   "60 분 전"처럼 보인다 */
-.lightning-age-legend i{position:relative;display:inline-block;width:13px;height:17px;margin-right:5px}
-.lightning-age-legend i::before,.lightning-age-legend i::after{content:"";position:absolute;clip-path:polygon(42% 0,88% 0,64% 36%,91% 36%,28% 100%,42% 59%,10% 59%)}
-.lightning-age-legend i::before{inset:-1px;background:#fff}
-.lightning-age-legend i::after{inset:1px;background:currentColor}
+/* 낙뢰 색상 범례 — 기상청 레이더처럼 지도 위 세로 막대.
+   자리: 지도 스타일 버튼(top:9, 높이 37) 아래로 내려 겹치지 않게 top:54.
+   흰 패널로 감싸는 이유: 배경지도가 밝게/어둡게로 바뀌어도 시각을 읽을 수 있어야 한다. */
+.lightning-age-legend{position:absolute;top:54px;right:9px;z-index:500;
+  display:flex;align-items:stretch;gap:5px;height:168px;padding:5px;
+  border:1px solid rgba(255,255,255,.5);border-radius:9px;background:rgba(255,255,255,.5);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  box-shadow:0 2px 8px rgba(0,0,0,.14)}
+/* 눈금은 색 칸과 같은 6행 격자 → 각 색 옆에 그 구간의 시작 시각이 딱 붙는다 */
+.lightning-age-legend .lg-ticks{display:grid;grid-template-rows:repeat(6,1fr);align-items:center;
+  color:var(--signal-deep);font-size:12px;font-weight:800;line-height:1;text-align:right;
+  text-shadow:0 1px 2px rgba(255,255,255,.85)}
+.lightning-age-legend .lg-bar{width:13px;border-radius:7px;overflow:hidden;
+  display:grid;grid-template-rows:repeat(6,1fr)}
+.lightning-age-legend .lg-bar i{display:block;background:currentColor}
 .lightning-age-legend .age-0{color:#ef3340}.lightning-age-legend .age-1{color:#ff7a1a}.lightning-age-legend .age-2{color:#ffd23f}.lightning-age-legend .age-3{color:#35b56a}.lightning-age-legend .age-4{color:#238ae6}.lightning-age-legend .age-5{color:#7757c8}
 .hero-lightning-status{margin:8px 0 0!important;color:#d8e8ee!important;font-size:12px!important;line-height:1.55}
 
@@ -107,8 +114,8 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
    위 여백(86) + 지도 외 부속(276) + 안전여유(16) = 378px를 뺀 만큼이 지도 몫이다.
    svh를 쓰는 이유: 주소창이 보일 때 기준이라 스크롤 중 주소창이 숨었다 나타나도
    높이가 안 흔들린다(dvh면 그때마다 지도가 리사이즈되며 타일이 다시 로드된다). */
-@media(max-width:620px){ #heroMap{height:clamp(250px,calc(100vh - 378px),550px)} .hero-time{min-width:88px;font-size:12px} }
-@supports (height:100svh){ @media(max-width:620px){ #heroMap{height:clamp(250px,calc(100svh - 378px),550px)} } }
+@media(max-width:620px){ #heroMap{height:clamp(250px,calc(100vh - 346px),550px)} .hero-time{min-width:88px;font-size:12px} }
+@supports (height:100svh){ @media(max-width:620px){ #heroMap{height:clamp(250px,calc(100svh - 346px),550px)} } }
 
 /* 갤럭시(360px)에서 "🐕 산책 전 확인"이 두 줄로 쪼개져 탭 높이가 늘었다.
    칸 하나가 91px뿐이라 13px로는 안 들어간다 → 좁은 화면에서만 글자를 살짝 줄인다.
@@ -246,8 +253,6 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
   .purpose-lead{font-size:14.5px;line-height:1.65;margin-bottom:8px}
   /* 범례는 한 줄로. 폭을 먹던 원인은 글자 크기가 아니라 "분 전"의 6번 반복이라,
      단위는 마지막 항목에만 남긴다 → 11.5px 그대로 한 줄에 들어간다 */
-  .lightning-age-legend{display:flex;flex-wrap:nowrap;gap:0 6px;justify-content:space-between}
-  .lightning-age-legend>span:not(:last-child) .lg-unit{display:none}
   .purpose-boundary{padding:14px}
   .purpose-map{padding:16px;border-radius:17px}
   .map-radar{height:260px}.ring-a{width:120px;height:120px}.ring-b{width:230px;height:230px}
