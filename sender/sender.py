@@ -58,6 +58,10 @@ MIN_STRIKES = int(os.environ.get("MIN_STRIKES", "3"))
 # 25km→15km→8km로 다가와도 알림이 한 번도 안 갔다(2026-08-21 지적).
 # 한 구간 더 안쪽으로 들어올 때마다 한 번씩 알린다.
 ALERT_BANDS = [int(x) for x in os.environ.get("ALERT_BANDS", "50,40,30,20,10").split(",")]
+# 10km 이내 최초 알림 뒤에도 낙뢰가 계속되면 한 번만 재알림한다.
+# 매 주기마다 울리면 사용자가 알림을 꺼버릴 수 있으므로, 단계 값에 reminded 상태를
+# 함께 저장해 같은 뇌우에서는 반복하지 않는다.
+NEARBY_REMINDER_MINUTES = int(os.environ.get("NEARBY_REMINDER_MINUTES", "10"))
 
 # HTTP 연결 재사용 세션.
 # 매 요청마다 TLS 손잡이를 새로 하면 느리다(실측: 푸시 330ms→146ms, Supabase 170ms→42ms).
@@ -470,9 +474,38 @@ def _as_band(level):
     if level == "warning":
         return 30
     try:
-        return int(level)
+        return int(str(level).split(":", 1)[0])
     except (TypeError, ValueError):
         return None
+
+
+def _reminder_sent(level):
+    """10:reminded처럼 같은 뇌우의 지속 알림 발송 여부를 읽는다."""
+    return isinstance(level, str) and level.endswith(":reminded")
+
+
+def _minutes_since(value, now=None):
+    """Supabase ISO 시각으로부터 지난 분. 값이 없거나 손상되면 None."""
+    if not value:
+        return None
+    try:
+        stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+        current = now or datetime.now(timezone.utc)
+        return max(0, (current - stamp.astimezone(timezone.utc)).total_seconds() / 60)
+    except (TypeError, ValueError):
+        return None
+
+
+def nearby_reminder_due(previous_level, current_level, last_alert_at, now=None):
+    """10km 단계가 계속될 때 10분 후 지속 알림을 한 번만 허용한다."""
+    if _as_band(previous_level) != 10 or _as_band(current_level) != 10:
+        return False
+    if _reminder_sent(previous_level):
+        return False
+    elapsed = _minutes_since(last_alert_at, now=now)
+    return elapsed is not None and elapsed >= NEARBY_REMINDER_MINUTES
 
 
 def lightning_transition(prev_level, cur_level):
@@ -538,6 +571,10 @@ def build_message(alert_type, dist=None):
     if alert_type == "farther":
         return (f"↗️ 낙뢰가 {km}km로 멀어졌어요" if km is not None else "↗️ 낙뢰가 멀어졌어요",
                 f"지나가는 중입니다. 다시 가까워지는지 썬더미리 레이더에서 확인해 보세요.")
+    if alert_type == "nearby_still":
+        return ("🚨 10km 안에서 낙뢰가 계속되고 있어요",
+                "가까운 곳에서 낙뢰가 계속 관측되고 있습니다. "
+                "썬더미리 레이더에서 현재 위치를 확인해 주세요.")
     raise ValueError(f"지원하지 않는 알림 유형: {alert_type}")
 
 
@@ -627,14 +664,21 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
 
         watching += 1
         # --- ⚡ 최초 관측 또는 50km/30km 거리 단계가 바뀔 때만 발송 ---
-        transition = lightning_transition(s.get("last_lightning_level"), lightning_level)
+        previous_level = s.get("last_lightning_level")
+        transition = lightning_transition(previous_level, lightning_level)
+        # 이미 10km 단계 알림을 받았고 근거리 낙뢰가 10분 이상 이어지는 경우,
+        # 같은 뇌우에서 딱 한 번만 지속 알림을 보낸다.
+        if (not transition and nearby_reminder_due(
+                previous_level, lightning_level, s.get("last_lightning_at"))):
+            transition = "nearby_still"
         if not transition:
             continue
 
         title, body = build_message(transition, dist=nearest)
         ok, status = send_web_push(s["subscription"], title, body)
         if ok:
-            pending_marks.append((s["id"], lightning_level))
+            marked_level = "10:reminded" if transition == "nearby_still" else lightning_level
+            pending_marks.append((s["id"], marked_level))
             sent += 1
             print(f"  {s.get('dong') or s['id'][:8]}: {lightning_level} "
                   f"({nearest:.0f}km, {transition}) → 발송")
