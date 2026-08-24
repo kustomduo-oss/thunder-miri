@@ -180,21 +180,11 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 body:has(#notifySheet:not([hidden])) .maker-note{transform:translateY(115%)}
 
 .maker-note-link{display:flex;align-items:flex-end;justify-content:center;gap:20px;
-  max-width:1120px;margin:0 auto;padding:0 46px 0 22px;   /* 오른쪽은 닫기 버튼 자리 */
+  max-width:1120px;margin:0 auto;padding:0 22px;
   color:inherit;text-decoration:none;cursor:pointer}
 .maker-note-link:hover{text-decoration:none}
 .maker-note-link:hover .maker-cta{color:#7F3A52}
 .maker-note-link:focus-visible{outline:2px solid #A24E6B;outline-offset:-3px}
-
-/* 보이는 원은 그대로 두고, 눌리는 범위만 44px로 넓힌다(투명 ::after).
-   원을 키우면 배너가 답답해지고, 좁으면 옆 링크가 눌린다 */
-.maker-close::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
-.maker-close{position:absolute;top:8px;right:8px;width:34px;height:34px;
-  display:grid;place-items:center;border:0;border-radius:50%;
-  background:rgba(255,255,255,.7);color:#8A6C78;
-  font:inherit;font-size:19px;line-height:1;cursor:pointer}
-.maker-close:hover{background:#fff;color:#5A3A46}
-.maker-close:focus-visible{outline:2px solid #A24E6B;outline-offset:2px}
 
 /* 스티커 3장을 겹쳐두고 번갈아 보여준다(GIF 대신 CSS). 높이는 첫 장이 정하고
    나머지는 그 위에 절대배치 — 장마다 폭이 달라도 흔들리지 않는다. */
@@ -223,7 +213,7 @@ body:has(#notifySheet:not([hidden])) .maker-note{transform:translateY(115%)}
 .maker-cta{justify-self:start;margin-top:7px;color:#A24E6B;font-size:13px;font-weight:900}
 
 @media(max-width:620px){
-  .maker-note-link{gap:12px;padding:0 42px 0 16px}
+  .maker-note-link{gap:12px;padding:0 16px}
   .maker-sticker{width:96px}
   .maker-copy{padding:18px 0 20px;gap:2px}
   .maker-line{font-size:15.5px!important}
