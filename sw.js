@@ -27,9 +27,11 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "./index.html#radar";
   const target = new URL(url, self.location.origin);
+  const requestedHash = target.hash;
   // 같은 화면이 이미 열려 있어도 새 탐색이 일어나도록 푸시마다 고유 값을 붙인다.
   target.searchParams.set("push", String(Date.now()));
-  target.hash = "radar";
+  // 관리 토큰이 든 fragment는 유지한다. index가 토큰을 꺼낸 뒤 #radar로 정리한다.
+  target.hash = requestedHash.includes("&manage=") ? requestedHash : "radar";
   const targetUrl = target.href;
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {

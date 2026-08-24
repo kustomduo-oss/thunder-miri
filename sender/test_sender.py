@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 
 from sender import sender
@@ -32,6 +33,20 @@ class NearbyReminderTests(unittest.TestCase):
         title, body = sender.build_message("nearby_still", 6.2)
         self.assertIn("10km 안", title)
         self.assertIn("계속 관측", body)
+
+
+class ManageLinkTests(unittest.TestCase):
+    def test_token_is_kept_in_fragment(self):
+        url = sender.build_manage_url("https://thundermiri.com/#radar", "safe_token-123")
+        self.assertEqual(url, "https://thundermiri.com/#radar&manage=safe_token-123")
+
+    @patch.object(sender.SB_SESSION, "patch")
+    def test_database_stores_hash_not_raw_token(self, mock_patch):
+        mock_patch.return_value.ok = True
+        token = sender.issue_manage_token("subscriber-id")
+        body = mock_patch.call_args.kwargs["json"]
+        self.assertNotEqual(body["manage_token_hash"], token)
+        self.assertEqual(len(body["manage_token_hash"]), 64)
 
 
 if __name__ == "__main__":

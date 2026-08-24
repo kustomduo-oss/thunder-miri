@@ -22,6 +22,41 @@ create table if not exists subscribers (
 alter table subscribers add column if not exists cooldown_min integer not null default 30;
 alter table subscribers add column if not exists last_lightning_at timestamptz;
 alter table subscribers add column if not exists last_lightning_level text;
+alter table subscribers add column if not exists manage_token_hash text;
+
+-- 푸시 알림에서 열린 관리 화면이 해당 구독 한 건만 안전하게 해지한다.
+-- 원문 토큰은 DB에 저장하지 않고 SHA-256 해시만 비교한다.
+create extension if not exists pgcrypto with schema extensions;
+create unique index if not exists idx_subscribers_manage_token_hash
+  on subscribers (manage_token_hash) where manage_token_hash is not null;
+
+create or replace function public.unsubscribe_with_token(p_token text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  affected integer;
+begin
+  if p_token is null or length(p_token) < 32 then
+    return false;
+  end if;
+
+  update public.subscribers
+     set active = false,
+         subscription = null,
+         manage_token_hash = null
+   where manage_token_hash = encode(digest(convert_to(p_token, 'UTF8'), 'sha256'), 'hex')
+     and active = true;
+
+  get diagnostics affected = row_count;
+  return affected = 1;
+end;
+$$;
+
+revoke all on function public.unsubscribe_with_token(text) from public;
+grant execute on function public.unsubscribe_with_token(text) to anon, authenticated;
 
 -- 같은 격자끼리 묶어 조회할 때 빠르게
 create index if not exists idx_subscribers_grid on subscribers (nx, ny) where active;

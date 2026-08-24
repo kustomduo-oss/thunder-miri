@@ -3,7 +3,9 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.22c';
+  var SITE_VERSION = '2026.08.24a';
+  var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF';
   var header =
     '<header class="site-header"><div class="inner">' +
       '<a class="brand" href="index.html"><span class="brand-mark"><img src="thundermiri-icon-192.png" alt="" /></span><span class="brand-full">동탄이네 썬더미리</span><span class="brand-short">동탄이네 썬더미리</span></a>' +
@@ -82,6 +84,20 @@
     var manageClose = document.getElementById('alertManageClose');
     var manageBackdrop = document.getElementById('alertManageBackdrop');
     var alertOffButton = document.getElementById('alertOffButton');
+    var pushManageToken = readPushManageToken();
+
+    function readPushManageToken() {
+      var match = String(window.location.hash || '').match(/(?:^|&)manage=([^&]+)/);
+      var token = match ? decodeURIComponent(match[1]) : '';
+      if (token) {
+        try { sessionStorage.setItem('thunder_push_manage_token', token); } catch (error) {}
+        // 토큰은 주소창·공유 링크에 계속 남기지 않는다.
+        history.replaceState(null, '', window.location.pathname + window.location.search + '#radar');
+        return token;
+      }
+      try { return sessionStorage.getItem('thunder_push_manage_token') || ''; }
+      catch (error) { return ''; }
+    }
 
     function readProfile() {
       try { return JSON.parse(localStorage.getItem('thunder_alert_profile') || '{}'); }
@@ -98,7 +114,9 @@
       if (!manageOverlay) return;
       var profile = readProfile();
       var locationText = document.getElementById('alertManageLocation');
-      if (locationText) locationText.textContent = (profile.dong ? profile.dong + '에서 ' : '현재 기기에서 ') + '천둥번개 알림을 받고 있습니다.';
+      if (locationText) locationText.textContent = pushManageToken
+        ? '방금 받은 알림의 구독을 이 기기에서 바로 해지할 수 있습니다.'
+        : (profile.dong ? profile.dong + '에서 ' : '현재 기기에서 ') + '천둥번개 알림을 받고 있습니다.';
       manageOverlay.hidden = false;
       document.body.style.overflow = 'hidden';
       if (alertOffButton) alertOffButton.focus();
@@ -109,11 +127,13 @@
       try {
         var registration = await navigator.serviceWorker.getRegistration();
         var subscription = registration && await registration.pushManager.getSubscription();
-        statusBar.hidden = !subscription;
-        if (subscription) {
+        statusBar.hidden = !subscription && !pushManageToken;
+        if (subscription || pushManageToken) {
           var profile = readProfile();
           var statusText = document.getElementById('alertStatusText');
-          if (statusText) statusText.textContent = '알림 켜짐' + (profile.dong ? ' · ' + profile.dong : '');
+          if (statusText) statusText.textContent = pushManageToken
+            ? '방금 받은 알림 관리'
+            : '알림 켜짐' + (profile.dong ? ' · ' + profile.dong : '');
         }
       } catch (error) {
         statusBar.hidden = true;
@@ -128,9 +148,26 @@
       alertOffButton.disabled = true;
       alertOffButton.textContent = '알림 끄는 중…';
       try {
-        var registration = await navigator.serviceWorker.getRegistration();
-        var subscription = registration && await registration.pushManager.getSubscription();
-        if (subscription) await subscription.unsubscribe();
+        if (pushManageToken) {
+          var response = await fetch(SUPABASE_URL + '/rest/v1/rpc/unsubscribe_with_token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ p_token: pushManageToken })
+          });
+          var removed = response.ok && await response.json();
+          if (!removed) throw new Error('invalid management token');
+          pushManageToken = '';
+          try { sessionStorage.removeItem('thunder_push_manage_token'); } catch (error) {}
+        }
+        if ('serviceWorker' in navigator) {
+          var registration = await navigator.serviceWorker.getRegistration();
+          var subscription = registration && await registration.pushManager.getSubscription();
+          if (subscription) await subscription.unsubscribe();
+        }
         try {
           localStorage.removeItem('thunder_grid');
           localStorage.removeItem('thunder_alert_profile');
@@ -139,6 +176,7 @@
         closeManage();
         statusBar.hidden = true;
         window.dispatchEvent(new CustomEvent('thunder-subscription-changed'));
+        window.alert('천둥번개 알림을 해지했습니다.');
       } catch (error) {
         window.alert('알림을 끄지 못했습니다. 브라우저의 사이트 설정에서 알림을 차단해주세요.');
       } finally {
@@ -151,6 +189,9 @@
     });
     window.addEventListener('thunder-subscription-changed', refreshSubscriptionStatus);
     refreshSubscriptionStatus();
+    // 푸시에서 들어온 경우 앱 설치 여부와 관계없이 상단 알림 관리 버튼을 남긴다.
+    // 레이더 확인이 주목적이므로 관리 창을 자동으로 덮어씌우지는 않는다.
+    if (pushManageToken && statusBar) statusBar.hidden = false;
   }
 
   // ── 하단 고정 광고 배너 ──────────────────────────────────

@@ -10,11 +10,14 @@ GitHub Actions에서 5분마다 실행(cron-job.org가 트리거). 동작 순서
 기상청 조회 로직은 '동탄이 봇'(lightning_alert.py)에서 가져와 위치를 매개변수화함.
 """
 import argparse
+import hashlib
 import json
 import math
 import os
+import secrets
 import time
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote, urlsplit, urlunsplit
 
 import requests
 from pywebpush import webpush, WebPushException
@@ -559,6 +562,50 @@ def deactivate(sub_id):
         print(f"[비활성화 실패] {e}")
 
 
+def issue_manage_token(sub_id):
+    """알림 링크에서 이 구독 한 건만 끌 수 있는 관리 토큰을 발급한다.
+
+    원문 토큰은 푸시 링크에만 넣고 DB에는 SHA-256 해시만 저장한다.
+    새 알림을 보낼 때마다 교체하므로 이전 알림의 링크는 자동으로 무효화된다.
+    실패해도 낙뢰 알림 자체는 막지 않고 관리 링크만 생략한다.
+    """
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    url = f"{SUPABASE_URL}/rest/v1/subscribers"
+    try:
+        res = SB_SESSION.patch(
+            url,
+            headers=sb_headers(),
+            params={"id": f"eq.{sub_id}"},
+            json={"manage_token_hash": token_hash},
+            timeout=15,
+        )
+        if not res.ok:
+            print(f"[관리 토큰 저장 실패] {res.status_code} {res.text[:150]}")
+            return None
+        return token
+    except Exception as e:
+        print(f"[관리 토큰 저장 실패] {e}")
+        return None
+
+
+def build_manage_url(base_url, token):
+    """토큰을 서버 로그에 남기지 않도록 URL fragment에 넣는다."""
+    if not token:
+        return base_url
+    parts = urlsplit(base_url)
+    anchor = (parts.fragment or "radar").split("&manage=", 1)[0]
+    fragment = f"{anchor}&manage={quote(token, safe='')}"
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, fragment))
+
+
+def send_subscriber_push(subscriber, title, body):
+    """기존 발송과 관리 링크 발급을 묶되, 링크 실패는 발송 실패로 취급하지 않는다."""
+    token = issue_manage_token(subscriber["id"])
+    url = build_manage_url(ALERT_CLICK_URL, token)
+    return send_web_push(subscriber["subscription"], title, body, url=url)
+
+
 def band_of(km):
     """이 거리가 속한 구간(km). 가장 바깥 구간보다 멀면 None."""
     if km is None:
@@ -800,7 +847,7 @@ def _run_subscribers(subs, strikes, pending_marks, pending_resets):
             continue
 
         title, body = build_message(transition, dist=nearest)
-        ok, status = send_web_push(s["subscription"], title, body)
+        ok, status = send_subscriber_push(s, title, body)
         if ok:
             marked_level = "10:reminded" if transition == "nearby_still" else lightning_level
             pending_marks.append((s["id"], marked_level))
@@ -820,8 +867,8 @@ def run_test():
     subs = get_subscribers()
     print(f"구독자 {len(subs)}명에게 테스트 푸시")
     for s in subs:
-        ok, status = send_web_push(
-            s["subscription"],
+        ok, status = send_subscriber_push(
+            s,
             "⚡ 썬더미리 테스트",
             "알림 연결이 정상입니다. 실제 낙뢰가 관측되면 등록한 위치를 기준으로 알려드립니다.",
         )
