@@ -562,32 +562,43 @@ async function refreshWeather(){
   button.removeAttribute("aria-busy");
 }
 
-/* 화면 전체로 보기. 사파리(iOS)는 표준 requestFullscreen을 안 따르고
-   -webkit- 접두사 버전을 쓴다 — 둘 다 시도해야 아이폰에서도 동작한다.
-   iOS 사파리는 아예 <video> 외 요소의 전체화면을 지원하지 않는 경우가 많아,
-   지원 안 되면 버튼을 숨겨서 눌러도 반응 없는 상태를 피한다. */
-function isFullscreenSupported(){
+/* 화면 전체로 보기. iPhone Safari는 일반 요소의 Fullscreen API를 지원하지
+   않으므로 그때는 CSS 고정 화면으로 같은 경험을 만든다. */
+function isInFullscreen(){
   const el = document.getElementById("radar");
-  return !!(el && (el.requestFullscreen || el.webkitRequestFullscreen));
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || el?.classList.contains("map-pseudo-fullscreen"));
 }
 
-function isInFullscreen(){
-  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+function setPseudoFullscreen(active){
+  const el = document.getElementById("radar");
+  if(!el) return;
+  el.classList.toggle("map-pseudo-fullscreen", active);
+  document.body.classList.toggle("map-pseudo-fullscreen-open", active);
+  onFullscreenChange();
 }
 
 async function toggleMapFullscreen(){
   const el = document.getElementById("radar");
   if(!el) return;
+  if(el.classList.contains("map-pseudo-fullscreen")){
+    setPseudoFullscreen(false);
+    return;
+  }
   try{
-    if(!isInFullscreen()){
+    if(new URLSearchParams(location.search).get("preview") === "ios-fullscreen"){
+      setPseudoFullscreen(true);
+      return;
+    }
+    if(!(document.fullscreenElement || document.webkitFullscreenElement)){
       if(el.requestFullscreen) await el.requestFullscreen();
-      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if(el.webkitRequestFullscreen) await Promise.resolve(el.webkitRequestFullscreen());
+      else setPseudoFullscreen(true);
     }else{
       if(document.exitFullscreen) await document.exitFullscreen();
       else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
     }
   }catch(error){
-    console.warn("전체화면 전환 실패:", error);
+    setPseudoFullscreen(true);
   }
 }
 
@@ -604,13 +615,9 @@ function onFullscreenChange(){
 }
 document.addEventListener("fullscreenchange", onFullscreenChange);
 document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-
-if(!isFullscreenSupported()){
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("mapFullscreenBtn");
-    if(btn) btn.hidden = true;
-  });
-}
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape" && document.getElementById("radar")?.classList.contains("map-pseudo-fullscreen")) setPseudoFullscreen(false);
+});
 
 document.addEventListener("click", e => {
   if(e.target && e.target.id === "heroPlay") tlToggle();
@@ -944,7 +951,7 @@ async function completeSubscription(){
 
   let subscription=null;
   try{
-    const registration=await navigator.serviceWorker.register("sw.js?v=2026.08.24c", {updateViaCache:"none"});
+    const registration=await navigator.serviceWorker.register("sw.js?v=2026.08.24d", {updateViaCache:"none"});
     await navigator.serviceWorker.ready;
     subscription=await registration.pushManager.getSubscription();
     if(!subscription){
