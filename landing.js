@@ -951,7 +951,7 @@ async function completeSubscription(){
 
   let subscription=null;
   try{
-    const registration=await navigator.serviceWorker.register("sw.js?v=2026.08.24d", {updateViaCache:"none"});
+    const registration=await navigator.serviceWorker.register("sw.js?v=2026.08.24e", {updateViaCache:"none"});
     await navigator.serviceWorker.ready;
     subscription=await registration.pushManager.getSubscription();
     if(!subscription){

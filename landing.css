@@ -56,13 +56,13 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
    벤더 접두사가 필요한 건 사파리(iOS)가 표준 :fullscreen을 아직 안 따라서다. */
 #radar:fullscreen{position:relative;top:0;max-width:none;width:100vw;height:100vh;
   display:flex;flex-direction:column;justify-content:flex-start;padding:max(12px,env(safe-area-inset-top,0px)) 16px 16px;border-radius:0}
-#radar:fullscreen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 68px}
-#radar:fullscreen .radar-fullscreen-brand img{display:block;width:min(310px,100%);height:64px;object-fit:contain}
+#radar:fullscreen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 76px;overflow:hidden}
+#radar:fullscreen .radar-fullscreen-brand img{display:block;width:min(380px,100%);height:72px;object-fit:cover}
 #radar:fullscreen #heroMap{height:calc(100vh - 298px);min-height:360px}
 #radar:-webkit-full-screen{position:relative;top:0;max-width:none;width:100vw;height:100vh;
   display:flex;flex-direction:column;justify-content:flex-start;padding:max(12px,env(safe-area-inset-top,0px)) 16px 16px;border-radius:0}
-#radar:-webkit-full-screen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 68px}
-#radar:-webkit-full-screen .radar-fullscreen-brand img{display:block;width:min(310px,100%);height:64px;object-fit:contain}
+#radar:-webkit-full-screen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 76px;overflow:hidden}
+#radar:-webkit-full-screen .radar-fullscreen-brand img{display:block;width:min(380px,100%);height:72px;object-fit:cover}
 #radar:-webkit-full-screen #heroMap{height:calc(100vh - 298px);min-height:360px}
 /* iPhone Safari용 가상 전체화면. 일반 요소 Fullscreen API가 없어도 레이더를
    화면에 고정하고 안전영역까지 채운다. */
@@ -72,8 +72,8 @@ body.map-pseudo-fullscreen-open{overflow:hidden!important}
   margin:0!important;padding:max(8px,env(safe-area-inset-top,0px)) 12px max(8px,env(safe-area-inset-bottom,0px))!important;
   display:flex!important;flex-direction:column;justify-content:flex-start;border-radius:0!important;
   overflow-y:auto;overscroll-behavior:none;box-shadow:none}
-#radar.map-pseudo-fullscreen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 54px;order:0}
-#radar.map-pseudo-fullscreen .radar-fullscreen-brand img{display:block;width:min(290px,88vw);height:50px;object-fit:contain}
+#radar.map-pseudo-fullscreen .radar-fullscreen-brand{display:flex;align-items:center;justify-content:center;flex:0 0 76px;order:0;overflow:hidden}
+#radar.map-pseudo-fullscreen .radar-fullscreen-brand img{display:block;width:min(380px,100%);height:72px;object-fit:cover}
 #radar.map-pseudo-fullscreen #heroMap{height:calc(100vh - 286px);height:calc(100dvh - 286px);min-height:300px;max-height:none}
 .map-fullscreen-btn.is-active svg{transform:scale(.85)}
 @keyframes weather-refresh-spin{to{transform:rotate(360deg)}}

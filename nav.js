@@ -3,14 +3,14 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.24d';
+  var SITE_VERSION = '2026.08.24e';
   var VERSION_STORAGE_KEY = 'thunder_site_version';
   var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF';
   var header =
     '<header class="site-header"><div class="inner">' +
-      '<a class="brand" href="index.html" aria-label="동탄이네 썬더미리 홈"><span class="brand-logo"><img src="thundermiri-retro-logo-transparent.png?v=1" alt="동탄이네 썬더미리" /></span></a>' +
+      '<a class="brand" href="index.html" aria-label="동탄이네 썬더미리 홈"><span class="brand-logo"><img src="thundermiri-wordmark-horizontal.png?v=2" alt="동탄이네 썬더미리" /></span></a>' +
       '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="siteMenu">메뉴</button>' +
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
         '<a href="index.html#radar">우리 동네 레이더</a>' +
@@ -298,7 +298,7 @@
      updateViaCache:none으로 GitHub Pages의 10분 캐시를 서비스워커 검사에는 쓰지 않는다. */
   function refreshServiceWorker() {
     if (!isLive() || !('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=2026.08.24d', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('sw.js?v=2026.08.24e', { updateViaCache: 'none' })
       .then(function (registration) { return registration.update(); })
       .catch(function () { /* 미지원·오프라인이면 다음 실행 때 다시 확인 */ });
   }
