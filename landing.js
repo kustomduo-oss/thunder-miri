@@ -944,7 +944,7 @@ async function completeSubscription(){
 
   let subscription=null;
   try{
-    const registration=await navigator.serviceWorker.register("sw.js?v=push-radar-3");
+    const registration=await navigator.serviceWorker.register("sw.js?v=2026.08.24c", {updateViaCache:"none"});
     await navigator.serviceWorker.ready;
     subscription=await registration.pushManager.getSubscription();
     if(!subscription){

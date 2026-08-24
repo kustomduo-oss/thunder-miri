@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.24b';
+  var SITE_VERSION = '2026.08.24c';
   var VERSION_STORAGE_KEY = 'thunder_site_version';
   var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
@@ -294,6 +294,15 @@
       .catch(function () { /* 오프라인·일시 오류는 다음 화면 복귀 때 다시 확인 */ });
   }
 
+  /* 알림 설정 화면을 다시 누르지 않아도 서비스워커 자체가 새 판을 확인한다.
+     updateViaCache:none으로 GitHub Pages의 10분 캐시를 서비스워커 검사에는 쓰지 않는다. */
+  function refreshServiceWorker() {
+    if (!isLive() || !('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('sw.js?v=2026.08.24c', { updateViaCache: 'none' })
+      .then(function (registration) { return registration.update(); })
+      .catch(function () { /* 미지원·오프라인이면 다음 실행 때 다시 확인 */ });
+  }
+
   function loadGA4() {
     if (!GA4_ID) return;
     var s = document.createElement('script');
@@ -326,6 +335,7 @@
     mount();
     mountMakerNote();
     loadAnalytics();
+    refreshServiceWorker();
     checkForAppUpdate(true);
   }
 
