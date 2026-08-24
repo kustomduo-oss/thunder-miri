@@ -115,6 +115,19 @@ let baseLayer = null, fellBack = false;
 const osmLayer = () => L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   { maxZoom:18, attribution:"© OpenStreetMap 기여자" });
 
+function setMapCredit(source){
+  let credit = document.getElementById("externalMapCredit");
+  if(!credit){
+    credit = document.createElement("p");
+    credit.id = "externalMapCredit";
+    credit.className = "external-map-credit";
+    document.querySelector(".hero-map-wrap")?.insertAdjacentElement("afterend", credit);
+  }
+  credit.innerHTML = source === "osm"
+    ? '지도: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap 기여자</a>'
+    : '지도: <a href="https://www.vworld.kr/" target="_blank" rel="noopener">VWorld</a>';
+}
+
 function updateRangeLabelScale(){
   if(!heroMap) return;
   const scale = Math.min(1.45, Math.max(.9, 1 + (heroMap.getZoom() - 7) * .15));
@@ -135,17 +148,18 @@ function setBasemap(type){
     fellBack = true;
     if(baseLayer) heroMap.removeLayer(baseLayer);
     osmLayer().addTo(heroMap);
+    setMapCredit("osm");
   });
   baseLayer.addTo(heroMap);
   baseLayer.setZIndex(1);
+  setMapCredit("vworld");
 }
 
 function initHeroMap(){
   const el = document.getElementById("heroMap");
   if(!el || typeof L === "undefined" || heroMap) return;
-  heroMap = L.map(el, { zoomControl:true, attributionControl:true })
+  heroMap = L.map(el, { zoomControl:true, attributionControl:false })
              .setView([36.5, 127.8], 6);
-  heroMap.attributionControl.setPrefix(false);
   heroMap.on("zoomend", updateRangeLabelScale);
   heroMap.on("moveend", updateLightningViewportControl);
   updateRangeLabelScale();

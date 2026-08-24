@@ -68,6 +68,9 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 .hero-map-wrap{position:relative}
 #heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#dfe8f0;overflow:hidden}
 #heroMap.leaflet-container{font:inherit}
+.external-map-credit{order:1;margin:5px 3px 0!important;color:#92b5c4!important;font-size:10px!important;line-height:1.4;text-align:right}
+.external-map-credit a{color:#b8d3dd;text-decoration:none}
+.external-map-credit a:hover{text-decoration:underline}
 /* 배경지도 색을 빼서 강수·낙뢰가 앞으로 나오게 한다. 예전엔 사용자가 배경지도를
    직접 바꾸게 했지만(밝게/어둡게 버튼), 그건 판독 문제를 사용자에게 떠넘기는 방식이라
    기본 상태 하나에서 잘 보이도록 맞췄다. */
