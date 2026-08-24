@@ -235,6 +235,76 @@ def fetch_lightning_nationwide():
                                 lookback_minutes=LOOKBACK_MINUTES, strict=True)
 
 
+# 관리자용 "남한 낙뢰 감지" 알림 — 개인 안전·모니터링 목적이라 국경선을
+# 정밀하게 그릴 필요는 없다. 휴전선은 서쪽(개성 부근 37.95N)이 낮고 동쪽
+# (고성 부근 38.6N)이 높은 대각선이라, 직선 위도 컷 대신 그 기울기를
+# 선형으로 근사한다. 개성 인근에서 낙뢰가 남한으로 오탐될 여지는 있지만
+# 안전 알림 용도로는 무해하다.
+def is_south_korea(lat, lon):
+    if not (33.0 <= lat <= 38.65 and 124.5 <= lon <= 131.9):
+        return False
+    dmz_lat = 37.95 + (lon - 126.0) * (38.6 - 37.95) / (128.4 - 126.0)
+    return lat <= dmz_lat + 0.15  # 여유 0.15도(~17km)
+
+
+# 관리자 알림 메시지에 지역명을 붙이기 위한 주요 도시 (남한만)
+_SK_CITIES = [
+    ("서울", 37.5665, 126.9780), ("인천", 37.4563, 126.7052), ("수원", 37.2636, 127.0286),
+    ("춘천", 37.8813, 127.7298), ("강릉", 37.7519, 128.8761), ("원주", 37.3422, 127.9202),
+    ("청주", 36.6424, 127.4890), ("대전", 36.3504, 127.3845), ("천안", 36.8151, 127.1139),
+    ("전주", 35.8242, 127.1480), ("군산", 35.9678, 126.7369), ("광주", 35.1595, 126.8526),
+    ("목포", 34.8118, 126.3922), ("여수", 34.7604, 127.6622), ("순천", 34.9506, 127.4872),
+    ("대구", 35.8714, 128.6014), ("포항", 36.0190, 129.3435), ("안동", 36.5684, 128.7294),
+    ("부산", 35.1796, 129.0756), ("울산", 35.5384, 129.3114), ("창원", 35.2280, 128.6811),
+    ("진주", 35.1800, 128.1076), ("제주", 33.4996, 126.5312), ("서귀포", 33.2541, 126.5601),
+    ("속초", 38.2070, 128.5918), ("충주", 36.9910, 127.9259), ("경주", 35.8562, 129.2247),
+]
+
+
+def _sk_city_labels(strikes, limit=3):
+    """낙뢰 좌표들에서 가장 가까운 도시 이름을 뽑아 중복 없이 최대 limit개."""
+    seen, out = set(), []
+    for lat, lon in strikes:
+        city, dist = min(((c, haversine(lat, lon, c[1], c[2])) for c in _SK_CITIES),
+                          key=lambda x: x[1])
+        name = city[0] if dist <= 40 else f"{city[0]} 인근"
+        if name not in seen:
+            seen.add(name)
+            out.append(name)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def check_sk_master_alert(strikes):
+    """남한 어디서든 낙뢰가 '새로 시작'될 때만 관리자에게 텔레그램 1회.
+
+    가입자 수와 무관하게 항상 확인한다(개인 모니터링·SNS 홍보 트리거 목적).
+    0건→1건 이상 전환에서만 보낸다 — 뇌우가 계속되는 동안 5분마다 오면
+    금세 무시하게 된다. 잠잠해지면 자동으로 다시 무장되어 다음 뇌우 때 또 알린다.
+    """
+    sk = [(lat, lon) for lat, lon in strikes if is_south_korea(lat, lon)]
+    hb = read_heartbeat() or {}
+    was_active = bool(hb.get("sk_active"))
+
+    if not sk:
+        if was_active:
+            hb["sk_active"] = False
+            _put_heartbeat(hb)
+        return
+
+    if was_active:
+        return  # 이미 알렸고 계속되는 중 — 조용히 넘어간다
+
+    labels = _sk_city_labels(sk)
+    where = ", ".join(labels) if labels else "지역 확인 중"
+    notify_admin(f"⚡ 남한에서 낙뢰가 감지되기 시작했습니다\n"
+                 f"{datetime.now(KST):%H:%M} 기준 {len(sk)}건 · {where}")
+    hb["sk_active"] = True
+    hb["sk_active_since"] = datetime.now(KST).isoformat(timespec="seconds")
+    _put_heartbeat(hb)
+
+
 def parse_strikes(items):
     """조회 결과를 (위도, 경도) 숫자 목록으로. 좌표가 깨진 건은 버린다."""
     strikes = []
@@ -320,12 +390,16 @@ def _put_heartbeat(data):
 
 
 def write_heartbeat(sent_count, strike_count):
-    _put_heartbeat({
+    # 통째로 새 dict를 덮어쓰면 check_sk_master_alert()가 남겨둔 sk_active 같은
+    # 다른 필드가 지워진다. 읽어서 병합한다(record_failure()와 같은 방식).
+    hb = read_heartbeat() or {}
+    hb.update({
         "last_success": datetime.now(KST).isoformat(timespec="seconds"),
         "sent": sent_count,
         "strikes": strike_count,
         "fail_streak": 0,          # 성공했으니 연속 실패 기록을 지운다
     })
+    _put_heartbeat(hb)
 
 
 def record_failure(reason):
@@ -617,13 +691,10 @@ def run_once():
     # 지난 주기들이 통째로 비어 있었는지 먼저 확인한다(복구 시점에 알리기 위함)
     check_missed_runs()
 
-    subs = get_subscribers()
-    if not subs:
-        print(f"[{datetime.now():%H:%M:%S}] 구독자 없음(또는 푸시토큰 없음). 종료.")
-        return
-
     # 전국 낙뢰를 한 번만 받아온다. 이후 거리 계산은 각자의 좌표로 우리가 직접 한다.
     # (격자로 묶어 조회하던 방식은 가입자가 흩어질수록 기상청 호출이 늘어 한도에 걸렸다)
+    # ⚠️ 구독자 유무 확인보다 먼저 온다 — 남한 마스터 알림(check_sk_master_alert)은
+    # 구독자가 0명이어도 항상 동작해야 하는 운영자 전용 채널이기 때문이다.
     try:
         strikes = parse_strikes(fetch_lightning_nationwide())
     except Exception as e:
@@ -639,6 +710,15 @@ def run_once():
                      f"(약 {streak * 5}분간 낙뢰를 확인하지 못함).\n"
                      f"{type(e).__name__}: {str(e)[:200]}")
         raise
+
+    # 운영자 전용. 구독자에게 가는 send_web_push()와는 완전히 다른 통로(텔레그램)이고
+    # 완전히 다른 함수다 — 절대 섞이지 않는다.
+    check_sk_master_alert(strikes)
+
+    subs = get_subscribers()
+    if not subs:
+        print(f"[{datetime.now():%H:%M:%S}] 구독자 없음(또는 푸시토큰 없음). 전국 낙뢰 {len(strikes)}건 확인만 하고 종료.")
+        return
 
     print(f"[{datetime.now():%H:%M:%S}] 구독자 {len(subs)}명 / 전국 낙뢰 {len(strikes)}건")
 

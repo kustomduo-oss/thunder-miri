@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=touch-1" />
-  <link rel="stylesheet" href="landing.css?v=map-focus-1" />
+  <link rel="stylesheet" href="landing.css?v=fullscreen-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="canonical" href="https://thundermiri.com/" />
   <meta property="og:type" content="website" />
@@ -66,6 +66,7 @@
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
         <button type="button" class="weather-refresh" id="weatherRefresh" aria-label="최신 기상정보 새로고침"><span aria-hidden="true">↻</span> 새로고침</button>
+        <button type="button" class="map-fullscreen-btn" id="mapFullscreenBtn" aria-label="화면 전체로 보기"><span aria-hidden="true">⛶</span></button>
         <button type="button" class="hero-lightning-viewport" id="heroLightningViewport" hidden></button>
         <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시각별 색상">
           <div class="lg-ticks">
@@ -211,7 +212,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="landing.js?v=map-focus-1" defer></script>
+<script src="landing.js?v=fullscreen-1" defer></script>
 <script src="nav.js?v=map-focus-1" defer></script>
 </body>
 </html>

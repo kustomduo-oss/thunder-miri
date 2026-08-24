@@ -548,6 +548,56 @@ async function refreshWeather(){
   button.removeAttribute("aria-busy");
 }
 
+/* 화면 전체로 보기. 사파리(iOS)는 표준 requestFullscreen을 안 따르고
+   -webkit- 접두사 버전을 쓴다 — 둘 다 시도해야 아이폰에서도 동작한다.
+   iOS 사파리는 아예 <video> 외 요소의 전체화면을 지원하지 않는 경우가 많아,
+   지원 안 되면 버튼을 숨겨서 눌러도 반응 없는 상태를 피한다. */
+function isFullscreenSupported(){
+  const el = document.getElementById("radar");
+  return !!(el && (el.requestFullscreen || el.webkitRequestFullscreen));
+}
+
+function isInFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+async function toggleMapFullscreen(){
+  const el = document.getElementById("radar");
+  if(!el) return;
+  try{
+    if(!isInFullscreen()){
+      if(el.requestFullscreen) await el.requestFullscreen();
+      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }else{
+      if(document.exitFullscreen) await document.exitFullscreen();
+      else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+  }catch(error){
+    console.warn("전체화면 전환 실패:", error);
+  }
+}
+
+function onFullscreenChange(){
+  const btn = document.getElementById("mapFullscreenBtn");
+  const active = isInFullscreen();
+  if(btn){
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-label", active ? "전체화면 닫기" : "화면 전체로 보기");
+  }
+  // 크기가 바뀐 직후엔 Leaflet이 타일을 옛 크기로 들고 있어 회색으로 보인다.
+  // 브라우저의 전체화면 전환 애니메이션이 끝난 뒤 다시 재보라고 살짝 늦춘다.
+  window.setTimeout(() => heroMap && heroMap.invalidateSize(), 120);
+}
+document.addEventListener("fullscreenchange", onFullscreenChange);
+document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+
+if(!isFullscreenSupported()){
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("mapFullscreenBtn");
+    if(btn) btn.hidden = true;
+  });
+}
+
 document.addEventListener("click", e => {
   if(e.target && e.target.id === "heroPlay") tlToggle();
   if(e.target && e.target.id === "heroForecastTab") setHeroRadarMode("forecast");
@@ -555,6 +605,7 @@ document.addEventListener("click", e => {
   if(e.target && e.target.id === "heroWalkTab") openWalkWeather();
   if(e.target && e.target.id === "heroLightningPlay") toggleHeroLightning();
   if(e.target && (e.target.id === "weatherRefresh" || e.target.closest?.("#weatherRefresh"))) refreshWeather();
+  if(e.target && (e.target.id === "mapFullscreenBtn" || e.target.closest?.("#mapFullscreenBtn"))) toggleMapFullscreen();
 });
 
 async function openWalkWeather(){
