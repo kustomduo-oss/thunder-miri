@@ -40,8 +40,8 @@ a:hover{text-decoration:underline}
   display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;min-height:56px;color:#fff;white-space:nowrap;flex-shrink:0}
 .brand:hover{text-decoration:none}
-.brand-logo{display:block;width:220px;height:56px;overflow:hidden}
-.brand-logo img{display:block;width:100%;height:100%;object-fit:cover}
+.brand-logo{display:block;width:250px;height:56px;overflow:hidden}
+.brand-logo img{display:block;width:100%;height:100%;object-fit:contain}
 .nav{display:flex;gap:6px;flex-wrap:wrap;-ms-overflow-style:none;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
 .nav a{flex:0 0 auto;color:#dbe3ff;font-size:14px;font-weight:600;padding:6px 10px;border-radius:8px;white-space:nowrap}
@@ -245,7 +245,7 @@ body:has(#notifySheet:not([hidden])) .maker-note{transform:translateY(115%)}
 @media(max-width:650px){
   .site-header .inner{position:relative;min-height:68px;padding:6px 16px;align-items:center;flex-direction:row}
   .brand{min-height:56px}
-  .brand-logo{width:min(220px,calc(100vw - 112px));height:56px}
+  .brand-logo{width:min(250px,calc(100vw - 112px));height:56px}
   .menu-toggle{display:inline-flex;align-items:center;justify-content:center}
   .alert-status-bar{top:calc(68px + env(safe-area-inset-top,0px));padding:7px 16px}
   .nav{position:absolute;top:calc(100% + 1px);left:12px;right:12px;width:auto;display:none;flex-direction:column;gap:2px;padding:9px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 36px rgba(7,42,62,.2)}
