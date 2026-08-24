@@ -8,7 +8,7 @@ on:
       mode:
         description: "once=실제 천둥감지, test=전 구독자에 테스트 푸시, admin-test=나에게만 텔레그램 테스트"
         type: choice
-        options: [once, test, admin-test]
+        options: [once, test, update-notice, admin-test]
         default: once
 
 # cron-job.org 요청이나 수동 실행이 겹치더라도 발송 엔진은 한 번만 실행합니다.

@@ -94,6 +94,7 @@ LOOKBACK_MINUTES = int(os.environ.get("LOOKBACK_MINUTES", "15"))
 THUNDER_SOUND_URL = os.environ.get("THUNDER_SOUND_URL", "https://youtu.be/lpi6gd1H0Ok")
 # 알림을 탭하면 열리는 화면. 보호자가 실제로 하는 행동(레이더로 상황 확인)에 맞춤.
 ALERT_CLICK_URL = os.environ.get("ALERT_CLICK_URL", "https://thundermiri.com/#radar")
+UPDATE_CLICK_URL = os.environ.get("UPDATE_CLICK_URL", "https://thundermiri.com/?update=latest#radar")
 
 # ----------------------------------------------------------------
 # 로컬 테스트용 .env.secret 읽기 (KEY=VALUE 한 줄씩). 클라우드에선 파일 없으니 무시됨.
@@ -599,10 +600,10 @@ def build_manage_url(base_url, token):
     return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, fragment))
 
 
-def send_subscriber_push(subscriber, title, body):
+def send_subscriber_push(subscriber, title, body, base_url=None):
     """기존 발송과 관리 링크 발급을 묶되, 링크 실패는 발송 실패로 취급하지 않는다."""
     token = issue_manage_token(subscriber["id"])
-    url = build_manage_url(ALERT_CLICK_URL, token)
+    url = build_manage_url(base_url or ALERT_CLICK_URL, token)
     return send_web_push(subscriber["subscription"], title, body, url=url)
 
 
@@ -877,6 +878,22 @@ def run_test():
             deactivate(s["id"])
 
 
+def run_update_notice():
+    """열려 있던 PWA 문서를 새 주소로 다시 탐색시키는 업데이트 안내."""
+    subs = get_subscribers()
+    print(f"구독자 {len(subs)}명에게 업데이트 안내 푸시")
+    for s in subs:
+        ok, status = send_subscriber_push(
+            s,
+            "✨ 썬더미리가 업데이트됐어요",
+            "전체화면 레이더와 새 조작 버튼을 적용했습니다. 알림을 눌러 새 버전을 불러오세요.",
+            base_url=UPDATE_CLICK_URL,
+        )
+        print(f"  {s.get('dong') or s['id'][:8]}: {'성공' if ok else f'실패({status})'}")
+        if status in (404, 410):
+            deactivate(s["id"])
+
+
 def validate_config(need_kma=True):
     required = {
         "SUPABASE_SECRET_KEY": SUPABASE_SECRET_KEY,
@@ -901,6 +918,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="썬더미리 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
+    parser.add_argument("--update-notice", action="store_true",
+                        help="모든 구독자에게 앱 업데이트 안내 푸시")
     parser.add_argument("--admin-test", action="store_true",
                          help="관리자 텔레그램 연결 테스트(구독자에겐 절대 안 감, 나에게만)")
     args = parser.parse_args()
@@ -911,10 +930,12 @@ if __name__ == "__main__":
                           "남한에 낙뢰가 감지되면 이런 식으로 옵니다. 실제 낙뢰와는 무관합니다.")
         raise SystemExit(0 if ok else 1)
 
-    if not validate_config(need_kma=not args.test):
+    if not validate_config(need_kma=not (args.test or args.update_notice)):
         raise SystemExit(1)
 
-    if args.test:
+    if args.update_notice:
+        run_update_notice()
+    elif args.test:
         run_test()
     else:
         run_once()

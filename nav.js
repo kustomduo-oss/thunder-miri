@@ -3,7 +3,9 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.24a';
+  var SITE_VERSION = '2026.08.24b';
+  var VERSION_STORAGE_KEY = 'thunder_site_version';
+  var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF';
   var header =
@@ -257,6 +259,41 @@
     return LIVE_HOSTS.indexOf(location.hostname) !== -1;
   }
 
+  /* 홈 화면 웹 앱은 종료 뒤에도 이전 문서를 그대로 복원할 수 있다.
+     서버의 작은 버전 파일을 직접 확인하고, 버전이 바뀐 경우에만 주소에 새 버전을 붙여
+     HTML까지 한 번 새로 받는다. 저장값을 먼저 바꾸므로 새로고침 반복은 생기지 않는다. */
+  function checkForAppUpdate(force) {
+    if (!isLive() || !window.fetch) return;
+    var now = Date.now();
+    if (!force && now - lastVersionCheckAt < 60000) return;
+    lastVersionCheckAt = now;
+
+    fetch('version.json?cb=' + now, { cache: 'no-store' })
+      .then(function (response) { return response.ok ? response.json() : null; })
+      .then(function (data) {
+        var remoteVersion = data && String(data.version || '').trim();
+        if (!remoteVersion) return;
+
+        var knownVersion = '';
+        try { knownVersion = localStorage.getItem(VERSION_STORAGE_KEY) || ''; }
+        catch (error) {}
+
+        if (!knownVersion) {
+          try { localStorage.setItem(VERSION_STORAGE_KEY, remoteVersion); }
+          catch (error) {}
+          return;
+        }
+        if (knownVersion === remoteVersion) return;
+
+        try { localStorage.setItem(VERSION_STORAGE_KEY, remoteVersion); }
+        catch (error) {}
+        var next = new URL(window.location.href);
+        next.searchParams.set('appv', remoteVersion);
+        window.location.replace(next.pathname + next.search + next.hash);
+      })
+      .catch(function () { /* 오프라인·일시 오류는 다음 화면 복귀 때 다시 확인 */ });
+  }
+
   function loadGA4() {
     if (!GA4_ID) return;
     var s = document.createElement('script');
@@ -289,7 +326,13 @@
     mount();
     mountMakerNote();
     loadAnalytics();
+    checkForAppUpdate(true);
   }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkForAppUpdate(false);
+  });
+  window.addEventListener('pageshow', function () { checkForAppUpdate(false); });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
