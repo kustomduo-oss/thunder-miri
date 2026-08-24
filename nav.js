@@ -8,7 +8,7 @@
   var SUPABASE_ANON_KEY = 'sb_publishable_5GA_EH7mqRbkWe-UEWEL2Q_xf5cn3kF';
   var header =
     '<header class="site-header"><div class="inner">' +
-      '<a class="brand" href="index.html" aria-label="동탄이네 썬더미리 홈"><span class="brand-logo"><img src="thundermiri-retro-logo.png" alt="동탄이네 썬더미리" /></span></a>' +
+      '<a class="brand" href="index.html" aria-label="동탄이네 썬더미리 홈"><span class="brand-logo"><img src="thundermiri-retro-logo-transparent.png?v=1" alt="동탄이네 썬더미리" /></span></a>' +
       '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="siteMenu">메뉴</button>' +
       '<nav class="nav" id="siteMenu" aria-label="주요 메뉴">' +
         '<a href="index.html#radar">우리 동네 레이더</a>' +
