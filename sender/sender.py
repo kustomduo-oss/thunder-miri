@@ -854,7 +854,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="썬더미리 발송 엔진")
     parser.add_argument("--once", action="store_true", help="한 번 확인하고 종료(클라우드용)")
     parser.add_argument("--test", action="store_true", help="모든 구독자에게 테스트 푸시")
+    parser.add_argument("--admin-test", action="store_true",
+                         help="관리자 텔레그램 연결 테스트(구독자에겐 절대 안 감, 나에게만)")
     args = parser.parse_args()
+
+    if args.admin_test:
+        # 구독자 경로(send_web_push)는 아예 호출하지 않는다 — notify_admin()만 쓴다.
+        ok = notify_admin("[테스트] 텔레그램 연결 확인용 메시지입니다.\n"
+                          "남한에 낙뢰가 감지되면 이런 식으로 옵니다. 실제 낙뢰와는 무관합니다.")
+        raise SystemExit(0 if ok else 1)
 
     if not validate_config(need_kma=not args.test):
         raise SystemExit(1)
