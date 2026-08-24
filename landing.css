@@ -40,12 +40,12 @@ body.landing-body{margin:0;background:var(--signal-bg);color:var(--signal-ink);o
 /* z-index:0 = 지도 카드에 자기 스택 컨텍스트를 만든다. 없으면 Leaflet 내부 패널의
    z-index:400이 그대로 최상위로 올라가 헤더(z-index:100) 위를 덮는다. */
 .purpose-map{grid-area:map;position:sticky;top:86px;z-index:0;scroll-margin-top:74px;padding:24px;border-radius:24px;background:#0c3448;color:#fff;box-shadow:0 30px 65px rgba(11,52,72,.2)}
-.weather-refresh{position:absolute;top:9px;right:9px;z-index:500;flex:0 0 auto;min-height:44px;padding:6px 11px;border:1px solid #78e5f4;border-radius:9px;background:#0b9fc0;color:#fff;font:inherit;font-size:12px;font-weight:900;box-shadow:0 4px 13px rgba(2,156,190,.3);cursor:pointer}
+.weather-refresh{position:absolute;left:10px;bottom:10px;z-index:500;flex:0 0 auto;height:44px;padding:6px 11px;border:1px solid #78e5f4;border-radius:9px;background:#0b9fc0;color:#fff;font:inherit;font-size:12px;font-weight:900;box-shadow:0 4px 13px rgba(2,156,190,.3);cursor:pointer}
 .weather-refresh:hover{background:#0bafd1}
 .weather-refresh span{display:inline-block;margin-right:2px;font-size:17px;line-height:0;vertical-align:-2px}
 .weather-refresh:disabled{cursor:wait;opacity:.72}
 .weather-refresh.is-loading span{animation:weather-refresh-spin .8s linear infinite}
-.map-fullscreen-btn{position:absolute;top:88px;left:10px;z-index:500;min-width:44px;min-height:44px;
+.map-fullscreen-btn{position:absolute;right:10px;bottom:10px;z-index:500;width:44px;height:44px;
   display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.35);
   border-radius:9px;background:rgba(12,52,72,.55);color:#fff;font-size:18px;cursor:pointer;
   backdrop-filter:blur(3px)}
@@ -85,6 +85,8 @@ body.map-pseudo-fullscreen-open{overflow:hidden!important}
 .hero-map-wrap{position:relative}
 #heroMap{height:420px;border:1px solid rgba(207,232,242,.14);border-radius:17px;background:#dfe8f0;overflow:hidden}
 #heroMap.leaflet-container{font:inherit}
+#heroMap .leaflet-control-zoom{margin-top:10px;margin-left:10px}
+#heroMap .leaflet-control-zoom a{width:44px;height:44px;line-height:44px;font-size:24px}
 .external-map-credit{order:1;margin:5px 3px 0!important;color:#92b5c4!important;font-size:10px!important;line-height:1.4;text-align:right}
 .external-map-credit a{color:#b8d3dd;text-decoration:none}
 .external-map-credit a:hover{text-decoration:underline}
@@ -92,7 +94,7 @@ body.map-pseudo-fullscreen-open{overflow:hidden!important}
    직접 바꾸게 했지만(밝게/어둡게 버튼), 그건 판독 문제를 사용자에게 떠넘기는 방식이라
    기본 상태 하나에서 잘 보이도록 맞췄다. */
 #heroMap .leaflet-tile-pane{filter:saturate(.25) brightness(1.07)}
-.hero-lightning-viewport{position:absolute;left:50%;bottom:10px;z-index:500;max-width:calc(100% - 24px);min-height:38px;padding:8px 13px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(7,54,73,.94);color:#fff;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 3px 12px rgba(2,28,40,.32);transform:translateX(-50%);cursor:pointer}
+.hero-lightning-viewport{position:absolute;left:50%;bottom:64px;z-index:500;max-width:calc(100% - 24px);min-height:38px;padding:8px 13px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(7,54,73,.94);color:#fff;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 3px 12px rgba(2,28,40,.32);transform:translateX(-50%);cursor:pointer}
 .hero-lightning-viewport[hidden]{display:none}
 .hero-lightning-viewport:active{transform:translateX(-50%) translateY(1px)}
 .hero-location-pin{position:relative;width:30px;height:30px;border:3px solid #fff;border-radius:50% 50% 50% 0;background:var(--signal);box-shadow:0 4px 10px rgba(6,62,91,.34);transform:rotate(-45deg)}
@@ -110,9 +112,8 @@ body.map-pseudo-fullscreen-open{overflow:hidden!important}
 @keyframes recent-bolt-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.55}}
 @media(prefers-reduced-motion:reduce){.hero-bolt.age-0{animation:none}}
 /* 낙뢰 색상 범례 — 기상청 레이더처럼 지도 위 세로 막대.
-   자리: 새로고침 버튼(top:9, 높이 44 → 바닥 53) 아래로 13px 띄워 top:66.
-   흰 패널로 감싸는 이유: 배경 위에서도 시각을 읽을 수 있어야 한다. */
-.lightning-age-legend{position:absolute;top:66px;right:9px;z-index:500;
+   확대·축소 버튼과 같은 10px 상단 기준선에 맞춘다. */
+.lightning-age-legend{position:absolute;top:10px;right:10px;z-index:500;
   display:flex;align-items:stretch;gap:5px;height:168px;padding:5px;
   border:1px solid rgba(255,255,255,.5);border-radius:9px;background:rgba(255,255,255,.5);
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
@@ -127,7 +128,7 @@ body.map-pseudo-fullscreen-open{overflow:hidden!important}
 .lightning-age-legend .age-0{color:#ef3340}.lightning-age-legend .age-1{color:#ff7a1a}.lightning-age-legend .age-2{color:#ffd23f}.lightning-age-legend .age-3{color:#35b56a}.lightning-age-legend .age-4{color:#238ae6}.lightning-age-legend .age-5{color:#7757c8}
 .hero-lightning-status{margin:8px 0 0!important;color:#d8e8ee!important;font-size:12px!important;line-height:1.55}
 
-.hero-tl{display:flex;align-items:center;gap:10px;margin-top:13px;min-width:0}
+.hero-tl{display:flex;align-items:center;gap:10px;margin-top:13px;padding:0 10px;min-width:0}
 .hero-play{flex:0 0 auto;width:44px;height:44px;border:0;border-radius:50%;background:var(--signal);color:#fff;font-size:13px;cursor:pointer;display:grid;place-items:center}
 .hero-play:active{transform:translateY(1px)}
 /* 막대 자체는 얇아 보이지만 요소 높이를 키워 손가락이 닿는 범위를 넓힌다.
