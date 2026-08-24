@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=transparent-logo-1" />
-  <link rel="stylesheet" href="landing.css?v=fullscreen-1" />
+  <link rel="stylesheet" href="landing.css?v=fullscreen-controls-2" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="canonical" href="https://thundermiri.com/" />
   <meta property="og:type" content="website" />
@@ -51,6 +51,9 @@
 
     <!-- 실제 레이더: 지금 비구름 + 위치 핑 + 과거→미래 타임바 -->
     <div class="purpose-map" id="radar">
+      <div class="radar-fullscreen-brand">
+        <img src="thundermiri-wordmark-horizontal.png?v=1" alt="동탄이네 썬더미리" />
+      </div>
       <div class="radar-view-tabs" role="tablist" aria-label="레이더 정보 선택">
         <button type="button" id="heroLightningTab" role="tab" aria-selected="true">⚡ 최근 낙뢰</button>
         <button type="button" id="heroForecastTab" role="tab" aria-selected="false">🌧️ 강수 예측</button>
@@ -66,7 +69,11 @@
       <div class="hero-map-wrap">
         <div id="heroMap" aria-label="우리 동네 낙뢰·비구름 레이더"></div>
         <button type="button" class="weather-refresh" id="weatherRefresh" aria-label="최신 기상정보 새로고침"><span aria-hidden="true">↻</span> 새로고침</button>
-        <button type="button" class="map-fullscreen-btn" id="mapFullscreenBtn" aria-label="화면 전체로 보기"><span aria-hidden="true">⛶</span></button>
+        <button type="button" class="map-fullscreen-btn" id="mapFullscreenBtn" aria-label="화면 전체로 보기">
+          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <path d="M9 4H4v5M4 4l6 6M15 20h5v-5M20 20l-6-6" />
+          </svg>
+        </button>
         <button type="button" class="hero-lightning-viewport" id="heroLightningViewport" hidden></button>
         <div class="lightning-age-legend" id="heroLightningLegend" aria-label="낙뢰 관측 시각별 색상">
           <div class="lg-ticks">
