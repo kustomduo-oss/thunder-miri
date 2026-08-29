@@ -39,6 +39,34 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="앞발을 든 강아지 동탄이와 썬더미리 말풍선" />
   <meta name="twitter:card" content="summary_large_image" />
+  <!-- 검색엔진에 사이트 이름과 성격을 명시한다. 표현은 정체성 규칙을 따른다 —
+       "실시간"은 쓰지 않는다(최대 5분 지연). -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://thundermiri.com/#website",
+        "url": "https://thundermiri.com/",
+        "name": "동탄이네 썬더미리",
+        "alternateName": "썬더미리",
+        "description": "기상청 낙뢰 관측 정보를 5분마다 확인해, 우리 동네로 다가오는 천둥번개를 보호자에게 알려주는 무료 알림 서비스입니다.",
+        "inLanguage": "ko-KR"
+      },
+      {
+        "@type": "WebApplication",
+        "name": "동탄이네 썬더미리",
+        "url": "https://thundermiri.com/",
+        "applicationCategory": "WeatherApplication",
+        "operatingSystem": "iOS, Android, Web",
+        "browserRequirements": "웹푸시를 지원하는 브라우저. 아이폰은 홈 화면에 추가 후 이용",
+        "description": "낙뢰가 우리 동네 50km 안에서 관측되면 웹푸시로 알려드립니다. 가까워지거나 멀어지는 것도 함께 알려, 보호자가 천둥소리에 무방비로 노출되지 않도록 준비할 시간을 드립니다.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="landing-body">
 
@@ -217,6 +245,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="landing.js?v=fullscreen-4" defer></script>
-<script src="nav.js?v=footer-logo-1" defer></script>
+<script src="nav.js?v=seo-1" defer></script>
 </body>
 </html>
