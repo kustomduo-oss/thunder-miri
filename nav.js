@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.29g';
+  var SITE_VERSION = '2026.08.29h';
   var VERSION_STORAGE_KEY = 'thunder_site_version';
   var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
@@ -207,8 +207,9 @@
     if (!note) return;
 
     // 이 요소가 화면에 들어오면 "읽기 시작했다"고 본다.
-    // index=콘텐츠 섹션, 하위 페이지=본문 카드 (문서 순서상 먼저 오는 것이 잡힘)
-    var trigger = document.querySelector('.content-discovery, .story-card, .sound-story-card');
+    // index=콘텐츠 섹션, 블로그=글 목록, 하위 페이지=본문 카드
+    // 문서 순서상 먼저 오는 요소가 표시 기준으로 잡힌다.
+    var trigger = document.querySelector('.content-discovery, .post-list, .story-card, .sound-story-card');
     if (!trigger) return;
 
     note.hidden = false;
