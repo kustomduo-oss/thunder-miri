@@ -144,6 +144,8 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .story-toon-slide{min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
 .story-toon-slide figure{margin:0}
 .story-toon-slide img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;background:#fff;border-radius:14px}
+/* 소리 적응 기록 컷은 인스타 정사각형(1:1)이라 비율을 따로 준다 */
+.training-toon-viewer .story-toon-slide img{aspect-ratio:1/1}
 .story-toon-slide figcaption{padding:13px 14px 3px;color:var(--ink-soft);font-size:13px;line-height:1.55;text-align:center;background:#fff}
 .story-toon-controls{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:12px;margin-top:14px}
 .story-toon-arrow{display:grid;place-items:center;width:46px;height:46px;padding:0;border:1px solid #a9c9d9;border-radius:50%;background:var(--navy);color:#fff;font:800 22px/1 inherit;cursor:pointer;transition:transform .16s ease,opacity .16s ease}

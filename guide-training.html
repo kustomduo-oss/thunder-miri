@@ -7,7 +7,7 @@
 <meta name="description" content="천둥을 무서워하던 동탄이에게 시도한 단계별 소리 적응 교육과 그 뒤의 변화 기록, 참고한 군견 적응훈련 및 반려견 소음 공포 연구를 함께 정리했습니다." />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
-<link rel="stylesheet" href="style.css?v=maker-support-3" />
+<link rel="stylesheet" href="style.css?v=training-toon-1" />
 <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="canonical" href="https://thundermiri.com/guide-training.html" />
   <meta property="og:type" content="website" />
@@ -26,6 +26,45 @@
 <main class="research-page sound-story-page">
   <span class="tag">동탄이 변화과정 기록</span>
   <h1 class="page-title story-title">단계별 소리 적응 교육</h1>
+
+
+  <!-- 인스타그램에 올린 '동탄이 소리 적응 기록' 8컷.
+       story.html과 같은 캐러셀이라 id도 같아야 story.js가 잡는다(한 페이지에 하나만 둘 것). -->
+  <section class="story-toon-viewer training-toon-viewer" aria-labelledby="trainingToonTitle">
+    <h2 id="trainingToonTitle" class="sr-only">동탄이 소리 적응 기록 인스타툰</h2>
+    <ol class="story-toon-track" id="storyToonTrack" tabindex="0">
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-01.webp" alt="동탄이의 소리 적응 기록 표지. 보호자와 동탄이가 스피커 옆에 앉아 있다" width="900" height="900" fetchpriority="high" /><figcaption>완전한 극복이 아닌, 동탄이의 변화 기록입니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-02.webp" alt="개인 경험이라는 안내와 전문가 상담 권유" width="900" height="900" loading="lazy" /><figcaption>동탄이 한 마리의 개인적인 경험입니다. 모든 반려견에게 같은 방법을 권하지 않습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-03.webp" alt="1단계, 맑은 날 잔잔한 빗소리부터 들려주는 장면" width="900" height="900" loading="lazy" /><figcaption>1단계 — 맑은 날, 가장 자극이 적은 빗소리부터 시작했습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-04.webp" alt="2단계, 천둥이 섞인 빗소리를 들려주는 장면" width="900" height="900" loading="lazy" /><figcaption>2단계 — 천둥이 섞인 빗소리로 조금씩 옮겨갔습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-05.webp" alt="3단계, 강한 폭우와 천둥소리를 들려주는 장면" width="900" height="900" loading="lazy" /><figcaption>3단계 — 강한 폭우와 천둥소리까지 들려줬습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-06.webp" alt="4단계, 실제 알림을 받고 미리 준비하는 장면" width="900" height="900" loading="lazy" /><figcaption>4단계 — 실제 알림을 받으면 평소 준비한 대응을 시작했습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-07.webp" alt="교육 전에는 반나절 이상 긴장했지만 지금은 한 시간 안에 안정을 찾는 비교" width="900" height="900" loading="lazy" /><figcaption>동탄이에게는 패닉으로 번지는 일이 줄고, 회복이 빨라졌습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="training-toon-08.webp" alt="효과를 보장하지 않는다는 안내와 전문가 상담 권유" width="900" height="900" loading="lazy" /><figcaption>모든 반려견에게 같은 효과를 보장하지 않습니다. 불안이 심하다면 먼저 전문가와 상담해주세요.</figcaption></figure>
+      </li>
+    </ol>
+    <div class="story-toon-controls">
+      <button type="button" class="story-toon-arrow" id="storyToonPrev" aria-label="이전 장면">&#8592;</button>
+      <p class="story-toon-counter" id="storyToonCounter" aria-live="polite"><strong>1</strong> / 8</p>
+      <button type="button" class="story-toon-arrow" id="storyToonNext" aria-label="다음 장면">&#8594;</button>
+    </div>
+    <p class="story-toon-hint" aria-hidden="true">화면을 옆으로 밀어 넘겨보세요</p>
+  </section>
 
   <div class="callout research-warning">
     <strong class="warning-title">변화 기록을 보여드리기 전 미리 알려드립니다.</strong>
@@ -94,6 +133,7 @@
     </a>
   </div>
 </main>
+<script src="story.js?v=3" defer></script>
 <script src="nav.js?v=seo-1" defer></script>
 </body>
 </html>
