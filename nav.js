@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.29b';
+  var SITE_VERSION = '2026.08.29c';
   var VERSION_STORAGE_KEY = 'thunder_site_version';
   var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';

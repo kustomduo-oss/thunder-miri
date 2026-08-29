@@ -1,7 +1,7 @@
 /* 썬더미리 — 웹푸시 서비스워커 */
 
 /* 배포할 때마다 올린다. 이 파일의 내용이 바뀌어야 브라우저가 새 워커를 설치한다. */
-const SW_VERSION = "2026.08.29b";
+const SW_VERSION = "2026.08.29c";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -42,7 +42,15 @@ self.addEventListener("push", (event) => {
     renotify: true,
     data: { url: data.url || "./index.html#radar" }
   };
-  event.waitUntil(self.registration.showNotification(title, options));
+  /* 알림을 띄우는 김에 새 워커가 있는지 확인한다.
+     iOS는 워커 스크립트가 24시간 이내에 받은 것이면 스스로 다시 확인하지 않는다.
+     그래서 배포를 해도 폰은 옛 코드를 계속 쓴다. update()를 직접 부르면
+     그 규칙과 무관하게 스크립트를 다시 받아오고, 새 버전이면 activate에서
+     열려 있는 앱을 새로 불러온다. */
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, options),
+    self.registration.update().catch(() => {})
+  ]));
 });
 
 self.addEventListener("notificationclick", (event) => {
