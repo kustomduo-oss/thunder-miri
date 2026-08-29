@@ -1,0 +1,37 @@
+.install-guide-page{max-width:760px;padding-top:38px}
+.install-guide-page>.page-title{max-width:680px;margin:8px 0 14px;font-size:clamp(36px,7vw,60px);line-height:1.1;letter-spacing:-1.6px}
+.install-guide-lead{max-width:650px;margin:0 0 22px;color:var(--ink-soft);font-size:17px;line-height:1.7}
+.install-guide-shell{max-width:620px;margin:0 auto;padding:14px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 15px 34px rgba(16,66,91,.1)}
+.install-guide-panel[hidden]{display:none!important}
+.install-guide-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:11px;padding:5px;border:1px solid #c7dce5;border-radius:12px;background:#eaf2f5}
+.install-guide-tabs button{min-height:44px;border:0;border-radius:8px;background:transparent;color:#54707d;font:inherit;font-size:14px;font-weight:850;cursor:pointer}
+.install-guide-tabs button[aria-selected="true"]{background:var(--navy);color:#fff;box-shadow:0 3px 9px rgba(14,46,66,.18)}
+.install-guide-track{display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:10px;margin:0;padding:0;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;list-style:none;border-radius:14px;background:#eee8df;cursor:grab}
+.install-guide-track::-webkit-scrollbar{display:none}
+.install-guide-track.is-dragging{scroll-snap-type:none;scroll-behavior:auto;cursor:grabbing;user-select:none}
+.install-guide-track.is-dragging img{pointer-events:none}
+.install-guide-track li{min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.install-guide-track img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:14px}
+.install-guide-controls{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:10px;margin-top:11px}
+.install-guide-controls button{display:grid;place-items:center;width:46px;height:46px;padding:0;border:0;border-radius:50%;background:var(--navy);color:#fff;font:800 22px/1 inherit;cursor:pointer}
+.install-guide-controls button:disabled{opacity:.25;cursor:default}
+.install-guide-controls p{margin:0;color:#6b7e87;font-size:13px;text-align:center}
+.install-guide-controls strong{color:var(--navy);font-size:18px}
+.install-guide-note{margin:8px 2px 1px;color:#637983;font-size:12px;line-height:1.5;text-align:center}
+.install-guide-actions{max-width:620px;margin:18px auto 0;text-align:center}
+.install-guide-actions .btn{display:block;width:100%;padding:16px}
+
+@media(max-width:620px){
+  .install-guide-page{display:flex;flex-direction:column;padding-top:18px}
+  .install-guide-page>.tag{order:0;align-self:flex-start}
+  .install-guide-page>.page-title{order:1;margin:7px 0 13px;font-size:clamp(29px,8.5vw,38px);line-height:1.08}
+  .install-guide-shell{order:2;width:calc(100% + 36px);margin-inline:-18px;padding:9px;border-radius:0;border-right:0;border-left:0;box-shadow:0 10px 24px rgba(16,66,91,.09)}
+  .install-guide-lead{order:3;margin:21px 0 13px;font-size:15px}
+  .install-guide-actions{order:4;width:100%;margin-top:0}
+  .install-guide-track{border-radius:12px}
+  .install-guide-track img{border-radius:12px}
+  .install-guide-tabs{margin-bottom:8px}
+  .install-guide-tabs button{min-height:42px;font-size:13px}
+  .install-guide-controls{margin-top:8px}
+  .install-guide-note{margin-top:6px}
+}

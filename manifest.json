@@ -2,7 +2,7 @@
   "name": "썬더미리",
   "short_name": "썬더미리",
   "description": "우리 동네로 다가오는 천둥번개를 보호자에게 미리 알려주는 웹 알림",
-  "start_url": ".",
+  "start_url": "./index.html",
   "scope": ".",
   "display": "standalone",
   "background_color": "#f5f8f9",

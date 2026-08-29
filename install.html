@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>홈 화면 추가 방법 | 동탄이네 썬더미리</title>
+  <meta name="description" content="아이폰 Safari와 안드로이드 Chrome에서 썬더미리를 홈 화면에 추가하는 방법을 그림으로 안내합니다." />
+  <meta name="theme-color" content="#0c3448" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json?v=brand-thundermiri-1" />
+  <link rel="apple-touch-icon" href="thundermiri-apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="thundermiri-icon-192.png" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
+  <link rel="stylesheet" href="style.css?v=story-toon-2" />
+  <link rel="stylesheet" href="install-guide.css?v=2" />
+  <link rel="canonical" href="https://thundermiri.com/install.html" />
+  <script>
+    if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+      location.replace('index.html#signup');
+    }
+  </script>
+</head>
+<body>
+  <main class="install-guide-page" id="installGuidePage">
+    <span class="tag">설치·알림 안내</span>
+    <h1 class="page-title">썬더미리를 홈 화면에<br />추가하는 방법</h1>
+    <p class="install-guide-lead">앱스토어·플레이스토어에서 내려받지 않아도, 홈 화면에 추가해 앱처럼 바로 열 수 있습니다.</p>
+
+    <section class="install-guide-shell" aria-labelledby="installGuideTitle">
+      <h2 id="installGuideTitle" class="sr-only">기기별 홈 화면 추가 방법</h2>
+      <div class="install-guide-tabs" role="tablist" aria-label="기기 선택">
+        <button type="button" role="tab" data-install-platform="ios" aria-selected="true">아이폰</button>
+        <button type="button" role="tab" data-install-platform="android" aria-selected="false">갤럭시(안드로이드)</button>
+      </div>
+
+      <section class="install-guide-panel" data-install-panel="ios">
+        <ol class="install-guide-track" tabindex="0" aria-label="아이폰 홈 화면 추가 방법">
+          <li><img src="install-guide-ios-01.webp" alt="아이폰에서 썬더미리를 홈 화면에 추가하는 네 단계 안내 표지" width="900" height="900" fetchpriority="high" /></li>
+          <li><img src="install-guide-ios-02.webp" alt="Safari에서 썬더미리를 열고 오른쪽 아래 점 세 개 버튼 누르기" width="900" height="900" loading="lazy" /></li>
+          <li><img src="install-guide-ios-03.webp" alt="Safari 공유 메뉴에서 더 보기 누르기" width="900" height="900" loading="lazy" /></li>
+          <li><img src="install-guide-ios-04.webp" alt="목록을 아래로 내려 홈 화면에 추가 누르기" width="900" height="900" loading="lazy" /></li>
+          <li><img src="install-guide-ios-05.webp" alt="이름을 확인하고 추가를 눌러 아이폰 홈 화면 설치 완료하기" width="900" height="900" loading="lazy" /></li>
+        </ol>
+        <div class="install-guide-controls">
+          <button type="button" data-carousel-prev aria-label="이전 단계">←</button>
+          <p data-carousel-counter aria-live="polite"><strong>1</strong> / 5</p>
+          <button type="button" data-carousel-next aria-label="다음 단계">→</button>
+        </div>
+        <p class="install-guide-note">Safari 버전에 따라 점 3개 대신 공유 아이콘(□↑)이 보일 수 있어요.</p>
+      </section>
+
+      <section class="install-guide-panel" data-install-panel="android" hidden>
+        <ol class="install-guide-track" tabindex="0" aria-label="안드로이드 Chrome 홈 화면 추가 방법">
+          <li><img src="install-guide-android-01.webp" alt="안드로이드 Chrome에서 썬더미리를 홈 화면에 설치하는 세 단계 안내 표지" width="900" height="900" fetchpriority="high" /></li>
+          <li><img src="install-guide-android-02.webp" alt="Chrome에서 썬더미리를 열고 오른쪽 위 점 세 개 버튼 누르기" width="900" height="900" loading="lazy" /></li>
+          <li><img src="install-guide-android-03.webp" alt="Chrome 메뉴를 아래로 내려 홈 화면에 추가 누르기" width="900" height="900" loading="lazy" /></li>
+          <li><img src="install-guide-android-04.webp" alt="설치를 눌러 안드로이드 홈 화면 추가 완료하기" width="900" height="900" loading="lazy" /></li>
+        </ol>
+        <div class="install-guide-controls">
+          <button type="button" data-carousel-prev aria-label="이전 단계">←</button>
+          <p data-carousel-counter aria-live="polite"><strong>1</strong> / 4</p>
+          <button type="button" data-carousel-next aria-label="다음 단계">→</button>
+        </div>
+        <p class="install-guide-note">기기와 Chrome 버전에 따라 ‘앱 설치’로 표시될 수 있어요.</p>
+      </section>
+    </section>
+
+    <div class="install-guide-actions">
+      <a class="btn" href="index.html#signup">썬더미리 열고 알림 설정하기</a>
+    </div>
+  </main>
+  <script src="install-guide.js?v=2" defer></script>
+  <script src="nav.js?v=install-guide-1" defer></script>
+</body>
+</html>

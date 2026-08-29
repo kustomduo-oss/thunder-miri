@@ -256,6 +256,10 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 .allow-notify{background:#c74736;color:#fff}.allow-notify:disabled{background:#b7c4ca}
 .notify-later{border:1px solid #bdcfd6;background:#fff;color:#405b67}
 .notify-guide-switch{display:block;width:100%;margin-top:13px;padding:7px;border:0;background:transparent;color:#7b4038;font:inherit;font-size:13px;font-weight:800;text-decoration:underline;cursor:pointer}
+.notify-guide-copy{margin:0 0 14px;font-size:14px;line-height:1.65}
+.notify-guide-fallback{display:block;margin:10px 2px 14px;color:#667d88;font-size:12px;line-height:1.55}
+.install-success-action{display:block;margin:13px auto 0;padding:7px;color:#176f99;font-size:14px;font-weight:850;text-align:center;text-decoration:underline}
+.notify-guide-link{display:grid;place-items:center;text-decoration:none}
 
 @media(max-width:900px){
   .section-pad{padding-top:76px;padding-bottom:76px}

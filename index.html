@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
 <link rel="stylesheet" href="style.css?v=header-wordmark-1" />
-  <link rel="stylesheet" href="landing.css?v=logo-scale-1" />
+  <link rel="stylesheet" href="landing.css?v=install-guide-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="canonical" href="https://thundermiri.com/" />
   <meta property="og:type" content="website" />
@@ -138,6 +138,7 @@
         <h2>알림이 켜졌습니다.</h2>
         <p>이제 천둥번개가 가까워지면 <strong>우리 아이</strong>를 위해 미리 알려드릴게요.</p>
         <a class="secondary-action" href="#radar">우리 동네 레이더 보기 →</a>
+        <a class="install-success-action" href="install.html?platform=android">홈 화면에도 추가하기 →</a>
       </div>
 
     </div>
@@ -194,13 +195,10 @@
 
     <div class="notify-guide" id="iosInstallGuide" hidden>
       <strong>iPhone은 홈 화면에서 한 번 더 열어야 해요.</strong>
-      <ol>
-        <li>Safari 하단의 <b>공유</b> 버튼을 누릅니다.</li>
-        <li><b>홈 화면에 추가</b>를 선택합니다.</li>
-        <li>추가된 아이콘으로 이 서비스를 다시 엽니다.</li>
-        <li>같은 주소를 확인한 뒤 <b>알림 허용</b>을 누릅니다.</li>
-      </ol>
-      <button type="button" class="notify-later" id="iosGuideDone">확인했어요</button>
+      <p class="notify-guide-copy">그림을 보면서 Safari에서 썬더미리를 홈 화면에 추가해주세요.</p>
+      <a class="allow-notify notify-guide-link" href="install.html?platform=ios">그림으로 설치 방법 보기</a>
+      <small class="notify-guide-fallback">Safari 버전에 따라 점 3개 대신 공유 아이콘(□↑)이 보일 수 있어요.</small>
+      <button type="button" class="notify-later" id="iosGuideDone">홈 화면에서 다시 열게요</button>
       <button type="button" class="notify-guide-switch" id="showDirectGuide">Android·PC 설정 방법 보기</button>
     </div>
 
@@ -219,6 +217,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="landing.js?v=fullscreen-4" defer></script>
-<script src="nav.js?v=auto-update-4" defer></script>
+<script src="nav.js?v=install-guide-1" defer></script>
 </body>
 </html>
