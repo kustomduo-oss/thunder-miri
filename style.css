@@ -252,9 +252,9 @@ body:has(#notifySheet:not([hidden])) .maker-note{transform:translateY(115%)}
 .maker-cta{justify-self:start;margin-top:7px;color:#A24E6B;font-size:13px;font-weight:900}
 
 @media(max-width:620px){
-  .maker-note-link{gap:12px;padding:10px 16px 0}
+  .maker-note-link{gap:12px;padding:6px 16px 0}
   .maker-sticker{width:96px}
-  .maker-copy{padding:18px 0 20px;gap:2px}
+  .maker-copy{padding:14px 0 16px;gap:2px}
   .maker-line{font-size:15.5px!important}
   .maker-sub{font-size:12.5px!important}
   .maker-support{font-size:clamp(9.5px,2.75vw,11px)!important}
