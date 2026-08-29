@@ -101,17 +101,19 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .site-footer{background:#fff;border-top:1px solid var(--line);margin-top:30px}
 .site-footer .inner{max-width:var(--wrap);margin:0 auto;padding:26px 18px 34px;text-align:center}
 .footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;margin-bottom:14px}
-/* 정책 줄은 읽을거리 줄 바로 아래에 붙인다 — 두 줄이 한 덩어리로 보이게 */
-.footer-nav-legal{margin-top:-6px}
 /* 좁은 화면에서 6개가 5+1로 감겨 "면책 고지"만 혼자 떨어졌다.
    라벨 뒷부분(.fn-long)을 접으면 6개가 한 줄에 들어간다 — 글자 크기는 그대로.
    정식 명칭은 데스크톱과 각 페이지 제목에 그대로 남는다. */
 @media(max-width:620px){
-  .footer-nav{flex-wrap:nowrap;gap:0 14px;justify-content:center}
+  .footer-nav{flex-wrap:nowrap;gap:0 10px;justify-content:center}
   .footer-nav .fn-long{display:none}
 }
 .footer-nav a{color:var(--ink-soft);font-size:13.5px;font-weight:600}
-.footer-brand{font-weight:800;color:var(--navy);margin-bottom:4px}
+/* 로고는 어두운 배경이 박힌 이미지라 밝은 푸터에서는 작은 배지처럼 놓는다.
+   헤더와 같은 파일을 써서 추가로 받는 이미지가 없다. */
+.footer-brand{display:inline-block;margin-bottom:12px;padding:9px 14px;line-height:0;
+  border-radius:10px;background:#0e2e42}   /* 헤더와 같은 남색 */
+.footer-brand img{display:block;height:22px;width:auto}
 .footer-copy{color:var(--ink-soft);font-size:12.5px;line-height:1.7}
 
 /* 기상 시그널 콘텐츠 페이지 */
