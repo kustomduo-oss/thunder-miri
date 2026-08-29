@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
   <link rel="stylesheet" href="style.css?v=story-toon-2" />
-  <link rel="stylesheet" href="install-guide.css?v=2" />
+  <link rel="stylesheet" href="install-guide.css?v=3" />
   <link rel="canonical" href="https://thundermiri.com/install.html" />
   <script>
     if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
@@ -25,16 +25,17 @@
   <main class="install-guide-page" id="installGuidePage">
     <span class="tag">설치·알림 안내</span>
     <h1 class="page-title">썬더미리를 홈 화면에<br />추가하는 방법</h1>
-    <p class="install-guide-lead">앱스토어·플레이스토어에서 내려받지 않아도, 홈 화면에 추가해 앱처럼 바로 열 수 있습니다.</p>
+    <p class="install-guide-why"><strong>아이폰은 홈 화면에 추가해야 천둥번개 알림을 받을 수 있어요.</strong></p>
+    <p class="install-guide-lead">앱스토어·플레이스토어에서 내려받을 필요는 없습니다. 위 단계대로 하면 홈 화면에서 앱처럼 바로 열리고, 그때부터 알림을 받을 수 있습니다.</p>
 
     <section class="install-guide-shell" aria-labelledby="installGuideTitle">
       <h2 id="installGuideTitle" class="sr-only">기기별 홈 화면 추가 방법</h2>
       <div class="install-guide-tabs" role="tablist" aria-label="기기 선택">
-        <button type="button" role="tab" data-install-platform="ios" aria-selected="true">아이폰</button>
-        <button type="button" role="tab" data-install-platform="android" aria-selected="false">갤럭시(안드로이드)</button>
+        <button type="button" role="tab" id="installTabIos" aria-controls="installPanelIos" data-install-platform="ios" aria-selected="true">아이폰</button>
+        <button type="button" role="tab" id="installTabAndroid" aria-controls="installPanelAndroid" data-install-platform="android" aria-selected="false">갤럭시(안드로이드)</button>
       </div>
 
-      <section class="install-guide-panel" data-install-panel="ios">
+      <section class="install-guide-panel" id="installPanelIos" role="tabpanel" aria-labelledby="installTabIos" data-install-panel="ios">
         <ol class="install-guide-track" tabindex="0" aria-label="아이폰 홈 화면 추가 방법">
           <li><img src="install-guide-ios-01.webp" alt="아이폰에서 썬더미리를 홈 화면에 추가하는 네 단계 안내 표지" width="900" height="900" fetchpriority="high" /></li>
           <li><img src="install-guide-ios-02.webp" alt="Safari에서 썬더미리를 열고 오른쪽 아래 점 세 개 버튼 누르기" width="900" height="900" loading="lazy" /></li>
@@ -47,10 +48,10 @@
           <p data-carousel-counter aria-live="polite"><strong>1</strong> / 5</p>
           <button type="button" data-carousel-next aria-label="다음 단계">→</button>
         </div>
-        <p class="install-guide-note">Safari 버전에 따라 점 3개 대신 공유 아이콘(□↑)이 보일 수 있어요.</p>
+        <p class="install-guide-note">기기에 따라 점 3개(⋯) 또는 공유 아이콘(□↑) 중 보이는 것을 누르면 됩니다.</p>
       </section>
 
-      <section class="install-guide-panel" data-install-panel="android" hidden>
+      <section class="install-guide-panel" id="installPanelAndroid" role="tabpanel" aria-labelledby="installTabAndroid" data-install-panel="android" hidden>
         <ol class="install-guide-track" tabindex="0" aria-label="안드로이드 Chrome 홈 화면 추가 방법">
           <li><img src="install-guide-android-01.webp" alt="안드로이드 Chrome에서 썬더미리를 홈 화면에 설치하는 세 단계 안내 표지" width="900" height="900" fetchpriority="high" /></li>
           <li><img src="install-guide-android-02.webp" alt="Chrome에서 썬더미리를 열고 오른쪽 위 점 세 개 버튼 누르기" width="900" height="900" loading="lazy" /></li>
@@ -66,11 +67,17 @@
       </section>
     </section>
 
+    <ol class="install-guide-next">
+      <li>홈 화면에 생긴 <strong>썬더미리</strong> 앱을 엽니다.</li>
+      <li>알림 받을 <strong>위치를 등록</strong>합니다.</li>
+      <li><strong>알림 받기</strong>를 누르고 허용합니다.</li>
+    </ol>
+
     <div class="install-guide-actions">
       <a class="btn" href="index.html#signup">썬더미리 열고 알림 설정하기</a>
     </div>
   </main>
   <script src="install-guide.js?v=2" defer></script>
-  <script src="nav.js?v=install-guide-1" defer></script>
+  <script src="nav.js?v=install-copy-1" defer></script>
 </body>
 </html>
