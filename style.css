@@ -129,6 +129,39 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .story-actions,.research-actions,.button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
 .btn.outline{background:#fff;color:var(--navy);border:1px solid #a9c9d9;box-shadow:none}
 
+/* 동탄이네 이야기 인스타툰 */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.story-intro{max-width:620px;margin:-14px 0 24px;color:var(--ink-soft);font-size:16px;line-height:1.65}
+.story-toon-viewer{max-width:620px;margin:0 auto;padding:14px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 15px 34px rgba(16,66,91,.1)}
+.story-toon-track{display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:12px;margin:0;padding:0;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;list-style:none;border-radius:14px;background:#e7f0f4;cursor:grab}
+.story-toon-track.is-dragging{scroll-snap-type:none;scroll-behavior:auto;cursor:grabbing;user-select:none}
+.story-toon-track.is-dragging img{pointer-events:none}
+.story-toon-track::-webkit-scrollbar{display:none}
+.story-toon-slide{min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.story-toon-slide figure{margin:0}
+.story-toon-slide img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;background:#fff;border-radius:14px}
+.story-toon-slide figcaption{padding:13px 14px 3px;color:var(--ink-soft);font-size:13px;line-height:1.55;text-align:center;background:#fff}
+.story-toon-controls{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:12px;margin-top:14px}
+.story-toon-arrow{display:grid;place-items:center;width:46px;height:46px;padding:0;border:1px solid #a9c9d9;border-radius:50%;background:var(--navy);color:#fff;font:800 22px/1 inherit;cursor:pointer;transition:transform .16s ease,opacity .16s ease}
+.story-toon-arrow:hover:not(:disabled){transform:translateY(-1px)}
+.story-toon-arrow:focus-visible{outline:3px solid rgba(255,196,27,.5);outline-offset:2px}
+.story-toon-arrow:disabled{opacity:.28;cursor:default}
+.story-toon-counter{margin:0;color:var(--ink-soft);font-size:14px;text-align:center}
+.story-toon-counter strong{color:var(--navy);font-size:18px}
+.story-toon-hint{margin:8px 0 1px;color:var(--ink-soft);font-size:12px;text-align:center}
+.story-service-note{display:grid;gap:5px;max-width:620px;margin:20px auto 0;padding:18px 20px;border-left:4px solid var(--yellow);border-radius:12px;background:#fff8df;color:var(--ink);line-height:1.55}
+.story-service-note strong{font-size:15px}
+.story-service-note span{color:var(--ink-soft);font-size:14px}
+.story-main-actions{max-width:620px;margin:16px auto 30px}
+.story-main-actions .btn{flex:1;min-width:210px;text-align:center}
+.story-text-details{margin-top:16px;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.story-text-details>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;color:var(--navy);cursor:pointer;list-style:none}
+.story-text-details>summary::-webkit-details-marker{display:none}
+.story-text-details>summary::after{content:'+';display:grid;place-items:center;width:28px;height:28px;margin-left:auto;border-radius:50%;background:var(--bg);font-size:20px;font-weight:500}
+.story-text-details[open]>summary::after{content:'\2212'}
+.story-text-details>summary span{color:var(--ink-soft);font-size:13px;font-weight:500}
+.story-text-details .story-card{border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none}
+
 .change-record{margin:18px 0}
 .change-record div:first-child{border-color:#e0d0b6;background:#fbf7f0}
 .change-record div:last-child{border-color:#a8cfc0;background:#f1faf6}
@@ -245,6 +278,16 @@ body:has(#notifySheet:not([hidden])) .maker-note{transform:translateY(115%)}
   .nav a.cta{display:none}
   .story-card{padding:4px 20px 24px}
   .story-card blockquote{font-size:17px}
+  .story-title{margin-bottom:22px;font-size:clamp(32px,10vw,44px)}
+  .story-intro{margin-top:-10px;font-size:15px}
+  .story-toon-viewer{margin-inline:-8px;padding:9px;border-radius:18px}
+  .story-toon-track{border-radius:12px}
+  .story-toon-slide img{border-radius:12px}
+  .story-toon-slide figcaption{font-size:12.5px}
+  .story-service-note{padding:16px}
+  .story-main-actions{display:grid;grid-template-columns:1fr}
+  .story-main-actions .btn{min-width:0}
+  .story-text-details>summary span{display:none}
   .claim-boundaries{grid-template-columns:1fr}
   .signal-stat-row{grid-template-columns:1fr}
   .signal-stat-row div{display:flex;align-items:center;justify-content:space-between;padding:13px 17px}

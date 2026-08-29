@@ -7,8 +7,9 @@
 <meta name="description" content="작업실 침수 이후 빗소리와 천둥을 무서워하게 된 동탄이, 그리고 패닉 전에 준비할 시간을 만들기 위해 동탄이네 썬더미리를 만든 이야기." />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.css" />
-<link rel="stylesheet" href="style.css?v=header-wordmark-1" />
+<link rel="stylesheet" href="style.css?v=story-toon-2" />
 <link rel="icon" type="image/png" href="icon-192.png" />
+<link rel="preload" as="image" href="story-toon-01.webp" type="image/webp" />
   <link rel="canonical" href="https://thundermiri.com/story.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="썬더미리" />
@@ -25,9 +26,61 @@
 <body>
 <main class="story-page">
   <span class="tag">이 서비스를 만든 이야기</span>
-  <h1 class="page-title story-title">천둥을 없앨 수는 없지만,<br />패닉 전에 준비할 수는 있었습니다.</h1>
+  <h1 class="page-title story-title">동탄이네 썬더미리가<br />시작된 이야기</h1>
+  <p class="story-intro">옆으로 넘기며 동탄이와 썬더미리의 이야기를 만나보세요.</p>
 
-  <article class="card story-card">
+  <section class="story-toon-viewer" aria-labelledby="storyToonTitle">
+    <h2 id="storyToonTitle" class="sr-only">동탄이네 이야기 인스타툰</h2>
+    <ol class="story-toon-track" id="storyToonTrack" tabindex="0">
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-01.webp" alt="폭우로 작업실이 침수된 날부터 시작된 동탄이네 이야기" width="900" height="1125" fetchpriority="high" /><figcaption>폭우로 작업실이 침수된 날부터 시작됐습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-02.webp" alt="침수된 작업실과 놀란 가족들을 지켜보는 동탄이" width="900" height="1125" loading="lazy" /><figcaption>가족들이 놀라 허둥대는 모습을 동탄이도 지켜봤습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-03.webp" alt="천둥소리에 심한 패닉 반응을 보이는 동탄이" width="900" height="1125" loading="lazy" /><figcaption>그 후 천둥소리에 심한 패닉 반응을 보이기 시작했습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-04.webp" alt="동탄이의 천둥 공포를 상담하고 약을 처방받는 모습" width="900" height="1125" loading="lazy" /><figcaption>병원에서 안정에 도움을 주는 약도 처방받았습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-05.webp" alt="군견의 헬기 적응 과정에서 아이디어를 얻는 장면" width="900" height="1125" loading="lazy" /><figcaption>군견의 헬기 적응 과정에서 아이디어를 얻었습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-06.webp" alt="평범한 날 작은 빗소리부터 적응을 시도하는 동탄이" width="900" height="1125" loading="lazy" /><figcaption>평범한 날 작은 빗소리부터 적응을 시도했습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-07.webp" alt="우리 동네 천둥번개를 미리 알기 위해 썬더미리를 만드는 장면" width="900" height="1125" loading="lazy" /><figcaption>필요한 것은 우리 동네 천둥번개를 미리 아는 것이었습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-08.webp" alt="미리 준비한 날 실제 천둥에도 안정을 찾으려는 동탄이" width="900" height="1125" loading="lazy" /><figcaption>미리 준비한 날 동탄이는 실제 천둥에도 안정을 찾으려 했습니다.</figcaption></figure>
+      </li>
+      <li class="story-toon-slide">
+        <figure><img src="story-toon-09.webp" alt="보호자에게 준비할 시간을 알려주는 썬더미리의 역할" width="900" height="1125" loading="lazy" /><figcaption>썬더미리는 치료 대신 준비할 시간을 알려드립니다.</figcaption></figure>
+      </li>
+    </ol>
+    <div class="story-toon-controls">
+      <button type="button" class="story-toon-arrow" id="storyToonPrev" aria-label="이전 이야기">&#8592;</button>
+      <p class="story-toon-counter" id="storyToonCounter" aria-live="polite"><strong>1</strong> / 9</p>
+      <button type="button" class="story-toon-arrow" id="storyToonNext" aria-label="다음 이야기">&#8594;</button>
+    </div>
+    <p class="story-toon-hint" aria-hidden="true">화면을 옆으로 밀어 넘겨보세요</p>
+  </section>
+
+  <aside class="story-service-note" aria-label="서비스 안내">
+    <strong>썬더미리는 치료나 훈련을 목적으로 하지 않습니다.</strong>
+    <span>천둥번개가 가까워지는 것을 미리 알려, 각자의 준비 시간을 드리는 서비스입니다.</span>
+  </aside>
+
+  <div class="story-actions story-main-actions">
+    <a class="btn" href="index.html#signup">우리 동네 알림 설정하기</a>
+    <a class="btn outline" href="guide-training.html">동탄이의 소리 적응 보기</a>
+  </div>
+
+  <details class="story-text-details">
+    <summary><strong>글로 읽기</strong><span>전체 이야기 펼치기</span></summary>
+    <article class="card story-card">
     <section>
       <p class="story-number">01</p>
       <h2>폭우로 작업실이 침수된 날</h2>
@@ -71,11 +124,8 @@
       <p>이 서비스가 하는 일은 하나입니다. 천둥번개가 가까워지는 것을 보호자에게 미리 알려, 각자의 반려견에게 맞는 준비를 할 시간을 벌어드리는 것. 갑작스러운 소음에 무방비로 노출되는 것을 막는 데 그 목적이 있습니다.</p>
     </section>
 
-    <div class="story-actions">
-      <a class="btn" href="index.html#signup">우리 동네 알림 설정하기</a>
-      <a class="btn outline" href="guide-training.html">동탄이의 소리 적응 보기</a>
-    </div>
-  </article>
+    </article>
+  </details>
 
   <div class="maker-note" id="makerNote" hidden>
     <a class="maker-note-link" href="https://smartstore.naver.com/kustomduo/products/6140003102" target="_blank" rel="noopener noreferrer">
@@ -96,5 +146,6 @@
   </div>
 </main>
 <script src="nav.js?v=auto-update-4" defer></script>
+<script src="story.js?v=2" defer></script>
 </body>
 </html>
