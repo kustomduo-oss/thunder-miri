@@ -1,7 +1,7 @@
 /* 썬더미리 — 웹푸시 서비스워커 */
 
 /* 배포할 때마다 올린다. 이 파일의 내용이 바뀌어야 브라우저가 새 워커를 설치한다. */
-const SW_VERSION = "2026.08.29c";
+const SW_VERSION = "2026.08.29d";
 
 self.addEventListener("install", () => self.skipWaiting());
 
