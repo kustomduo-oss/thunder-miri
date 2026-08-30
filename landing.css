@@ -221,6 +221,9 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
 .content-discovery-heading{margin-bottom:17px}.content-discovery-heading h2{margin:0;font-size:24px;line-height:1.3;letter-spacing:-.035em}
 .content-discovery-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .discovery-card{display:grid;gap:11px;padding:22px 20px;border:1px solid var(--signal-line);border-radius:14px;background:#fff;color:var(--signal-ink);box-shadow:0 8px 22px rgba(25,70,91,.06)}.discovery-card.sound-link{border-top:3px solid var(--signal-yellow)}
+.discovery-card.how-link{grid-column:1/-1;grid-template-columns:112px 1fr;align-items:center;border-top:3px solid var(--signal)}
+.discovery-thumb{display:block;width:112px;height:140px;border-radius:10px;object-fit:cover;box-shadow:0 7px 18px rgba(25,70,91,.12)}
+.discovery-card.how-link>div{display:grid;gap:9px;min-width:0}
 .discovery-kicker{margin:0!important;color:var(--signal);font-size:12px!important;font-weight:900}
 .discovery-card h3{margin:0;font-size:17px;line-height:1.45;letter-spacing:-.02em}
 .discovery-card p{margin:0!important;font-size:13px!important;line-height:1.7!important}
@@ -308,6 +311,6 @@ button.cta{width:100%;min-height:58px;border:0;border-radius:9px;background:#c74
   .result-section{gap:36px}
   .more-section{grid-template-columns:1fr}
   .more-section a{padding:23px}
-  .content-discovery{padding:40px 18px}.content-discovery-heading{display:grid;gap:2px;margin-bottom:13px}.content-discovery-heading h2{font-size:21px}.content-discovery-grid{grid-template-columns:1fr;gap:9px}.discovery-card{padding:19px 18px}.discovery-card h3{font-size:16px}
+  .content-discovery{padding:40px 18px}.content-discovery-heading{display:grid;gap:2px;margin-bottom:13px}.content-discovery-heading h2{font-size:21px}.content-discovery-grid{grid-template-columns:1fr;gap:9px}.discovery-card{padding:19px 18px}.discovery-card h3{font-size:16px}.discovery-card.how-link{grid-column:auto;grid-template-columns:86px 1fr}.discovery-thumb{width:86px;height:108px}
   .notify-sheet-card{padding:25px 20px calc(22px + env(safe-area-inset-bottom))}
 }

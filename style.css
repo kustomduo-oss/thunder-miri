@@ -167,6 +167,9 @@ main{max-width:var(--wrap);margin:0 auto;padding:30px 18px 50px}
 .story-text-details[open]>summary::after{content:'\2212'}
 .story-text-details>summary span{color:var(--ink-soft);font-size:13px;font-weight:500}
 .story-text-details .story-card{border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none}
+.how-text-body{padding:0 22px 24px;border-top:1px solid var(--line)}
+.how-text-details .signal-stat-row{margin-top:22px}
+.how-detail-card{margin-top:18px;box-shadow:none}
 
 .change-record{margin:18px 0}
 .change-record div:first-child{border-color:#e0d0b6;background:#fbf7f0}

@@ -3,7 +3,7 @@
 (function () {
   /* 배포한 판을 폰에서 바로 확인하려고 푸터에 찍는다.
      화면이 안 바뀐 것 같을 때 캐시 문제인지 여기서 판별한다. 배포 시 이 값만 고칠 것. */
-  var SITE_VERSION = '2026.08.29k';
+  var SITE_VERSION = '2026.08.30a';
   var VERSION_STORAGE_KEY = 'thunder_site_version';
   var lastVersionCheckAt = 0;
   var SUPABASE_URL = 'https://pdlohzenslwbiyoxwjom.supabase.co';
@@ -40,7 +40,7 @@
       /* 1줄은 읽을거리·연락처. 메뉴에서 뺀 '작동 방식'과 그동안 어디에서도
          닿을 수 없던 '도움말'을 여기에 둬 접근 가능한 페이지로 남긴다. */
       '<nav class="footer-nav">' +
-        '<a href="how.html">작동 방식</a>' +
+        '<a href="how.html">작동 원리</a>' +
         '<a href="about.html">소개</a>' +
         '<a href="contact.html">문의</a>' +
         '<a href="privacy.html">개인정보<span class="fn-long">처리방침</span></a>' +
