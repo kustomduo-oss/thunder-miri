@@ -1,7 +1,7 @@
 name: thunder-miri-radar
 
 on:
-  # 푸시 발송이 끝나면 레이더 자료는 별도 실행에서 생성합니다.
+  # 기존 5분 스케줄러의 완료 이벤트만 공유합니다. 발송 성공 여부와 무관하게 수집합니다.
   workflow_run:
     workflows: ["thunder-miri-sender"]
     types: [completed]
@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   radar:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     # 5분마다 트리거되므로 그 안에 끝나야 한다. 넘기면 다음 실행에 취소돼
     # 그 주기의 레이더가 통째로 사라진다. 매달려 있느니 빨리 실패하는 게 낫다.

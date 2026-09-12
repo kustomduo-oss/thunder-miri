@@ -74,6 +74,58 @@ RADAR_TIMEOUT = int(os.environ.get("RADAR_TIMEOUT", "60"))       # 1회 수신 �
 QPF_TIMEOUT = int(os.environ.get("QPF_TIMEOUT", "45"))           # 예측 1장 상한(초)
 DEADLINE_SEC = int(os.environ.get("RADAR_DEADLINE_SEC", "210"))  # 전체 마감(3분 30초)
 _started = time.monotonic()
+_qpf_cache = {}
+
+
+def validate_radar(raw):
+    """현재 지원하는 HSR HB 격자의 헤더와 전체 데이터 길이를 검증한다."""
+    if len(raw) < 4:
+        raise ValueError("radar header missing")
+    nx, ny = struct.unpack("<hh", raw[:4])
+    if (nx, ny) != (2305, 2881):
+        raise ValueError("unsupported radar dimensions")
+    if len(raw) != 4 + nx * ny * 2:
+        raise ValueError("incomplete radar payload")
+
+
+def validate_png(raw, map_code):
+    # verify는 PNG 청크/CRC, load는 압축된 실제 픽셀까지 확인한다.
+    with Image.open(io.BytesIO(raw)) as img:
+        if img.format != "PNG":
+            raise ValueError("not PNG")
+        if map_code == "HB" and img.size != (600, 770):
+            raise ValueError("unsupported QPF dimensions")
+        img.verify()
+    with Image.open(io.BytesIO(raw)) as img:
+        img.load()
+
+
+def fetch_validated(url, params, validator, read_timeout, label, tries=2, deadline=None):
+    """인증키를 로그에 남기지 않으며, 검증 실패도 동일 자료로 재시도한다."""
+    for attempt in range(tries):
+        stop_at = min(_started + DEADLINE_SEC, deadline or float('inf'))
+        remaining = stop_at - time.monotonic()
+        if remaining < 2:
+            return None
+        try:
+            # 연결 대기는 짧게, 수신 대기는 별도로 제한한다.
+            with requests.get(url, params=params,
+                              timeout=(min(10, remaining / 2),
+                                       min(read_timeout, remaining / 2))) as res:
+                res.raise_for_status()
+                raw = res.content
+                validator(raw)
+                return raw
+        except (requests.exceptions.RequestException, ValueError, OSError,
+                SyntaxError) as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            print(f"[{label}] {attempt + 1}/{tries} 실패: {type(exc).__name__}"
+                  f" HTTP={status or '-'} (기존 정상 자료 유지)")
+            if status in (401, 403, 429):
+                return None
+        if attempt + 1 < tries and time.monotonic() + 2 < stop_at:
+            time.sleep(2)
+    return None
 
 
 def over_deadline(what=""):
@@ -87,20 +139,18 @@ def over_deadline(what=""):
 def fetch_radar(tm=None, tries=3):
     """레이더 합성자료(binary) 수신. 최신 파일이 아직 없을 수 있어 시각을 거슬러 재시도."""
     now = datetime.now()
+    # 관측 API 장애에 전체 시간을 소진하지 않고 별도 강수 예측 API에 시간을 남긴다.
+    deadline = min(_started + DEADLINE_SEC, time.monotonic() + 90)
     for k in range(tries):
         t = tm or (now - timedelta(minutes=15 + k * 5))
         stamp = t.replace(minute=(t.minute // 5) * 5, second=0).strftime("%Y%m%d%H%M")
-        try:
-            res = requests.get(RADAR_URL, params={
+        raw = fetch_validated(RADAR_URL, {
                 "tm": stamp, "cmp": "HSR", "qcd": "KMA", "obs": "ECHO",
                 "map": "HB", "disp": "B", "authKey": KMA_API_KEY,
-            }, timeout=RADAR_TIMEOUT)
-            # 정상 응답은 수 MB. 짧으면 "자료가 없습니다" 같은 안내문.
-            if len(res.content) > 100000:
-                return res.content, stamp
-            print(f"[레이더] {stamp} 자료 없음 → 이전 시각 재시도")
-        except requests.exceptions.RequestException as e:
-            print(f"[레이더] {stamp} 수신 실패: {e}")
+            }, validate_radar, RADAR_TIMEOUT, f"레이더 {stamp}", deadline=deadline)
+        if raw is not None:
+            return raw, stamp
+        print(f"[레이더] {stamp} 유효 자료 없음 → 이전 시각 재시도")
         if tm:
             break
     return None, None
@@ -153,6 +203,7 @@ def latlon_sample_grid(bounds, px):
 
 def render(raw, lat, lon):
     """전국 격자를 위경도 격자로 재투영해 PNG(투명 배경) + 위경도 범위 반환"""
+    validate_radar(raw)
     nx, ny = struct.unpack("<hh", raw[:4])
     grid = np.frombuffer(raw[4:4 + nx * ny * 2], dtype="<i2").reshape(ny, nx)
 
@@ -230,6 +281,10 @@ def build_forecast(lat, lon, key):
                 "local_total_px": local_total_px,
                 "local_radius_km": LOCAL_RAIN_RADIUS_KM,
             })
+
+    if not frames:
+        print("[예측] 유효 프레임 없음 — 기존 forecast.json 유지")
+        return None
 
     meta = {
         "base_time": base.isoformat(),
@@ -315,18 +370,17 @@ def _qpf_overlay(base, ef, lat, lon):
 
 def _qpf_image(base, ef, map_code="HR"):
     """예측 이미지 1장. 실패하거나 내용이 없으면 None."""
-    try:
-        res = requests.get(QPF_URL, params={
+    cache_key = (base, ef, map_code)
+    if cache_key in _qpf_cache:
+        return _qpf_cache[cache_key]
+    raw = fetch_validated(QPF_URL, {
             "eva": 2, "tm": base.strftime("%Y%m%d%H%M"), "qpf": "B", "ef": ef,
             "map": map_code, "grid": 2, "legend": 0 if map_code == "HB" else 1, "size": 600,
             "zoom_level": 0, "zoom_x": 0, "zoom_y": 0, "authKey": KMA_API_KEY,
-        }, timeout=QPF_TIMEOUT)
-        # 정상은 PNG. 내용이 거의 없는 빈 프레임(수백 바이트)은 버린다.
-        if res.content[:4] == b"\x89PNG" and len(res.content) > 3000:
-            return res.content
-    except requests.exceptions.RequestException as e:
-        print(f"[예측] ef=+{ef} 수신 실패: {e}")
-    return None
+        }, lambda data: validate_png(data, map_code), QPF_TIMEOUT, f"예측 +{ef}")
+    if raw is not None:
+        _qpf_cache[cache_key] = raw
+    return raw
 
 
 def upload(path, data, content_type):
@@ -374,6 +428,8 @@ def build_for(nx_grid, ny_grid, lat, lon, dong, lightning=None, raw=None, stamp=
 
     key = key or f"{nx_grid}_{ny_grid}"
     img_url = upload(f"{key}.png", png, "image/png")
+    if not img_url:
+        return None
 
     obs = datetime.strptime(stamp, "%Y%m%d%H%M") if stamp else datetime.now()
     meta = {
@@ -430,6 +486,8 @@ if __name__ == "__main__":
     raw, stamp = fetch_radar()
     if raw is None:
         print("[레이더] 자료 수신 실패")
+        # 관측 파일 실패가 별도 API인 강수 예측까지 막지 않도록 한다.
+        build_forecast(36.5, 127.8, "national")
         raise SystemExit(1)
 
     # 전국판: 아직 가입하지 않은 방문자도 첫 화면에서 볼 수 있도록 항상 만든다
@@ -455,9 +513,13 @@ if __name__ == "__main__":
             print(f"[레이더] 낙뢰 {total}건 중 최신 {len(nat_strikes)}건만 저장 (상한 {NAT_STRIKE_LIMIT})")
         build_for(None, None, NAT_LAT, NAT_LON, "전국",
                   lightning=nat_strikes, raw=raw, stamp=stamp, key="national")
+    except Exception as e:
+        print(f"[전국] 생성 실패(무시하고 계속): {type(e).__name__}")
+
+    try:
         build_forecast(NAT_LAT, NAT_LON, "national")
     except Exception as e:
-        print(f"[전국] 생성 실패(무시하고 계속): {e}")
+        print(f"[전국 예측] 생성 실패: {type(e).__name__}")
 
     if not grids:
         print("[레이더] 구독자 없음 — 동네별 생성 생략")
