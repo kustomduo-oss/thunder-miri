@@ -22,6 +22,11 @@ from urllib.parse import quote, urlsplit, urlunsplit
 import requests
 from pywebpush import webpush, WebPushException
 
+if __package__:
+    from .korea_land import contains as is_south_korea
+else:
+    from korea_land import contains as is_south_korea
+
 
 KST = timezone(timedelta(hours=9))
 
@@ -239,16 +244,8 @@ def fetch_lightning_nationwide():
                                 lookback_minutes=LOOKBACK_MINUTES, strict=True)
 
 
-# 관리자용 "남한 낙뢰 감지" 알림 — 개인 안전·모니터링 목적이라 국경선을
-# 정밀하게 그릴 필요는 없다. 휴전선은 서쪽(개성 부근 37.95N)이 낮고 동쪽
-# (고성 부근 38.6N)이 높은 대각선이라, 직선 위도 컷 대신 그 기울기를
-# 선형으로 근사한다. 개성 인근에서 낙뢰가 남한으로 오탐될 여지는 있지만
-# 안전 알림 용도로는 무해하다.
-def is_south_korea(lat, lon):
-    if not (33.0 <= lat <= 38.65 and 124.5 <= lon <= 131.9):
-        return False
-    dmz_lat = 37.95 + (lon - 126.0) * (38.6 - 37.95) / (128.4 - 126.0)
-    return lat <= dmz_lat + 0.15  # 여유 0.15도(~17km)
+# 관리자용 육지/도서 판정은 korea_land의 실제 폴리곤으로 수행한다.
+# 사용자 거리별 알림이나 지도 표시 범위를 이 필터로 제한하지 않는다.
 
 
 # 관리자 알림 메시지에 지역명을 붙이기 위한 주요 도시 (남한만)
@@ -287,13 +284,19 @@ def check_sk_master_alert(strikes):
     0건→1건 이상 전환에서만 보낸다 — 뇌우가 계속되는 동안 5분마다 오면
     금세 무시하게 된다. 잠잠해지면 자동으로 다시 무장되어 다음 뇌우 때 또 알린다.
     """
-    sk = [(lat, lon) for lat, lon in strikes if is_south_korea(lat, lon)]
+    try:
+        sk = [(lat, lon) for lat, lon in strikes if is_south_korea(lat, lon)]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        # 경계 파일 장애로 사용자 푸시까지 중단하거나 해외 감지를 보내지 않는다.
+        print(f"[관리자 국내 필터] {type(exc).__name__} — 관리자 감지 알림만 보류")
+        return
     hb = read_heartbeat() or {}
-    was_active = bool(hb.get("sk_active"))
+    # 옛 사각형 필터가 해외 낙뢰로 설정한 활성 상태는 승계하지 않는다.
+    was_active = bool(hb.get("sk_land_v1_active"))
 
     if not sk:
         if was_active:
-            hb["sk_active"] = False
+            hb["sk_land_v1_active"] = False
             _put_heartbeat(hb)
         return
 
@@ -304,8 +307,8 @@ def check_sk_master_alert(strikes):
     where = ", ".join(labels) if labels else "지역 확인 중"
     notify_admin(f"⚡ 남한에서 낙뢰가 감지되기 시작했습니다\n"
                  f"{datetime.now(KST):%H:%M} 기준 {len(sk)}건 · {where}")
-    hb["sk_active"] = True
-    hb["sk_active_since"] = datetime.now(KST).isoformat(timespec="seconds")
+    hb["sk_land_v1_active"] = True
+    hb["sk_land_v1_active_since"] = datetime.now(KST).isoformat(timespec="seconds")
     _put_heartbeat(hb)
 
 
