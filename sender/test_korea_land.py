@@ -22,8 +22,27 @@ FOREIGN_OR_SEA = {
     '서해': (35.5, 124.7), '대한해협': (34.8, 129.5),
 }
 
+COASTAL = [(35.38, 125.834), (35.62, 126.212), (35.653, 126.293),
+           (33.2, 126.6), (34.8, 129.5)]
+EXCLUDED = [point for name, point in FOREIGN_OR_SEA.items() if name != '대한해협']
+
 
 class KoreaLandTests(unittest.TestCase):
+    def test_coastal_area_includes_reported_west_sea_and_jeju(self):
+        for point in COASTAL + list(DOMESTIC.values()):
+            with self.subTest(point=point):
+                self.assertTrue(korea_land.within_coastal_area(*point))
+
+    def test_coastal_area_excludes_foreign_land_and_distant_sea(self):
+        for point in EXCLUDED:
+            with self.subTest(point=point):
+                self.assertFalse(korea_land.within_coastal_area(*point))
+
+    def test_coastal_distance_boundary(self):
+        # 서해상의 동일 지점: 1km 이내는 아니지만 국내 섬에서 50km 안이다.
+        self.assertFalse(korea_land.within_coastal_area(35.38, 125.834, radius_km=1))
+        self.assertTrue(korea_land.within_coastal_area(35.38, 125.834, radius_km=50))
+
     def test_domestic_mainland_and_islands(self):
         for name, point in DOMESTIC.items():
             with self.subTest(name=name):
@@ -51,7 +70,7 @@ class KoreaLandTests(unittest.TestCase):
     @patch.object(sender, 'read_heartbeat', return_value={})
     @patch.object(sender, 'notify_admin')
     def test_foreign_only_sends_nothing(self, notify, read, put):
-        sender.check_sk_master_alert(list(FOREIGN_OR_SEA.values()))
+        sender.check_sk_master_alert(EXCLUDED)
         notify.assert_not_called()
         put.assert_not_called()
 
@@ -78,6 +97,15 @@ class KoreaLandTests(unittest.TestCase):
         sender.check_sk_master_alert([FOREIGN_OR_SEA['대마도']])
         notify.assert_not_called()
         self.assertFalse(put.call_args.args[0]['sk_land_v1_active'])
+
+    @patch.object(sender, '_put_heartbeat')
+    @patch.object(sender, 'read_heartbeat', return_value={})
+    @patch.object(sender, 'notify_admin')
+    def test_west_sea_sends_admin_alert(self, notify, read, put):
+        sender.check_sk_master_alert(COASTAL[:3])
+        notify.assert_called_once()
+        self.assertIn('국내·연안', notify.call_args.args[0])
+        self.assertIn('3건', notify.call_args.args[0])
 
     @patch.object(sender, 'is_south_korea', side_effect=OSError('missing boundary'))
     @patch.object(sender, 'notify_admin')

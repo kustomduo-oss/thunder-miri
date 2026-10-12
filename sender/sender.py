@@ -23,9 +23,9 @@ import requests
 from pywebpush import webpush, WebPushException
 
 if __package__:
-    from .korea_land import contains as is_south_korea
+    from .korea_land import within_coastal_area as is_south_korea
 else:
-    from korea_land import contains as is_south_korea
+    from korea_land import within_coastal_area as is_south_korea
 
 
 KST = timezone(timedelta(hours=9))
@@ -244,7 +244,7 @@ def fetch_lightning_nationwide():
                                 lookback_minutes=LOOKBACK_MINUTES, strict=True)
 
 
-# 관리자용 육지/도서 판정은 korea_land의 실제 폴리곤으로 수행한다.
+# 관리자용 국내 육지/도서 및 주변 50km 해상 판정은 korea_land에서 수행한다.
 # 사용자 거리별 알림이나 지도 표시 범위를 이 필터로 제한하지 않는다.
 
 
@@ -305,7 +305,7 @@ def check_sk_master_alert(strikes):
 
     labels = _sk_city_labels(sk)
     where = ", ".join(labels) if labels else "지역 확인 중"
-    notify_admin(f"⚡ 남한에서 낙뢰가 감지되기 시작했습니다\n"
+    notify_admin(f"⚡ 국내·연안에서 낙뢰가 감지되기 시작했습니다\n"
                  f"{datetime.now(KST):%H:%M} 기준 {len(sk)}건 · {where}")
     hb["sk_land_v1_active"] = True
     hb["sk_land_v1_active_since"] = datetime.now(KST).isoformat(timespec="seconds")
